@@ -1,31 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Player Profile</title>
-  <link rel="stylesheet" href="assets/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Masters - Profile</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <script src="assets/script.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Welcome, <span id="username"></span></h1>
-      <button id="themeToggle">Toggle Theme</button>
-    </header>
+    <div class="profile-container">
+        <h1>Welcome, <span id="username"></span>!</h1>
+        <p>Wins: <span id="wins"></span></p>
+        <p>Losses: <span id="losses"></span></p>
+        <button id="logoutButton">Logout</button>
+    </div>
 
-    <h2>Your Stats</h2>
-    <p>Wins: <span id="wins">0</span></p>
-    <p>Losses: <span id="losses">0</span></p>
+    <script>
+        // Get logged-in user from localStorage
+        const user = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (user) {
+            // Display user info
+            document.getElementById('username').textContent = user.name;
+            document.getElementById('wins').textContent = user.wins;
+            document.getElementById('losses').textContent = user.losses;
+        } else {
+            window.location.href = 'index.html'; // Redirect to login if not logged in
+        }
 
-    <button id="logout">Logout</button>
-    <button id="generateMonster">Generate Monster</button>
-    <button id="battle">Go to Battle</button>
-
-    <footer>
-      <p class="version">Version 1.0.0</p>
-    </footer>
-  </div>
-
-  <script src="assets/script.js"></script>
+        // Handle logout
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            localStorage.removeItem('loggedInUser'); // Clear logged-in user
+            window.location.href = 'index.html'; // Redirect to login page
+        });
+    </script>
 </body>
 </html>
+

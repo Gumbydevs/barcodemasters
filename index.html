@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barcode Masters</title>
-  <link rel="stylesheet" href="/assets/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Masters - Login</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <script src="assets/script.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Barcode Masters</h1>
-      <button id="themeToggle">Toggle Theme</button>
-    </header>
+    <div class="login-container">
+        <h1>Login to Barcode Masters</h1>
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
+            
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+            
+            <button type="submit">Login</button>
+        </form>
+    </div>
 
-    <form id="loginForm">
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
-      <button type="submit">Login</button>
-    </form>
-
-    <footer>
-      <p class="version">Version 1.0.0</p>
-    </footer>
-  </div>
-
-  <script src="/assets/script.js"></script>
+    <script>
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Call the login function
+            login(username, password);
+        });
+    </script>
 </body>
 </html>

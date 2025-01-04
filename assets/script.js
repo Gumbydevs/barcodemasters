@@ -1,24 +1,17 @@
-// script.js
+// Sample user data
+const users = [
+  { username: "player1", password: "password123", name: "Player One", wins: 5, losses: 3 },
+  { username: "player2", password: "password456", name: "Player Two", wins: 10, losses: 2 }
+];
 
-// Version management
-const VERSION = "1.0.0"; // Update this to change the version globally
-
-// Set version on every page
-document.querySelectorAll(".version").forEach(element => {
-  element.textContent = `Version ${VERSION}`;
-});
-
-// Handle theme toggle
-const themeToggle = document.getElementById('themeToggle');
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const body = document.body;
-    body.classList.toggle('dark-mode');
-    localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
-  });
-}
-
-// Apply stored theme preference
-if (localStorage.getItem('theme') === 'dark') {
-  document.body.classList.add('dark-mode');
+// Function to simulate login
+function login(username, password) {
+  const user = users.find(user => user.username === username && user.password === password);
+  if (user) {
+      // Store logged-in user in localStorage
+      localStorage.setItem('loggedInUser', JSON.stringify(user));
+      window.location.href = 'profile.html'; // Redirect to the profile page
+  } else {
+      alert('Invalid username or password!');
+  }
 }
