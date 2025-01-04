@@ -92,8 +92,14 @@
     function handleCredentialResponse(response) {
       const user = response.credential;
       console.log("ID Token: " + user); // You can parse the token to extract user data
-      // Redirect to home page with user info
+
+      // Store the user's data in localStorage and cookies
       localStorage.setItem('userData', user);
+      
+      // Set a session cookie
+      document.cookie = "userData=" + encodeURIComponent(user) + "; path=/; SameSite=Lax; Secure";
+      
+      // Redirect to the home page
       window.location.href = 'main.html';
     }
 
