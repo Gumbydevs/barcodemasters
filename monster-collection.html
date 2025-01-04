@@ -4,24 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self'; 
-      script-src 'self' https://apis.google.com https://www.gstatic.com https://accounts.google.com 'unsafe-inline' 'unsafe-eval';
-      style-src 'self' 'unsafe-inline';
-      frame-src 'self' https://accounts.google.com https://www.gstatic.com;
-      connect-src 'self' https://www.googleapis.com;
-      img-src 'self' data:;
+        default-src 'self'; 
+        script-src 'self' https://apis.google.com https://www.gstatic.com 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' https://www.googleapis.com;
+        frame-src 'self' https://accounts.google.com https://www.gstatic.com;
+        img-src 'self' data:;
     ">
-    <title>Barcode Masters - Monster Collection</title>
+    <title>Monster Collection - Barcode Masters</title>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
 </head>
 <body>
-    <h1>Welcome to Barcode Masters</h1>
-    <button id="google-signin-button">Sign in with Google</button>
+    <h1>Welcome to Barcode Masters - Monster Collection</h1>
+    
+    <!-- Display the Google Sign-In button if the player is not signed in -->
+    <div id="signin-section">
+        <button id="google-signin-button">Sign in with Google</button>
+    </div>
+
+    <!-- Display player info -->
     <div id="player-info" style="display: none;">
+        <h3>Player Profile</h3>
         <p id="player-name"></p>
         <p id="player-id"></p>
     </div>
+
+    <!-- Monster collection section -->
     <div id="monster-collection" style="display: none;">
         <h2>Your Monsters</h2>
         <ul id="monster-list"></ul>
@@ -29,8 +38,10 @@
 
     <script>
         let gapiInitialized = false;
-        const clientId = '472252081207-mpmsv3vd6p2ej50cokl2a0jhiepla90t.apps.googleusercontent.com'; // Replace with your actual client ID
-        const apiKey = 'AIzaSyAvSQBek_khqKh5ZEYhWcqlF0taRg_Q1R4'; // Replace with your API key
+        const clientId = '472252081207-mpmsv3vd6p2ej50cokl2a0jhiepla90t.apps.googleusercontent.com'; // Your Client ID
+        const apiKey = 'AIzaSyAvSQBek_khqKh5ZEYhWcqlF0taRg_Q1R4'; // Your API Key
+        const spreadsheetId = 'YOUR_SPREADSHEET_ID'; // Replace with your actual spreadsheet ID
+        const range = 'Sheet1!A1:D100'; // Define the range where player and monster info are stored
 
         // Load Google API client
         function handleClientLoad() {
@@ -40,7 +51,7 @@
         // Initialize Google API client
         function initClient() {
             gapi.client.init({
-                apiKey: apiKey, 
+                apiKey: apiKey,
                 clientId: clientId,
                 discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
                 scope: "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -64,7 +75,7 @@
                 document.getElementById("player-info").style.display = "block";
                 loadMonsterCollection();
             } else {
-                document.getElementById("google-signin-button").style.display = "block";
+                document.getElementById("signin-section").style.display = "block";
             }
         }
 
@@ -78,20 +89,30 @@
             });
         }
 
-        // Load Monster Collection data (mocked for now)
+        // Load Monster Collection data from Google Sheets
         function loadMonsterCollection() {
             if (!gapiInitialized) return;
 
-            const monsterList = ["Dragon", "Griffin", "Phoenix"]; // Placeholder data
-            const listElement = document.getElementById("monster-list");
-
-            monsterList.forEach(monster => {
-                const listItem = document.createElement("li");
-                listItem.innerText = monster;
-                listElement.appendChild(listItem);
+            gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: spreadsheetId,
+                range: range,
+            }).then(response => {
+                const rows = response.result.values;
+                if (rows.length > 0) {
+                    const listElement = document.getElementById("monster-list");
+                    rows.forEach(row => {
+                        // Assume columns: Monster Name, Level, Attack, Defense
+                        const listItem = document.createElement("li");
+                        listItem.innerText = `Name: ${row[0]}, Level: ${row[1]}, Attack: ${row[2]}, Defense: ${row[3]}`;
+                        listElement.appendChild(listItem);
+                    });
+                    document.getElementById("monster-collection").style.display = "block";
+                } else {
+                    console.log("No data found.");
+                }
+            }).catch(error => {
+                console.error("Error fetching data from Google Sheets:", error);
             });
-
-            document.getElementById("monster-collection").style.display = "block";
         }
 
         // Attach event listener to sign-in button
