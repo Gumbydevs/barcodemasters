@@ -108,9 +108,7 @@
         }
     </style>
 
-    <!-- Updated CSP to allow Google APIs and OAuth Iframe with nonce -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://cdn.jsdelivr.net https://www.gstatic.com 'unsafe-inline' 'nonce-abcdef123456'; frame-src 'self' https://accounts.google.com https://content-sheets.googleapis.com; style-src 'self' 'unsafe-inline';">
-    
     <script src="https://apis.google.com/js/api.js" nonce="abcdef123456"></script>
 </head>
 <body>
@@ -132,21 +130,19 @@
         <p>&copy; 2025 Barcode Masters. All rights reserved.</p>
     </footer>
 
-    <!-- External JS File with Nonce -->
     <script nonce="abcdef123456">
         const apiKey = 'AIzaSyAvSQBek_khqKh5ZEYhWcqlF0taRg_Q1R4';
         const clientId = '472252081207-mpmsv3vd6p2ej50cokl2a0jhiepla90t.apps.googleusercontent.com';
         const spreadsheetId = '15s90AxqNSzv-K_639ffokf-6Zd5tSFdHeBPFZIyG7Jc'; // Your Spreadsheet ID
-        const playerID = "1001";  // Replace with dynamic player ID if necessary
 
-        function parseJwt (token) {
-          var base64Url = token.split('.')[1];
-          var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
+        function parseJwt(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
 
-          return JSON.parse(jsonPayload);
+            return JSON.parse(jsonPayload);
         }
 
         async function loadMonsterCollection() {
@@ -202,7 +198,7 @@
             if (userData) {
                 const user = parseJwt(userData);
                 document.getElementById("playerName").textContent = user.name || "Player Name";
-                document.getElementById("playerID").textContent = playerID;
+                document.getElementById("playerID").textContent = user.user_id || "Loading...";
             } else {
                 console.log("No user data found in local storage");
             }
