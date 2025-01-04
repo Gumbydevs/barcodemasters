@@ -11,7 +11,7 @@
       background-color: #f0f0f0;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       height: 100vh;
       flex-direction: column;
       text-align: center;
@@ -28,7 +28,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 80%;
+      width: 100%;
       padding: 20px;
       background-color: #ffffff;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -38,6 +38,25 @@
     header img {
       width: 275px;
       height: 264px;
+    }
+
+    .player-info {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      flex-direction: column;
+    }
+
+    .player-info div {
+      margin-left: 10px;
+    }
+
+    .button-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .button {
@@ -94,17 +113,34 @@
     </header>
   </div>
 
-  <h2>Login to Barcode Masters</h2>
-  <p>Sign in with your Google account to begin your adventure!</p>
+  <!-- Player Info Section -->
+  <div class="player-info">
+    <div><strong>Player Name:</strong> <span id="playerName">John Doe</span></div>
+    <div><strong>Player ID:</strong> <span id="playerId">123456</span></div>
+    <div><strong>Profile Picture:</strong></div>
+    <img src="profile-placeholder.png" alt="Profile Picture" width="100">
+  </div>
 
-  <!-- Google Sign-In button container -->
-  <div id="googleSignInBtn"></div>
+  <!-- Game Description -->
+  <p><strong>Welcome to Barcode Masters!</strong></p>
+  <p>In this game, you can scan 'The Codes' and create your own unique creatures to battle with. Unlock new monsters, train them, and challenge other players in various ways!</p>
 
-  <div id="version">Prototype Version 1.01165</div>
-  <div style="font-size: 12px; color: gray; margin-top: 20px;">&copy; 2025 Barcode Masters. All rights reserved.</div>
+  <!-- Buttons for navigation -->
+  <div class="button-container">
+    <button class="button" onclick="window.location.href='monster-generator.html'">DNA Extractor (Monster Generator)</button>
+    <button class="button" onclick="window.location.href='monster-collection.html'">Monster Collection</button>
+    <button class="button" onclick="window.location.href='#'">Train Monsters</button>
+    <button class="button" onclick="window.location.href='#'">PVP Battle</button>
+    <button class="button" onclick="window.location.href='help.html'">Help</button>
+  </div>
 
   <!-- Dark Mode Toggle Button -->
   <button id="darkModeToggle">Toggle Dark/Light Mode</button>
+
+  <!-- Version -->
+  <div id="version">Prototype Version 1.01165</div>
+
+  <div style="font-size: 12px; color: gray; margin-top: 20px;">&copy; 2025 Barcode Masters. All rights reserved.</div>
 
   <!-- Inline Script -->
   <script>
