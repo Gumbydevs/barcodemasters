@@ -5,34 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Profile</title>
     <link rel="stylesheet" href="assets/styles.css">
-    <script src="assets/script.js" defer></script>
 </head>
 <body>
     <div class="profile-container">
-        <h1>Welcome, <span id="username"></span>!</h1>
-        <p>Wins: <span id="wins"></span></p>
-        <p>Losses: <span id="losses"></span></p>
+        <h1>Your Profile</h1>
+        <div class="profile-info">
+            <h2>Welcome, <span id="usernameDisplay"></span></h2>
+            <p><strong>Wins:</strong> <span id="winsDisplay"></span></p>
+            <p><strong>Losses:</strong> <span id="lossesDisplay"></span></p>
+        </div>
+
         <button id="logoutButton">Logout</button>
     </div>
 
     <script>
-        // Get logged-in user from localStorage
-        const user = JSON.parse(localStorage.getItem('loggedInUser'));
-        if (user) {
-            // Display user info
-            document.getElementById('username').textContent = user.name;
-            document.getElementById('wins').textContent = user.wins;
-            document.getElementById('losses').textContent = user.losses;
+        // Retrieve logged-in user data from localStorage
+        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        
+        if (loggedInUser) {
+            document.getElementById('usernameDisplay').textContent = loggedInUser.name;
+            document.getElementById('winsDisplay').textContent = loggedInUser.wins;
+            document.getElementById('lossesDisplay').textContent = loggedInUser.losses;
         } else {
-            window.location.href = 'index.html'; // Redirect to login if not logged in
+            window.location.href = 'index.html'; // Redirect to login if no user is logged in
         }
 
         // Handle logout
         document.getElementById('logoutButton').addEventListener('click', function() {
-            localStorage.removeItem('loggedInUser'); // Clear logged-in user
+            localStorage.removeItem('loggedInUser');
             window.location.href = 'index.html'; // Redirect to login page
         });
     </script>
 </body>
 </html>
-
