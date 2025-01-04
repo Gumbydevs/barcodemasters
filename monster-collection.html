@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self'; 
-    script-src 'self' https://apis.google.com https://www.gstatic.com 'unsafe-inline' 'unsafe-eval';
-    connect-src 'self' https://www.googleapis.com https://content-sheets.googleapis.com;
-    frame-src 'self' https://accounts.google.com https://www.gstatic.com;
-    img-src 'self' data:;
-  ">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com; style-src 'self';">
   <title>Barcode Masters - Monster Collection - Version 1.01165</title>
+  <link rel="stylesheet" href="styles.css"> <!-- External stylesheet to avoid CSP issues -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,7 +21,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 80%;
+      width: 100%;
       padding: 20px;
       background-color: #ffffff;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -36,53 +31,45 @@
       width: 275px;
       height: 264px;
     }
-    .player-info {
-      font-size: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      margin-left: 20px;
-    }
-    .player-info p {
-      margin: 5px 0;
-    }
-    .player-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background-color: #d0d0d0;
-      margin-bottom: 10px;
-    }
-    .monster-list {
+    .collection-container {
       width: 90%;
-      max-width: 800px;
-      margin: 20px auto;
+      max-width: 1200px;
       background-color: #ffffff;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       padding: 20px;
     }
-    .monster-item {
+    .monster-card {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px;
+      width: 200px;
     }
-    .monster-item:last-child {
-      border-bottom: none;
+    .monster-image {
+      width: 100px;
+      height: 100px;
+      background-color: #d0d0d0;
+      border-radius: 50%;
+      margin-bottom: 10px;
     }
     .monster-info {
       text-align: left;
+      width: 100%;
     }
-    .monster-info p {
-      margin: 3px 0;
+    .monster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
     }
     .button {
       padding: 12px 25px;
       font-size: 16px;
-      margin: 5px;
+      margin: 10px 0;
       background-color: #007bff;
       color: white;
       border: none;
@@ -92,11 +79,6 @@
     .button:hover {
       background-color: #0056b3;
     }
-    #version {
-      font-size: 12px;
-      color: gray;
-      margin-top: 20px;
-    }
   </style>
 </head>
 <body>
@@ -104,70 +86,64 @@
     <header>
       <img src="BarcodeLogo1.PNG" alt="Barcode Masters Logo">
     </header>
-    <div class="player-info">
-      <img id="playerAvatar" class="player-avatar" src="default-avatar.png" alt="Player Avatar">
-      <p><strong>Player Name:</strong> <span id="playerName">Player One</span></p>
-      <p><strong>Player Email:</strong> <span id="playerEmail">player@example.com</span></p>
-    </div>
   </div>
 
-  <div class="monster-list" id="monsterList">
-    <h2>Your Monsters</h2>
-    <!-- Placeholder for dynamically loaded monsters -->
-    <p>Loading your monster collection...</p>
+  <h1>Your Monster Collection</h1>
+  <div class="collection-container">
+    <div id="monsterGrid" class="monster-grid"></div>
   </div>
 
-  <div id="version">Prototype Version 1.01165</div>
-  <div style="font-size: 12px; color: gray; margin-top: 20px;">&copy; 2025 Barcode Masters. All rights reserved.</div>
+  <button class="button" onclick="window.location.href='home.html'">Back to Home</button>
 
   <script>
-    console.log("Monster Collection Page Loaded");
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("Monster Collection Page Loaded");
 
-    // Function to extract user data from ID token
-    function parseJwt(token) {
-      var base64Url = token.split('.')[1];
-      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
-    }
+      const spreadsheetId = "YOUR_SPREADSHEET_ID_HERE"; // Replace with your spreadsheet ID
+      const apiKey = "YOUR_API_KEY_HERE"; // Replace with your API key
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1?key=${apiKey}`;
 
-    // Load player data from localStorage
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-      const user = parseJwt(userData);
-      document.getElementById('playerName').textContent = user.name || "Player Name";
-      document.getElementById('playerEmail').textContent = user.email || "Player Email";
-      document.getElementById('playerAvatar').src = user.picture || "default-avatar.png";
-    } else {
-      console.log("No user data found in local storage");
-    }
+      async function fetchMonsters() {
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          renderMonsters(data.values);
+        } catch (error) {
+          console.error("Error fetching monster data:", error);
+        }
+      }
 
-    // Simulate fetching monster data (replace with API call)
-    const monsters = [
-      { name: "Flareon", level: 12, type: "Fire", experience: 240 },
-      { name: "Aqualix", level: 8, type: "Water", experience: 120 },
-      { name: "Terradon", level: 15, type: "Earth", experience: 340 }
-    ];
+      function renderMonsters(monsters) {
+        const monsterGrid = document.getElementById("monsterGrid");
+        monsterGrid.innerHTML = ""; // Clear existing content
 
-    const monsterList = document.getElementById('monsterList');
-    monsterList.innerHTML = '<h2>Your Monsters</h2>';
+        monsters.slice(1).forEach(monster => { // Skip header row
+          const [name, type, level, experience, image] = monster;
 
-    monsters.forEach(monster => {
-      const monsterItem = document.createElement('div');
-      monsterItem.classList.add('monster-item');
+          const card = document.createElement("div");
+          card.className = "monster-card";
 
-      monsterItem.innerHTML = `
-        <div class="monster-info">
-          <p><strong>Name:</strong> ${monster.name}</p>
-          <p><strong>Level:</strong> ${monster.level}</p>
-          <p><strong>Type:</strong> ${monster.type}</p>
-        </div>
-        <p><strong>EXP:</strong> ${monster.experience}</p>
-      `;
+          const monsterImage = document.createElement("img");
+          monsterImage.className = "monster-image";
+          monsterImage.src = image || "default-monster.png"; // Fallback image
+          monsterImage.alt = `${name} Image`;
 
-      monsterList.appendChild(monsterItem);
+          const info = document.createElement("div");
+          info.className = "monster-info";
+          info.innerHTML = `
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Type:</strong> ${type}</p>
+            <p><strong>Level:</strong> ${level}</p>
+            <p><strong>Experience:</strong> ${experience}</p>
+          `;
+
+          card.appendChild(monsterImage);
+          card.appendChild(info);
+          monsterGrid.appendChild(card);
+        });
+      }
+
+      fetchMonsters();
     });
   </script>
 </body>
