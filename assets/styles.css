@@ -1,94 +1,105 @@
-/* styles.css */
-
-/* Global styles */
+/* General Styles */
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f0f0f0;
   margin: 0;
   padding: 0;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-/* Light mode styles (default) */
-:root {
-  --bg-color: white;
-  --text-color: black;
-  --button-bg: #4CAF50;
-  --button-text: white;
-}
-
-body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-/* Dark mode styles */
-body.dark-mode {
-  --bg-color: #121212;
-  --text-color: #E0E0E0;
-  --button-bg: #6A1B9A;
-  --button-text: #E0E0E0;
-}
-
-h1, h2 {
-  text-align: center;
-}
-
-button {
-  background-color: var(--button-bg);
-  color: var(--button-text);
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  font-size: 1rem;
-  margin: 10px;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #333;
-}
-
-/* Version label styling */
-.version {
-  font-size: 0.8rem;
-  color: gray;
-  position: fixed;
-  bottom: 10px;
-  left: 10px;
-}
-
-/* Layout for each page */
-.container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
 }
 
-input[type="text"], input[type="file"] {
-  padding: 10px;
-  margin: 10px;
-  font-size: 1rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-/* Header and Footer styling */
-header, footer {
+/* Container Styling */
+.login-container {
   text-align: center;
-  padding: 20px;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 420px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Logo Styling */
+.logo {
+  width: 180px; /* Adjust size based on your logo */
+  height: auto;
+  margin-bottom: 30px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Form Styling */
+form {
   width: 100%;
 }
 
-/* Theme Toggle Button */
-#themeToggle {
-  background-color: #ff9800;
-  color: #fff;
-  padding: 10px;
-  margin-top: 20px;
+label {
+  display: block;
+  text-align: left;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 16px;
+  color: #333;
+  transition: all 0.3s ease-in-out;
+}
+
+input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background-color: #007bff;
+  color: white;
   border: none;
+  border-radius: 8px;
+  font-size: 18px;
   cursor: pointer;
-  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Mobile Responsiveness */
+@media screen and (max-width: 480px) {
+  .login-container {
+      padding: 20px;
+  }
+  .logo {
+      width: 150px;
+  }
+  h1 {
+      font-size: 24px;
+  }
+  input {
+      padding: 12px;
+  }
+  button {
+      padding: 12px;
+  }
 }
