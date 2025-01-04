@@ -17,13 +17,6 @@
       text-align: center;
       transition: background-color 0.3s, color 0.3s;
     }
-
-    /* Dark mode styles */
-    body.dark-mode {
-      background-color: #121212;
-      color: white;
-    }
-
     .main-header {
       display: flex;
       justify-content: center;
@@ -33,13 +26,12 @@
       background-color: #ffffff;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       margin-bottom: 20px;
+      transition: background-color 0.3s;
     }
-
     header img {
       width: 275px;
       height: 264px;
     }
-
     .player-info {
       font-size: 16px;
       display: flex;
@@ -47,12 +39,12 @@
       justify-content: center;
       align-items: flex-start;
       margin-left: 20px;
+      color: #333;
+      transition: color 0.3s;
     }
-
     .player-info p {
       margin: 5px 0;
     }
-
     .player-avatar {
       width: 60px;
       height: 60px;
@@ -60,7 +52,6 @@
       background-color: #d0d0d0;
       margin-bottom: 10px;
     }
-
     .button {
       padding: 12px 25px;
       font-size: 16px;
@@ -71,39 +62,18 @@
       cursor: pointer;
       border-radius: 5px;
     }
-
     .button:hover {
       background-color: #0056b3;
     }
-
     #version {
       font-size: 12px;
       color: gray;
       margin-top: 20px;
     }
-
     .game-explanation {
       font-size: 16px;
       margin-bottom: 20px;
       color: #333;
-    }
-
-    /* Dark Mode Toggle Button Style */
-    #darkModeToggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px;
-      background-color: #333;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 1000;
-    }
-
-    #darkModeToggle:hover {
-      background-color: #555;
     }
 
     /* Mobile adjustments */
@@ -112,32 +82,49 @@
         flex-direction: column;
         align-items: center;
       }
-
       header img {
-        width: 150px;
+        width: 150px; /* Further shrink the logo for mobile */
         height: auto;
         margin-bottom: 20px;
       }
-
       .player-info {
         align-items: center;
         margin-left: 0;
       }
-
       .player-avatar {
         width: 50px;
         height: 50px;
         margin-bottom: 10px;
       }
-
       .button {
         padding: 10px 20px;
         font-size: 14px;
       }
-
       #version {
         font-size: 10px;
       }
+    }
+
+    /* Dark Mode Styles */
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    body.dark-mode .main-header {
+      background-color: #333;
+    }
+    body.dark-mode .player-info {
+      color: #e0e0e0;
+    }
+    body.dark-mode .button {
+      background-color: #444;
+      color: #e0e0e0;
+    }
+    body.dark-mode .button:hover {
+      background-color: #666;
+    }
+    body.dark-mode #version {
+      color: #bbb;
     }
   </style>
 </head>
@@ -173,9 +160,6 @@
   <div id="version">Prototype Version 1.01165</div>
   <div style="font-size: 12px; color: gray; margin-top: 20px;">&copy; 2025 Barcode Masters. All rights reserved.</div>
 
-  <!-- Dark Mode Toggle Button -->
-  <button id="darkModeToggle">Toggle Dark Mode</button>
-
   <script>
     // Checking if the script runs correctly
     console.log("Page Loaded");
@@ -204,28 +188,23 @@
       console.log("No user data found in local storage");
     }
 
-    // Dark Mode Toggle Functionality
-    document.addEventListener('DOMContentLoaded', () => {
-      const toggleButton = document.getElementById("darkModeToggle");
+    // Toggle dark mode on page load if stored
+    if(localStorage.getItem('darkMode') === 'enabled') {
+      document.body.classList.add('dark-mode');
+    }
 
-      // Check for saved theme in localStorage
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
-        document.body.classList.add('dark-mode');
-      }
+    // Dark mode toggle function
+    function toggleDarkMode() {
+      const darkModeEnabled = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', darkModeEnabled ? 'enabled' : 'disabled');
+    }
 
-      toggleButton.addEventListener('click', () => {
-        // Toggle between light and dark modes
-        document.body.classList.toggle('dark-mode');
-
-        // Save the current theme to localStorage
-        if (document.body.classList.contains('dark-mode')) {
-          localStorage.setItem('theme', 'dark');
-        } else {
-          localStorage.removeItem('theme');
-        }
-      });
-    });
+    // Add button for toggling dark mode (example position at top right)
+    const darkModeButton = document.createElement('button');
+    darkModeButton.textContent = "Toggle Dark Mode";
+    darkModeButton.classList.add('button');
+    darkModeButton.onclick = toggleDarkMode;
+    document.body.appendChild(darkModeButton);
   </script>
 </body>
 </html>
