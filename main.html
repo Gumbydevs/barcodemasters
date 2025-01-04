@@ -10,10 +10,9 @@
       margin: 0;
       background-color: #f0f0f0;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      height: 100vh;
       flex-direction: column;
+      align-items: center;
+      height: 100vh;
       text-align: center;
       transition: background-color 0.3s, color 0.3s;
     }
@@ -24,50 +23,71 @@
       color: white;
     }
 
+    /* Logo and Player Info Header */
     .main-header {
       display: flex;
       justify-content: center;
       align-items: center;
       width: 100%;
-      padding: 20px;
       background-color: #ffffff;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
+      padding: 20px;
+      margin-bottom: 30px;
     }
 
-    header img {
-      width: 275px;
-      height: 264px;
+    .logo-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f8f8f8;
+      padding: 20px;
+      border-radius: 8px;
+      margin-right: 20px;
+      width: auto;
+      height: 300px;
+    }
+
+    .logo-box img {
+      max-width: 100%;
+      height: auto;
     }
 
     .player-info {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 10px;
       flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
     }
 
     .player-info div {
-      margin-left: 10px;
+      margin-bottom: 10px;
+    }
+
+    .player-info img {
+      border-radius: 50%;
+      margin-top: 10px;
     }
 
     .button-container {
-      margin-top: 20px;
+      margin-top: 30px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 900px;
+      flex-wrap: wrap;
     }
 
     .button {
-      padding: 12px 25px;
-      font-size: 16px;
+      padding: 10px 20px;
+      font-size: 14px;
       margin: 5px;
       background-color: #007bff;
       color: white;
       border: none;
       cursor: pointer;
       border-radius: 5px;
+      width: 160px;
+      text-align: center;
     }
 
     .button:hover {
@@ -77,7 +97,7 @@
     #version {
       font-size: 12px;
       color: gray;
-      margin-top: 20px;
+      margin-top: 30px;
     }
 
     /* Dark Mode Toggle Button Style */
@@ -107,18 +127,18 @@
 </head>
 <body>
   <div class="main-header">
-    <!-- Logo on the left -->
-    <header>
-      <img src="BarcodeLogo1.PNG" alt="Barcode Masters Logo">
-    </header>
-  </div>
+    <!-- Logo Box -->
+    <div class="logo-box">
+      <img src="BarcodeLogo1.PNG" alt="Barcode Masters Logo" />
+    </div>
 
-  <!-- Player Info Section -->
-  <div class="player-info">
-    <div><strong>Player Name:</strong> <span id="playerName">John Doe</span></div>
-    <div><strong>Player ID:</strong> <span id="playerId">123456</span></div>
-    <div><strong>Profile Picture:</strong></div>
-    <img src="profile-placeholder.png" alt="Profile Picture" width="100">
+    <!-- Player Info Section -->
+    <div class="player-info">
+      <div><strong>Player Name:</strong> <span id="playerName">John Doe</span></div>
+      <div><strong>Player ID:</strong> <span id="playerId">123456</span></div>
+      <div><strong>Profile Picture:</strong></div>
+      <img src="profile-placeholder.png" alt="Profile Picture" width="100" />
+    </div>
   </div>
 
   <!-- Game Description -->
