@@ -8,13 +8,33 @@
 </head>
 <body>
     <div class="profile-container">
-        <h1>Your Profile</h1>
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
+        </div>
+
+        <!-- Random Tip / Lore Section -->
+        <div class="tip-container">
+            <p id="randomTip"></p>
+        </div>
+
+        <!-- Profile Info Section -->
         <div class="profile-info">
             <h2>Welcome, <span id="usernameDisplay"></span></h2>
             <p><strong>Wins:</strong> <span id="winsDisplay"></span></p>
             <p><strong>Losses:</strong> <span id="lossesDisplay"></span></p>
         </div>
 
+        <!-- Navigation Buttons -->
+        <div class="navigation-buttons">
+            <button onclick="window.location.href = 'dnaExtractor.html';">DNA Extractor</button>
+            <button onclick="window.location.href = 'monsterCollection.html';">Monster Collection</button>
+            <button onclick="window.location.href = 'trainMonster.html';">Train Monster</button>
+            <button onclick="window.location.href = 'pvpBattle.html';">PVP Battle</button>
+            <button onclick="window.location.href = 'help.html';">Help</button>
+        </div>
+
+        <!-- Logout Button -->
         <button id="logoutButton">Logout</button>
     </div>
 
@@ -35,6 +55,23 @@
             localStorage.removeItem('loggedInUser');
             window.location.href = 'index.html'; // Redirect to login page
         });
+
+        // Randomizing Tip / Lore
+        const tips = [
+            "Did you know? Scanning barcodes can unlock different monster types based on their ID!",
+            "Tip: Collect monsters from different environments for a better team!",
+            "Lore: The Barcode Masters are a secret organization studying the genetics of monsters.",
+            "Fun Fact: Your monster's strength is influenced by how many battles it wins!",
+            "Did you know? Every barcode has a hidden rarity tied to your monster's abilities."
+        ];
+
+        // Randomly select a tip from the array and display it
+        function displayRandomTip() {
+            const randomIndex = Math.floor(Math.random() * tips.length);
+            document.getElementById('randomTip').textContent = tips[randomIndex];
+        }
+
+        displayRandomTip();
     </script>
 </body>
 </html>

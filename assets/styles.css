@@ -1,18 +1,5 @@
-/* General Styles */
-body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f0f0f0;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  flex-direction: column;
-}
-
-/* Container Styling */
-.login-container {
+/* Profile Page Styles */
+.profile-container {
   text-align: center;
   padding: 30px;
   background-color: #fff;
@@ -23,46 +10,50 @@ body {
   transition: all 0.3s ease-in-out;
 }
 
-/* Logo Styling */
+.logo-container {
+  margin-bottom: 20px;
+}
+
 .logo {
-  width: 180px; /* Adjust size based on your logo */
+  width: 180px;
   height: auto;
-  margin-bottom: 30px;
-  transition: all 0.3s ease-in-out;
 }
 
-/* Form Styling */
-form {
-  width: 100%;
-}
-
-label {
-  display: block;
-  text-align: left;
-  margin-bottom: 8px;
+.tip-container {
+  font-size: 16px;
   font-weight: 600;
   color: #333;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
-  margin-bottom: 18px;
-  border: 2px solid #ddd;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #f8f8f8;
   border-radius: 8px;
-  box-sizing: border-box;
-  font-size: 16px;
-  color: #333;
-  transition: all 0.3s ease-in-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-input:focus {
-  border-color: #007bff;
-  outline: none;
+.profile-info {
+  margin-bottom: 30px;
+}
+
+h2 {
+  font-size: 24px;
+  color: #333;
+}
+
+p {
+  font-size: 18px;
+  color: #666;
+}
+
+/* Button Styles */
+.navigation-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 button {
-  width: 100%;
+  width: 80%;
   padding: 14px;
   background-color: #007bff;
   color: white;
@@ -78,27 +69,32 @@ button:hover {
   transform: translateY(-2px);
 }
 
-h1 {
-  font-size: 28px;
-  margin-bottom: 20px;
-  font-weight: 700;
-  color: #333;
+#logoutButton {
+  width: 80%;
+  padding: 14px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+#logoutButton:hover {
+  background-color: #c82333;
 }
 
 /* Mobile Responsiveness */
 @media screen and (max-width: 480px) {
-  .login-container {
+  .profile-container {
       padding: 20px;
   }
+
   .logo {
       width: 150px;
   }
-  h1 {
-      font-size: 24px;
-  }
-  input {
-      padding: 12px;
-  }
+
   button {
       padding: 12px;
   }
