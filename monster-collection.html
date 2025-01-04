@@ -108,10 +108,10 @@
         }
     </style>
 
-    <!-- Updated CSP to allow Google APIs and OAuth Iframe -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://cdn.jsdelivr.net https://www.gstatic.com; frame-src https://accounts.google.com https://content-sheets.googleapis.com; style-src 'self' 'unsafe-inline';">
+    <!-- Updated CSP to allow Google APIs and OAuth Iframe with nonce -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://cdn.jsdelivr.net https://www.gstatic.com 'nonce-abcdef123456'; frame-src https://accounts.google.com https://content-sheets.googleapis.com; style-src 'self' 'unsafe-inline';">
     
-    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://apis.google.com/js/api.js" nonce="abcdef123456"></script>
 </head>
 <body>
     <header>
@@ -132,8 +132,8 @@
         <p>&copy; 2025 Barcode Masters. All rights reserved.</p>
     </footer>
 
-    <!-- External JS File -->
-    <script>
+    <!-- External JS File with Nonce -->
+    <script nonce="abcdef123456">
         const apiKey = 'AIzaSyAvSQBek_khqKh5ZEYhWcqlF0taRg_Q1R4';
         const clientId = '472252081207-mpmsv3vd6p2ej50cokl2a0jhiepla90t.apps.googleusercontent.com';
         const spreadsheetId = '15s90AxqNSzv-K_639ffokf-6Zd5tSFdHeBPFZIyG7Jc'; // Your Spreadsheet ID
