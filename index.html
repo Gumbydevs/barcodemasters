@@ -15,7 +15,15 @@
       height: 100vh;
       flex-direction: column;
       text-align: center;
+      transition: background-color 0.3s, color 0.3s;
     }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: #121212;
+      color: white;
+    }
+
     .main-header {
       display: flex;
       justify-content: center;
@@ -26,10 +34,12 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       margin-bottom: 20px;
     }
+
     header img {
       width: 275px;
       height: 264px;
     }
+
     .button {
       padding: 12px 25px;
       font-size: 16px;
@@ -40,13 +50,33 @@
       cursor: pointer;
       border-radius: 5px;
     }
+
     .button:hover {
       background-color: #0056b3;
     }
+
     #version {
       font-size: 12px;
       color: gray;
       margin-top: 20px;
+    }
+
+    /* Dark Mode Toggle Button Style */
+    #darkModeToggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    #darkModeToggle:hover {
+      background-color: #555;
     }
   </style>
 
@@ -72,6 +102,9 @@
 
   <div id="version">Prototype Version 1.01165</div>
   <div style="font-size: 12px; color: gray; margin-top: 20px;">&copy; 2025 Barcode Masters. All rights reserved.</div>
+
+  <!-- Dark Mode Toggle Button -->
+  <button id="darkModeToggle">Toggle Dark Mode</button>
 
   <!-- Inline Script -->
   <script>
@@ -102,6 +135,29 @@
       // Redirect to the home page
       window.location.href = 'main.html';
     }
+
+    // Toggle Dark Mode
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleButton = document.getElementById("darkModeToggle");
+
+      // Check for saved theme in localStorage
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+
+      toggleButton.addEventListener('click', () => {
+        // Toggle between light and dark modes
+        document.body.classList.toggle('dark-mode');
+
+        // Save the current theme to localStorage
+        if (document.body.classList.contains('dark-mode')) {
+          localStorage.setItem('theme', 'dark');
+        } else {
+          localStorage.removeItem('theme');
+        }
+      });
+    });
 
     // Call the function to initialize when the script is loaded
     window.onload = function() {
