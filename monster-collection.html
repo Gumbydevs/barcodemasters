@@ -7,6 +7,40 @@
   <title>Barcode Masters - Monster Collection - Version 1.01165</title>
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
+
+  <style>
+    /* Light mode styles */
+    body {
+      background-color: white;
+      color: black;
+      font-family: Arial, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: #121212;
+      color: white;
+    }
+
+    /* Toggle button style */
+    #darkModeToggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    #darkModeToggle:hover {
+      background-color: #555;
+    }
+  </style>
 </head>
 <body>
   <div class="main-header">
@@ -21,5 +55,32 @@
   </div>
 
   <button id="backButton" class="button">Back to Home</button>
+
+  <!-- Dark Mode Toggle Button -->
+  <button id="darkModeToggle">Toggle Dark Mode</button>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleButton = document.getElementById("darkModeToggle");
+
+      // Check for saved theme in local storage
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+      }
+
+      toggleButton.addEventListener('click', () => {
+        // Toggle between light and dark modes
+        document.body.classList.toggle('dark-mode');
+
+        // Save the current theme to localStorage
+        if (document.body.classList.contains('dark-mode')) {
+          localStorage.setItem('theme', 'dark');
+        } else {
+          localStorage.removeItem('theme');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
