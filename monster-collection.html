@@ -29,17 +29,18 @@
 
     <script>
         let gapiInitialized = false;
+        const clientId = '472252081207-mpmsv3vd6p2ej50cokl2a0jhiepla90t.apps.googleusercontent.com'; // Replace with your actual client ID
+        const apiKey = 'AIzaSyAvSQBek_khqKh5ZEYhWcqlF0taRg_Q1R4'; // Replace with your API key
 
-        // Replace with your OAuth Client ID
-        const clientId = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
-
+        // Load Google API client
         function handleClientLoad() {
             gapi.load('client:auth2', initClient);
         }
 
+        // Initialize Google API client
         function initClient() {
             gapi.client.init({
-                apiKey: 'YOUR_API_KEY',
+                apiKey: apiKey, 
                 clientId: clientId,
                 discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
                 scope: "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -53,6 +54,7 @@
             });
         }
 
+        // Update sign-in status
         function updateSigninStatus(isSignedIn) {
             if (isSignedIn) {
                 const authInstance = gapi.auth2.getAuthInstance();
@@ -66,16 +68,21 @@
             }
         }
 
+        // Handle Google Sign-In button click
         function handleSignInClick() {
             const authInstance = gapi.auth2.getAuthInstance();
-            authInstance.signIn();
+            authInstance.signIn().then(() => {
+                console.log("Signed in successfully");
+            }).catch((error) => {
+                console.error("Sign-in failed", error);
+            });
         }
 
+        // Load Monster Collection data (mocked for now)
         function loadMonsterCollection() {
             if (!gapiInitialized) return;
 
-            // Example of fetching monster data from Google Sheets or any API
-            const monsterList = ["Dragon", "Griffin", "Phoenix"]; // Placeholder for actual data
+            const monsterList = ["Dragon", "Griffin", "Phoenix"]; // Placeholder data
             const listElement = document.getElementById("monster-list");
 
             monsterList.forEach(monster => {
@@ -87,10 +94,10 @@
             document.getElementById("monster-collection").style.display = "block";
         }
 
-        // Event listener for sign-in button
+        // Attach event listener to sign-in button
         document.getElementById("google-signin-button").addEventListener("click", handleSignInClick);
 
-        // Load the client and initialize the Google API
+        // Load the Google API client library
         handleClientLoad();
     </script>
 </body>
