@@ -36,6 +36,7 @@ label {
   font-size: 14px;
   text-align: left;
   width: 100%;
+  margin-bottom: 5px;
 }
 
 input {
@@ -68,6 +69,9 @@ button:hover {
   justify-content: center;
   text-align: center;
   padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .logo {
