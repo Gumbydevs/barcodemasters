@@ -20,12 +20,12 @@ body.dark-mode {
   justify-content: center;
   height: 100vh;
   padding: 20px;
-  box-sizing: border-box;  /* Prevents the container from pushing out of bounds */
-  text-align: center; /* Center text and inputs */
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .logo {
-  max-width: 100%;
+  max-width: 80%; /* Scale logo responsively */
   height: auto;
   margin-bottom: 20px;
 }
