@@ -149,7 +149,16 @@ body.dark-mode footer {
   border-color: #888;
 }
 
-/*  Media Queries for Responsive Design */
+/* Footer with version number at the bottom left */
+footer {
+  position: fixed;
+  bottom: 10px;
+  left: 10px; /* Move version number to the left */
+  font-size: 14px;
+  color: inherit;
+}
+
+/* Media Queries for Responsive Design */
 @media (max-width: 768px) {
   .login-container {
     padding: 20px;
