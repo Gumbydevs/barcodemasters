@@ -6,6 +6,42 @@
     <title>Barcode Masters - Profile</title>
     <link rel="stylesheet" href="assets/styles.css">
     <script src="assets/script.js" defer></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Check if user is authenticated
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is authenticated
+                console.log("Authenticated user:", user);
+
+                // Display user data
+                document.getElementById('playerName').textContent = `Player Name: ${user.displayName || 'John Doe'}`;
+                document.getElementById('winsLosses').textContent = `Wins: 10 | Losses: 5`;  // Placeholder until you fetch actual data
+                document.getElementById('playerInfo').textContent = `More info about ${user.displayName || 'John Doe'}...`;
+            } else {
+                // User is not authenticated, redirect to login
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- Dark Mode Toggle -->
@@ -57,18 +93,6 @@
                 localStorage.removeItem("theme");
             }
         });
-
-        // Display logged-in user data
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-
-        if (loggedInUser) {
-            document.getElementById('playerName').textContent = `Player Name: ${loggedInUser.name}`;
-            document.getElementById('winsLosses').textContent = `Wins: ${loggedInUser.wins} | Losses: ${loggedInUser.losses}`;
-            document.getElementById('playerInfo').textContent = `More info about ${loggedInUser.name}...`;
-        } else {
-            // If no user is logged in, redirect to login page
-            window.location.href = 'index.html';
-        }
     </script>
 
     <style>
@@ -108,4 +132,3 @@
     </style>
 </body>
 </html>
-

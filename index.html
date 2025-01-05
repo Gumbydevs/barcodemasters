@@ -29,8 +29,8 @@
         const auth = getAuth(app); // Initialize Firebase Auth
 
         // Function to handle Firebase Authentication
-        function loginWithFirebase(username, password) {
-            signInWithEmailAndPassword(auth, username, password)
+        function loginWithFirebase(email, password) {
+            signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
                     // Successful login
                     const user = userCredential.user;
@@ -40,7 +40,7 @@
                 .catch((error) => {
                     // Handle errors and log them
                     console.error('Error during login:', error.code, error.message);
-                    alert('Invalid username or password!');
+                    alert('Invalid email or password!');
                 });
         }
 
@@ -68,11 +68,11 @@
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent default form submission
             
-            const username = document.getElementById('username').value;
+            const email = document.getElementById('username').value; // Email input for username
             const password = document.getElementById('password').value;
             
             // Call the Firebase login function
-            loginWithFirebase(username, password);
+            loginWithFirebase(email, password);
         });
     </script>
 </head>
@@ -86,8 +86,8 @@
 
         <h1>Login to Barcode Masters</h1>
         <form id="loginForm">
-            <label for="username">Username</label>
-            <input type="text" id="username" required>
+            <label for="username">Email</label> <!-- Updated to Email -->
+            <input type="email" id="username" required>
             
             <label for="password">Password</label>
             <input type="password" id="password" required>
