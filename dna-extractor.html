@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - DNA Extractor</title>
     <link rel="stylesheet" href="assets/styles.css">
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
         .dna-extractor-container {
             width: 100%;
@@ -181,8 +181,18 @@
             </div>
         </div>
 
-        <!-- Error Message -->
-        <p id="errorMessage" style="color: red; display: none;"></p>
+        <!-- Status Messages -->
+        <div id="statusMessages" style="margin-top: 1rem; padding: 1rem; border-radius: 8px; background: rgba(255, 255, 255, 0.1);">
+            <p id="errorMessage" style="color: red; display: none;"></p>
+            <p id="debugMessage" style="color: inherit;">Ready to scan...</p>
+        </div>
+
+        <!-- Camera Selection -->
+        <div style="margin-top: 1rem;">
+            <select id="cameraSelect" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: inherit;">
+                <option value="">Loading cameras...</option>
+            </select>
+        </div>
     </div>
 
     <!-- Version Number -->
@@ -216,40 +226,86 @@
         let selectedDeviceId;
 
         async function initializeScanner() {
-            codeReader = new ZXing.BrowserMultiFormatReader();
             try {
-                const videoInputDevices = await codeReader.listVideoInputDevices();
-                selectedDeviceId = videoInputDevices[0].deviceId;
+                // Show initializing message
+                updateDebugMessage('Initializing scanner...');
                 
+                // Initialize code reader
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                
+                // List available devices
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+                
+                // Update camera selection dropdown
+                const cameraSelect = document.getElementById('cameraSelect');
+                cameraSelect.innerHTML = videoInputDevices.map(device => 
+                    `<option value="${device.deviceId}">${device.label || `Camera ${device.deviceId}`}</option>`
+                ).join('');
+                
+                // Set default device
+                selectedDeviceId = videoInputDevices[0]?.deviceId;
+                
+                // Add event listeners
                 document.getElementById('startButton').addEventListener('click', () => {
+                    updateDebugMessage('Start button clicked...');
                     startScanning();
                 });
+                
+                cameraSelect.addEventListener('change', (event) => {
+                    selectedDeviceId = event.target.value;
+                });
+                
+                updateDebugMessage('Scanner initialized. Ready to scan!');
             } catch (err) {
                 console.error(err);
-                showError('Failed to initialize scanner. Please check camera permissions.');
+                showError('Failed to initialize scanner: ' + err.message);
+                updateDebugMessage('Scanner initialization failed. Please check camera permissions.');
             }
         }
 
         async function startScanning() {
+            updateDebugMessage('Starting scanner...');
+            
             try {
-                const result = await codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
-                    if (result) {
-                        // Here we'll add the monster generation logic
-                        console.log('Barcode found:', result.text);
-                        document.getElementById('result-text').textContent = result.text;
-                        document.getElementById('scan-result').style.display = 'block';
+                // Hide the start button while scanning
+                document.getElementById('startButton').style.display = 'none';
+                
+                // Show the video element
+                const videoElement = document.querySelector('video');
+                videoElement.style.display = 'block';
+                
+                updateDebugMessage('Accessing camera...');
+                
+                const result = await codeReader.decodeFromVideoDevice(
+                    selectedDeviceId, 
+                    'video', 
+                    (result, err) => {
+                        if (result) {
+                            // Success! We found a barcode
+                            updateDebugMessage('Barcode detected: ' + result.text);
+                            codeReader.reset(); // Stop scanning
+                            document.getElementById('startButton').style.display = 'block'; // Show button again
+                            videoElement.style.display = 'none'; // Hide video
+                            
+                            // Generate and save monster
+                            generateMonster(result.text);
+                        }
                         
-                        // Generate and save monster
-                        generateMonster(result.text);
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error(err);
+                            updateDebugMessage('Scanning error: ' + err.message);
+                            showError('Error during scanning: ' + err.message);
+                        }
                     }
-                    if (err && !(err instanceof ZXing.NotFoundException)) {
-                        console.error(err);
-                        showError('Error during scanning.');
-                    }
-                });
+                );
+                
+                updateDebugMessage('Scanner started successfully. Point camera at a barcode.');
+                
             } catch (err) {
                 console.error(err);
-                showError('Failed to start scanning. Please check camera permissions.');
+                document.getElementById('startButton').style.display = 'block';
+                showError('Failed to start scanning: ' + err.message);
+                updateDebugMessage('Failed to start scanner. Please check camera permissions.');
             }
         }
 
@@ -383,6 +439,19 @@
             errorElement.textContent = message;
             errorElement.style.display = 'block';
         }
+        
+        // Function to update debug message
+        function updateDebugMessage(message) {
+            const debugElement = document.getElementById('debugMessage');
+            debugElement.textContent = message;
+        }
+        
+        // Add a cleanup function for when the page is closed/navigated away from
+        window.addEventListener('beforeunload', () => {
+            if (codeReader) {
+                codeReader.reset();
+            }
+        });
 
         // Check authentication state
         onAuthStateChanged(auth, (user) => {
