@@ -64,6 +64,7 @@ label {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 5px;
+  color: inherit; /* Ensure label color matches text color */
 }
 
 input {
@@ -96,14 +97,39 @@ input:focus {
   background-color: #45a049;
 }
 
-footer {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  font-size: 14px;
-  color: inherit;
+/* Dark Mode Specific Styles */
+body.dark-mode h1,
+body.dark-mode label,
+body.dark-mode input,
+body.dark-mode button,
+body.dark-mode footer {
+  color: #f5f5f5; /* Ensure all text is light in dark mode */
 }
 
+body.dark-mode .login-container {
+  background-color: #333; /* Dark background for login container */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Darker shadow for dark mode */
+}
+
+body.dark-mode .btn-login {
+  background-color: #3b8d3b; /* Slightly different green for dark mode */
+}
+
+body.dark-mode .btn-login:hover {
+  background-color: #357a35;
+}
+
+body.dark-mode input {
+  background-color: #444; /* Darker background for inputs in dark mode */
+  border-color: #555; /* Lighter border color for inputs */
+  color: #f5f5f5; /* Light text color for inputs */
+}
+
+body.dark-mode footer {
+  color: #f5f5f5; /* Light text color in footer */
+}
+
+/* Dark mode button styles */
 #darkModeToggle {
   position: absolute;
   top: 20px;
@@ -123,10 +149,10 @@ footer {
   border-color: #888;
 }
 
-
+/* Media Queries for Responsive Design */
 @media (max-width: 768px) {
   .login-container {
-      padding: 20px;
+    padding: 20px;
   }
 
   h1 {
