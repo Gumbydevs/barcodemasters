@@ -5,12 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Login</title>
     <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="login-container">
+        <!-- Logo -->
+        <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
+
+        <h1>Login to Barcode Masters</h1>
+        <form id="loginForm">
+            <label for="username">Email</label>
+            <input type="email" id="username" required>
+            
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+            
+            <button type="submit" class="btn-login">Login</button>
+            <p id="errorMessage" style="color: red; display: none;"></p>
+        </form>
+    </div>
+
+    <!-- Version Number -->
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.0</span></p>
+    </footer>
+
     <!-- Firebase SDK (Modules) -->
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -25,24 +51,48 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const auth = getAuth(app); // Initialize Firebase Auth
+        const auth = getAuth(app);
+
+        // Function to show error message
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
 
         // Function to handle Firebase Authentication
-        function loginWithFirebase(username, password) {
-            signInWithEmailAndPassword(auth, username, password)
-                .then((userCredential) => {
-                    // Successful login
-                    const user = userCredential.user;
-                    console.log("User logged in:", user);
-                    localStorage.setItem("loggedInUser", JSON.stringify(user));  // Store user info in localStorage
-                    window.location.href = 'profile.html'; // Redirect to the profile page
-                })
-                .catch((error) => {
-                    // Handle errors and log them
-                    console.error('Error during login:', error.code, error.message);
-                    alert('Invalid username or password!');
-                });
+        async function loginWithFirebase(email, password) {
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Successful login
+                const user = userCredential.user;
+                console.log("User logged in:", user);
+                localStorage.setItem("loggedInUser", JSON.stringify({
+                    email: user.email,
+                    uid: user.uid
+                }));
+                window.location.href = 'profile.html';
+            } catch (error) {
+                console.error('Error during login:', error.code, error.message);
+                let errorMessage = 'An error occurred during login.';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Please enter a valid email address.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                }
+                
+                showError(errorMessage);
+            }
         }
 
         // Handle dark mode toggle
@@ -56,58 +106,23 @@
 
         darkModeToggle.addEventListener("click", function() {
             document.body.classList.toggle("dark-mode");
-
-            // Save the theme preference
-            if (document.body.classList.contains("dark-mode")) {
-                localStorage.setItem("theme", "dark");
-            } else {
-                localStorage.removeItem("theme");
-            }
+            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
         });
 
         // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-            
-            const username = document.getElementById('username').value;
+            event.preventDefault();
+            const email = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            
-            // Call the Firebase login function
-            loginWithFirebase(username, password);
+            loginWithFirebase(email, password);
         });
 
-        // Firebase Auth state check (for persistent login)
+        // Check if user is already logged in
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // If the user is already logged in, redirect to profile page
                 window.location.href = 'profile.html';
             }
         });
     </script>
-</head>
-<body>
-    <!-- Dark Mode Toggle -->
-    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-
-    <div class="login-container">
-        <!-- Logo -->
-        <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
-
-        <h1>Login to Barcode Masters</h1>
-        <form id="loginForm">
-            <label for="username">Username</label>
-            <input type="text" id="username" required>
-            
-            <label for="password">Password</label>
-            <input type="password" id="password" required>
-            
-            <button type="submit" class="btn-login">Login</button>
-        </form>
-    </div>
-
-    <!-- Version Number -->
-    <footer>
-        <p>Version: <span id="versionNumber">1.0.0</span></p>
-    </footer>
 </body>
 </html>
