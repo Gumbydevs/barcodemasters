@@ -1,6 +1,6 @@
 // Sample user data
 const users = [
-  { username: "player1", password: "password123", name: "Player One", wins: 5, losses: 3 },
+  { username: "GumbyDev", password: "password123", name: "GumbyDev", wins: 0, losses: 0 },
   { username: "player2", password: "password456", name: "Player Two", wins: 10, losses: 2 }
 ];
 
