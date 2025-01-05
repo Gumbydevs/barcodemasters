@@ -149,7 +149,7 @@ body.dark-mode footer {
   border-color: #888;
 }
 
-/* Media Queries for Responsive Design */
+/*  Media Queries for Responsive Design */
 @media (max-width: 768px) {
   .login-container {
     padding: 20px;
