@@ -1,4 +1,14 @@
 /* Profile Page Styles */
+body {
+  display: flex;
+  justify-content: center; /* Horizontally center the profile container */
+  align-items: center; /* Vertically center the profile container */
+  min-height: 100vh; /* Ensure it takes full viewport height */
+  margin: 0;
+  background-color: #f4f4f4; /* Light background color for the page */
+  font-family: 'Arial', sans-serif;
+}
+
 .profile-container {
   text-align: center;
   padding: 30px;
@@ -6,7 +16,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 420px;
+  max-width: 420px; /* Max width for the container */
   transition: all 0.3s ease-in-out;
 }
 
@@ -17,6 +27,7 @@
 .logo {
   width: 180px;
   height: auto;
+  object-fit: contain; /* Prevents image from being distorted */
 }
 
 .tip-container {
@@ -62,6 +73,7 @@ button {
   font-size: 18px;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
+  margin: 5px 0;
 }
 
 button:hover {
@@ -97,5 +109,14 @@ button:hover {
 
   button {
       padding: 12px;
+      font-size: 16px;
+  }
+
+  h2 {
+      font-size: 22px;
+  }
+
+  p {
+      font-size: 16px;
   }
 }
