@@ -10,7 +10,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -28,7 +28,7 @@
         const analytics = getAnalytics(app);
         const auth = getAuth(app); // Initialize Firebase Auth
 
-        // Function to handle Firebase Authentication (Sign In)
+        // Function to handle Firebase Authentication
         function loginWithFirebase(username, password) {
             signInWithEmailAndPassword(auth, username, password)
                 .then((userCredential) => {
@@ -42,23 +42,6 @@
                     // Handle errors and log them
                     console.error('Error during login:', error.code, error.message);
                     alert('Invalid username or password!');
-                });
-        }
-
-        // Function to handle Firebase Sign Up
-        function signUpWithFirebase(username, password) {
-            createUserWithEmailAndPassword(auth, username, password)
-                .then((userCredential) => {
-                    // Account created successfully
-                    const user = userCredential.user;
-                    console.log("User signed up:", user);
-                    localStorage.setItem("loggedInUser", JSON.stringify(user));  // Store user info in localStorage
-                    window.location.href = 'profile.html'; // Redirect to the profile page
-                })
-                .catch((error) => {
-                    // Handle sign-up errors
-                    console.error('Error during sign-up:', error.code, error.message);
-                    alert('Error creating account: ' + error.message);
                 });
         }
 
@@ -85,21 +68,12 @@
         // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent default form submission
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
             // Call the Firebase login function
             loginWithFirebase(username, password);
-        });
-
-        // Handle sign-up form submission
-        document.getElementById('signUpForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-            const username = document.getElementById('signUpUsername').value;
-            const password = document.getElementById('signUpPassword').value;
-            
-            // Call the Firebase sign-up function
-            signUpWithFirebase(username, password);
         });
 
         // Firebase Auth state check (for persistent login)
@@ -120,51 +94,20 @@
         <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
 
         <h1>Login to Barcode Masters</h1>
-        <!-- Login Form -->
         <form id="loginForm">
-            <label for="username">Username (Email)</label>
-            <input type="email" id="username" required>
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
             
             <label for="password">Password</label>
             <input type="password" id="password" required>
             
             <button type="submit" class="btn-login">Login</button>
         </form>
-
-        <!-- Sign Up Link and Form -->
-        <p>Don't have an account? <a href="#" id="showSignUp">Sign Up</a></p>
-
-        <div id="signUpFormContainer" style="display:none;">
-            <h2>Sign Up</h2>
-            <form id="signUpForm">
-                <label for="signUpUsername">Username (Email)</label>
-                <input type="email" id="signUpUsername" required>
-                
-                <label for="signUpPassword">Password</label>
-                <input type="password" id="signUpPassword" required>
-                
-                <button type="submit" class="btn-login">Sign Up</button>
-            </form>
-            <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
-        </div>
     </div>
 
     <!-- Version Number -->
     <footer>
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
-
-    <script>
-        // Switch between login and sign up forms
-        document.getElementById('showSignUp').addEventListener('click', function() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('signUpFormContainer').style.display = 'block';
-        });
-
-        document.getElementById('showLogin').addEventListener('click', function() {
-            document.getElementById('signUpFormContainer').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-        });
-    </script>
 </body>
 </html>
