@@ -3,167 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Masters - Monster Collection</title>
+    <title>Barcode Masters - DNA Extractor</title>
     <link rel="stylesheet" href="assets/styles.css">
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
-        .collection-container {
+        .dna-extractor-container {
             width: 100%;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 1rem;
             box-sizing: border-box;
         }
 
-        .collection-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .collection-stats {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            min-width: 120px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .monsters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            padding: 1rem;
-        }
-
-        .monster-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1rem;
-            transition: transform 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-        }
-
-        .monster-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .monster-image-placeholder {
+        #interactive.viewport {
+            position: relative;
             width: 100%;
-            height: 180px;
-            background: rgba(0, 0, 0, 0.2);
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        #interactive.viewport > canvas, #interactive.viewport > video {
+            max-width: 100%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-button {
+            padding: 1rem 2rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
             border-radius: 8px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            position: relative;
+            z-index: 100;
         }
 
-        .monster-info {
+        .scan-button:active {
+            background: #3d8b40;
+            transform: scale(0.98);
+        }
+
+        #statusMessages {
             margin-top: 1rem;
-        }
-
-        .monster-name {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-
-        .monster-type-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
+            padding: 1rem;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.1);
         }
 
-        .monster-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-            margin-top: 0.5rem;
+        /* Dark mode styles */
+        body.dark-mode .scan-button {
+            background: #3b8d3b;
         }
 
-        .stat-item {
-            padding: 0.25rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.875rem;
-        }
-
-        .filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .filter-select {
-            padding: 0.5rem;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: inherit;
-            min-width: 120px;
-        }
-
-        .sort-select {
-            padding: 0.5rem;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: inherit;
-            min-width: 120px;
-        }
-
-        /* Dark mode specific styles */
-        body.dark-mode .monster-card {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        body.dark-mode .stat-box {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Mobile responsive styles */
-        @media (max-width: 768px) {
-            .collection-stats {
-                gap: 1rem;
-            }
-
-            .stat-box {
-                min-width: 100px;
-                padding: 0.75rem;
-            }
-
-            .monsters-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 1rem;
-                padding: 0.5rem;
-            }
-
-            .filters {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .filter-select, .sort-select {
-                width: 100%;
-            }
+        body.dark-mode .scan-button:active {
+            background: #2d6d2d;
         }
     </style>
 </head>
@@ -171,62 +72,31 @@
     <!-- Dark Mode Toggle -->
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
-    <div class="collection-container">
-        <div class="collection-header">
-            <div class="logo-container">
-                <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
-            </div>
-            <h1>Monster Collection</h1>
+    <div class="dna-extractor-container">
+        <div class="logo-container">
+            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
         </div>
 
-        <!-- Collection Stats -->
-        <div class="collection-stats">
-            <div class="stat-box">
-                <h3>Total Monsters</h3>
-                <p id="totalMonsters">0</p>
-            </div>
-            <div class="stat-box">
-                <h3>Highest Level</h3>
-                <p id="highestLevel">0</p>
-            </div>
-            <div class="stat-box">
-                <h3>Unique Types</h3>
-                <p id="uniqueTypes">0</p>
-            </div>
+        <h1>DNA Extractor</h1>
+        
+        <!-- Status Messages -->
+        <div id="statusMessages">
+            <p id="errorMessage" style="color: red; display: none;"></p>
+            <p id="debugMessage">Ready to scan...</p>
         </div>
 
-        <!-- Filters -->
-        <div class="filters">
-            <select id="typeFilter" class="filter-select">
-                <option value="">All Types</option>
-                <option value="Feral">Feral</option>
-                <option value="Fighter">Fighter</option>
-                <option value="Caster">Caster</option>
-                <option value="Ranged">Ranged</option>
-                <option value="Tank">Tank</option>
-            </select>
-            <select id="levelFilter" class="filter-select">
-                <option value="">All Levels</option>
-                <option value="1">Level 1</option>
-                <option value="2">Level 2</option>
-                <option value="3">Level 3</option>
-            </select>
-            <select id="sortBy" class="sort-select">
-                <option value="dateCreated">Date Created</option>
-                <option value="level">Level</option>
-                <option value="hp">HP</option>
-                <option value="ap">AP</option>
-                <option value="speed">Speed</option>
-            </select>
+        <!-- Scanner Viewport -->
+        <div id="interactive" class="viewport" style="display: none;">
+            <video id="video" autoplay playsinline muted></video>
         </div>
 
-        <!-- Monsters Grid -->
-        <div class="monsters-grid" id="monstersGrid">
-            <!-- Monster cards will be dynamically added here -->
-        </div>
+        <!-- Scan Button -->
+        <button class="scan-button" id="startButton">Start Camera</button>
 
-        <!-- Error Message -->
-        <p id="errorMessage" style="color: red; display: none;"></p>
+        <!-- Monster Result -->
+        <div id="monsterResult" style="display: none;">
+            <!-- Monster details will be populated here -->
+        </div>
     </div>
 
     <!-- Version Number -->
@@ -234,12 +104,13 @@
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
 
-    <!-- Firebase SDK (Modules) -->
+    <!-- Main Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -255,140 +126,15 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentMonsters = [];
+        // Global variables
+        let codeReader = null;
+        let selectedDeviceId = null;
 
-        // Function to create monster card HTML
-        function createMonsterCard(monster) {
-            return `
-                <div class="monster-card" data-id="${monster.id}">
-                    <div class="monster-image-placeholder">
-                        AI generated appearance placeholder
-                    </div>
-                    <div class="monster-info">
-                        <div class="monster-name">${monster.name}</div>
-                        <span class="monster-type-badge">${monster.type}</span>
-                        <div class="monster-stats">
-                            <div class="stat-item">
-                                <span>Level</span>
-                                <span>${monster.level}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>XP</span>
-                                <span>${monster.experience}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>HP</span>
-                                <span>${monster.hp}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>AP</span>
-                                <span>${monster.ap}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Speed</span>
-                                <span>${monster.speed}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        // Device detection
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-        // Function to update collection stats
-        function updateCollectionStats(monsters) {
-            document.getElementById('totalMonsters').textContent = monsters.length;
-            
-            const highestLevel = Math.max(...monsters.map(m => m.level));
-            document.getElementById('highestLevel').textContent = highestLevel;
-            
-            const uniqueTypes = new Set(monsters.map(m => m.type)).size;
-            document.getElementById('uniqueTypes').textContent = uniqueTypes;
-        }
-
-        // Function to filter and sort monsters
-        function filterAndSortMonsters() {
-            let filtered = [...currentMonsters];
-            
-            const typeFilter = document.getElementById('typeFilter').value;
-            const levelFilter = document.getElementById('levelFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
-
-            if (typeFilter) {
-                filtered = filtered.filter(m => m.type === typeFilter);
-            }
-            
-            if (levelFilter) {
-                filtered = filtered.filter(m => m.level === parseInt(levelFilter));
-            }
-
-            filtered.sort((a, b) => {
-                if (sortBy === 'dateCreated') {
-                    return new Date(b.dateCreated) - new Date(a.dateCreated);
-                }
-                return b[sortBy] - a[sortBy];
-            });
-
-            const monstersGrid = document.getElementById('monstersGrid');
-            monstersGrid.innerHTML = filtered.map(createMonsterCard).join('');
-        }
-
-        // Function to fetch monsters from Firebase
-        async function fetchMonsters() {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-
-                const monstersRef = collection(db, `users/${user.uid}/monsters`);
-                const q = query(monstersRef, orderBy('dateCreated', 'desc'));
-                const querySnapshot = await getDocs(q);
-                
-                currentMonsters = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                updateCollectionStats(currentMonsters);
-                filterAndSortMonsters();
-            } catch (error) {
-                console.error('Error fetching monsters:', error);
-                showError('Failed to load monsters. Please try again.');
-            }
-        }
-
-        // Function to show error message
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-
-        // Add event listeners for filters
-        document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
-        document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
-        document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
-
-        // Check authentication state
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                fetchMonsters();
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
-
-        // Handle dark mode toggle
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        const savedTheme = localStorage.getItem("theme");
-        
-        if (savedTheme === "dark") {
-            document.body.classList.add("dark-mode");
-        }
-
-        darkModeToggle.addEventListener("click", function() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-        });
-    // Monster generation code
+        // Monster generation constants
         const monsterTypes = [
             { type: 'Feral', hpMod: 1.0, apMod: 1.2, speedMod: 1.3 },
             { type: 'Fighter', hpMod: 1.2, apMod: 1.2, speedMod: 1.0 },
@@ -502,6 +248,140 @@
             `;
             monsterResult.style.display = 'block';
         }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Scanner functions
+        async function initializeScanner() {
+            try {
+                updateDebugMessage('Initializing scanner...');
+                
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera access is not supported by this browser');
+                }
+
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                
+                if (videoDevices.length === 0) {
+                    throw new Error('No camera found on device');
+                }
+
+                // Prefer back camera
+                const backCamera = videoDevices.find(device => 
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear'));
+                
+                selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
+                
+                updateDebugMessage('Scanner ready. Click "Start Camera" to begin.');
+                
+            } catch (err) {
+                console.error('Scanner initialization error:', err);
+                showError(err.message || 'Failed to initialize scanner');
+            }
+        }
+
+        async function startScanning() {
+            const videoElement = document.getElementById('interactive');
+            if (!videoElement) {
+                showError('Video element not found');
+                return;
+            }
+
+            try {
+                updateDebugMessage('Starting camera...');
+                document.getElementById('startButton').style.display = 'none';
+                videoElement.style.display = 'block';
+
+                await codeReader.decodeFromVideoDevice(
+                    selectedDeviceId,
+                    'video',
+                    (result, err) => {
+                        if (result) {
+                            updateDebugMessage('Barcode found: ' + result.text);
+                            stopScanning();
+                            generateMonster(result.text);
+                        }
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error('Scanning error:', err);
+                            updateDebugMessage('Scanning error: ' + err.message);
+                        }
+                    }
+                );
+
+                updateDebugMessage('Camera active - point at a barcode');
+
+            } catch (err) {
+                console.error('Scanning error:', err);
+                showError(err.message || 'Failed to start scanning');
+                resetUI();
+            }
+        }
+
+        function stopScanning() {
+            if (codeReader) {
+                codeReader.reset();
+                resetUI();
+            }
+        }
+
+        function resetUI() {
+            document.getElementById('startButton').style.display = 'block';
+            document.getElementById('interactive').style.display = 'none';
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeScanner();
+            
+            // Button click handler
+            const startButton = document.getElementById('startButton');
+            if (startButton) {
+                startButton.addEventListener('click', async () => {
+                    if (isIOS && isSafari) {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ 
+                                video: { facingMode: 'environment' } 
+                            });
+                            stream.getTracks().forEach(track => track.stop());
+                        } catch (err) {
+                            showError('Please allow camera access to scan barcodes');
+                            return;
+                        }
+                    }
+                    startScanning();
+                });
+            }
+        });
+
+        // Auth check
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Dark mode
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        });
     </script>
 </body>
 </html>
