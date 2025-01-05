@@ -10,7 +10,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -29,18 +29,19 @@
         const auth = getAuth(app); // Initialize Firebase Auth
 
         // Function to handle Firebase Authentication
-        function loginWithFirebase(email, password) {
-            signInWithEmailAndPassword(auth, email, password)
+        function loginWithFirebase(username, password) {
+            signInWithEmailAndPassword(auth, username, password)
                 .then((userCredential) => {
                     // Successful login
                     const user = userCredential.user;
                     console.log("User logged in:", user);
+                    localStorage.setItem("loggedInUser", JSON.stringify(user));  // Store user info in localStorage
                     window.location.href = 'profile.html'; // Redirect to the profile page
                 })
                 .catch((error) => {
                     // Handle errors and log them
                     console.error('Error during login:', error.code, error.message);
-                    alert('Invalid email or password!');
+                    alert('Invalid username or password!');
                 });
         }
 
@@ -68,11 +69,19 @@
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent default form submission
             
-            const email = document.getElementById('username').value; // Email input for username
+            const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
             // Call the Firebase login function
-            loginWithFirebase(email, password);
+            loginWithFirebase(username, password);
+        });
+
+        // Firebase Auth state check (for persistent login)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // If the user is already logged in, redirect to profile page
+                window.location.href = 'profile.html';
+            }
         });
     </script>
 </head>
@@ -86,8 +95,8 @@
 
         <h1>Login to Barcode Masters</h1>
         <form id="loginForm">
-            <label for="username">Email</label> <!-- Updated to Email -->
-            <input type="email" id="username" required>
+            <label for="username">Username</label>
+            <input type="text" id="username" required>
             
             <label for="password">Password</label>
             <input type="password" id="password" required>
