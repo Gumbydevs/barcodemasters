@@ -8,6 +8,9 @@
     <script src="assets/script.js" defer></script>
 </head>
 <body>
+    <!-- Dark Mode Toggle -->
+    <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
+
     <div class="login-container">
         <!-- Logo -->
         <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
@@ -52,6 +55,29 @@
             
             // Call the login function
             login(username, password);
+        });
+
+        // Dark Mode Toggle Functionality
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        // Check for saved dark mode preference in localStorage
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            body.classList.add('dark-mode');
+        }
+
+        // Toggle dark mode on button click
+        darkModeToggle.addEventListener('click', function() {
+            body.classList.toggle('dark-mode');
+            
+            // Save the dark mode preference in localStorage
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.textContent = '🌞'; // Change the button icon to light mode
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.textContent = '🌙'; // Change the button icon to dark mode
+            }
         });
     </script>
 </body>
