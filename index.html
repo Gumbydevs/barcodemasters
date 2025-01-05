@@ -11,7 +11,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -27,9 +27,53 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
-        
-        // Export the auth object to make it available outside the module
-        export const auth = getAuth(app);
+        const auth = getAuth(app); // Initialize Firebase Auth
+
+        // Handle dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+
+        // Check for stored theme preference
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+
+            // Save the theme preference
+            if (document.body.classList.contains("dark-mode")) {
+                localStorage.setItem("theme", "dark");
+            } else {
+                localStorage.removeItem("theme");
+            }
+        });
+
+        // Function to handle Firebase Authentication
+        function loginWithFirebase(username, password) {
+            signInWithEmailAndPassword(auth, username, password)
+                .then((userCredential) => {
+                    // Successful login
+                    const user = userCredential.user;
+                    console.log("User logged in:", user);
+                    window.location.href = 'profile.html'; // Redirect to the profile page
+                })
+                .catch((error) => {
+                    // Handle errors
+                    alert('Invalid username or password!');
+                });
+        }
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Call the Firebase login function
+            loginWithFirebase(username, password);
+        });
     </script>
 </head>
 <body>
@@ -56,55 +100,5 @@
     <footer>
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
-
-    <script type="module">
-        import { auth } from './index.html'; // Import the auth object from the module
-
-        // Handle dark mode toggle
-        const darkModeToggle = document.getElementById("darkModeToggle");
-
-        // Check for stored theme preference
-        const savedTheme = localStorage.getItem("theme");
-        if (savedTheme === "dark") {
-            document.body.classList.add("dark-mode");
-        }
-
-        darkModeToggle.addEventListener("click", function() {
-            document.body.classList.toggle("dark-mode");
-
-            // Save the theme preference
-            if (document.body.classList.contains("dark-mode")) {
-                localStorage.setItem("theme", "dark");
-            } else {
-                localStorage.removeItem("theme");
-            }
-        });
-
-        // Function to handle Firebase Authentication
-        function loginWithFirebase(username, password) {
-            auth.signInWithEmailAndPassword(username, password)
-                .then((userCredential) => {
-                    // Successful login
-                    const user = userCredential.user;
-                    console.log("User logged in:", user);
-                    window.location.href = 'profile.html'; // Redirect to the profile page
-                })
-                .catch((error) => {
-                    // Handle errors
-                    alert('Invalid username or password!');
-                });
-        }
-
-        // Handle login form submission
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            // Call the Firebase login function
-            loginWithFirebase(username, password);
-        });
-    </script>
 </body>
 </html>
