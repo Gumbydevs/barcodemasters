@@ -6,6 +6,29 @@
     <title>Barcode Masters - Login</title>
     <link rel="stylesheet" href="assets/styles.css">
     <script src="assets/script.js" defer></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+    </script>
 </head>
 <body>
     <!-- Dark Mode Toggle -->
@@ -53,22 +76,19 @@
             }
         });
 
-        // Sample user data
-        const users = [
-            { username: "player1", password: "password123", name: "Player One", wins: 5, losses: 3 },
-            { username: "player2", password: "password456", name: "Player Two", wins: 10, losses: 2 }
-        ];
-
-        // Function to simulate login
-        function login(username, password) {
-            const user = users.find(user => user.username === username && user.password === password);
-            if (user) {
-                // Store logged-in user in localStorage
-                localStorage.setItem('loggedInUser', JSON.stringify(user));
-                window.location.href = 'profile.html'; // Redirect to the profile page
-            } else {
-                alert('Invalid username or password!');
-            }
+        // Function to handle Firebase Authentication
+        function loginWithFirebase(username, password) {
+            auth.signInWithEmailAndPassword(username, password)
+                .then((userCredential) => {
+                    // Successful login
+                    const user = userCredential.user;
+                    console.log("User logged in:", user);
+                    window.location.href = 'profile.html'; // Redirect to the profile page
+                })
+                .catch((error) => {
+                    // Handle errors
+                    alert('Invalid username or password!');
+                });
         }
 
         // Handle login form submission
@@ -78,8 +98,8 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Call the login function
-            login(username, password);
+            // Call the Firebase login function
+            loginWithFirebase(username, password);
         });
     </script>
 </body>
