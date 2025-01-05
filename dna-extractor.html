@@ -101,6 +101,25 @@
             font-size: 1rem;
             margin: 1rem 0;
             transition: background-color 0.3s;
+            -webkit-tap-highlight-color: transparent; /* For mobile */
+            touch-action: manipulation; /* For better mobile touch handling */
+            user-select: none;
+            position: relative; /* Ensure it's above other elements */
+            z-index: 100; /* Make sure button is clickable */
+        }
+
+        .scan-button:active {
+            background: #3d8b40; /* Darker shade for feedback */
+            transform: scale(0.98); /* Slight scale for feedback */
+        }
+
+        /* Dark mode specific styles */
+        body.dark-mode .scan-button {
+            background: #3b8d3b;
+        }
+
+        body.dark-mode .scan-button:active {
+            background: #2d6d2d;
         }
 
         .scan-button:hover {
@@ -142,7 +161,7 @@
             <div class="scanner-overlay"></div>
         </div>
 
-        <button class="scan-button" id="startButton">Start Scanning</button>
+        <button class="scan-button" id="startButton" onclick="handleScanButtonClick()">Start Scanning</button>
         
         <div class="scanning-feedback" id="scanningFeedback">
             Preparing scanner...
@@ -227,85 +246,106 @@
 
         async function initializeScanner() {
             try {
-                // Show initializing message
                 updateDebugMessage('Initializing scanner...');
                 
-                // Initialize code reader
-                codeReader = new ZXing.BrowserMultiFormatReader();
+                // Initialize code reader with specific formats for better performance
+                codeReader = new ZXing.BrowserMultiFormatReader(null, {
+                    possibleFormats: [
+                        ZXing.BarcodeFormat.QR_CODE,
+                        ZXing.BarcodeFormat.EAN_13,
+                        ZXing.BarcodeFormat.EAN_8,
+                        ZXing.BarcodeFormat.UPC_A,
+                        ZXing.BarcodeFormat.UPC_E
+                    ]
+                });
                 
+                // Check for media devices support
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera access is not supported by this browser');
+                }
+
                 // List available devices
-                const videoInputDevices = await codeReader.listVideoInputDevices();
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 
-                // Update camera selection dropdown
-                const cameraSelect = document.getElementById('cameraSelect');
-                cameraSelect.innerHTML = videoInputDevices.map(device => 
-                    `<option value="${device.deviceId}">${device.label || `Camera ${device.deviceId}`}</option>`
-                ).join('');
+                if (videoDevices.length === 0) {
+                    throw new Error('No camera found on device');
+                }
+
+                // Prefer back camera on mobile
+                const backCamera = videoDevices.find(device => 
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear'));
                 
-                // Set default device
-                selectedDeviceId = videoInputDevices[0]?.deviceId;
+                selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
                 
-                // Add event listeners
-                document.getElementById('startButton').addEventListener('click', () => {
-                    updateDebugMessage('Start button clicked...');
-                    startScanning();
-                });
+                updateDebugMessage('Scanner ready. Click "Start Camera" to begin scanning.');
                 
-                cameraSelect.addEventListener('change', (event) => {
-                    selectedDeviceId = event.target.value;
-                });
-                
-                updateDebugMessage('Scanner initialized. Ready to scan!');
             } catch (err) {
-                console.error(err);
-                showError('Failed to initialize scanner: ' + err.message);
-                updateDebugMessage('Scanner initialization failed. Please check camera permissions.');
+                console.error('Scanner initialization error:', err);
+                showError(err.message || 'Failed to initialize scanner');
+                updateDebugMessage('Scanner initialization failed. ' + err.message);
             }
         }
 
         async function startScanning() {
-            updateDebugMessage('Starting scanner...');
+            updateDebugMessage('Starting camera...');
             
             try {
                 // Hide the start button while scanning
                 document.getElementById('startButton').style.display = 'none';
                 
                 // Show the video element
-                const videoElement = document.querySelector('video');
+                const videoElement = document.getElementById('video');
                 videoElement.style.display = 'block';
                 
-                updateDebugMessage('Accessing camera...');
+                // For iOS Safari, we need to handle things slightly differently
+                if (isIOS && isSafari) {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    });
+                    videoElement.srcObject = stream;
+                }
                 
-                const result = await codeReader.decodeFromVideoDevice(
+                updateDebugMessage('Starting barcode detection...');
+                
+                await codeReader.decodeFromVideoDevice(
                     selectedDeviceId, 
                     'video', 
                     (result, err) => {
                         if (result) {
                             // Success! We found a barcode
-                            updateDebugMessage('Barcode detected: ' + result.text);
-                            codeReader.reset(); // Stop scanning
-                            document.getElementById('startButton').style.display = 'block'; // Show button again
-                            videoElement.style.display = 'none'; // Hide video
-                            
-                            // Generate and save monster
+                            updateDebugMessage('Barcode found: ' + result.text);
+                            stopScanning();
                             generateMonster(result.text);
                         }
                         
                         if (err && !(err instanceof ZXing.NotFoundException)) {
-                            console.error(err);
+                            console.error('Scanning error:', err);
                             updateDebugMessage('Scanning error: ' + err.message);
-                            showError('Error during scanning: ' + err.message);
                         }
                     }
                 );
                 
-                updateDebugMessage('Scanner started successfully. Point camera at a barcode.');
+                updateDebugMessage('Scanner active - point camera at a barcode');
                 
             } catch (err) {
-                console.error(err);
+                console.error('Scanning error:', err);
                 document.getElementById('startButton').style.display = 'block';
-                showError('Failed to start scanning: ' + err.message);
-                updateDebugMessage('Failed to start scanner. Please check camera permissions.');
+                showError(err.message || 'Failed to start scanning');
+                updateDebugMessage('Failed to start scanner: ' + err.message);
+            }
+        }
+
+        function stopScanning() {
+            if (codeReader) {
+                codeReader.reset();
+                document.getElementById('startButton').style.display = 'block';
+                document.getElementById('video').style.display = 'none';
             }
         }
 
@@ -473,8 +513,57 @@
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
         });
 
-        // Initialize scanner when page loads
-        window.addEventListener('load', initializeScanner);
+        // iOS Safari specific check
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        // Function to request camera permissions explicitly
+        async function requestCameraPermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream right away
+                return true;
+            } catch (err) {
+                console.error('Camera permission error:', err);
+                showError('Please allow camera access to scan barcodes');
+                return false;
+            }
+        }
+
+        // Handle scan button click with permission check
+        async function handleScanButtonClick() {
+            updateDebugMessage('Button clicked');
+            
+            // For iOS Safari, request permission first
+            if (isIOS && isSafari) {
+                const hasPermission = await requestCameraPermission();
+                if (!hasPermission) return;
+            }
+            
+            startScanning();
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded - initializing...');
+            
+            const button = document.getElementById('startButton');
+            
+            // Add multiple event listeners for better mobile support
+            button.addEventListener('click', handleScanButtonClick);
+            button.addEventListener('touchend', function(e) {
+                e.preventDefault(); // Prevent double-firing on mobile
+                handleScanButtonClick();
+            });
+            
+            initializeScanner();
+        });
     </script>
 </body>
 </html>
