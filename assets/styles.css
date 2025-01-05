@@ -74,6 +74,7 @@ button {
   cursor: pointer;
   transition: all 0.3s ease-in-out;
   margin: 5px 0;
+  align-self: center; /* Ensure the button aligns with the container */
 }
 
 button:hover {
@@ -91,6 +92,8 @@ button:hover {
   font-size: 18px;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
+  margin: 5px 0;
+  align-self: center; /* Ensures logout button is centered as well */
 }
 
 #logoutButton:hover {
