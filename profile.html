@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Profile</title>
     <link rel="stylesheet" href="assets/styles.css">
-    <script src="assets/script.js" defer></script>
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Modules) -->
     <script type="module">
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Your Firebase config
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -24,80 +25,35 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app); // Initialize Firebase Auth
 
-        // Variable to track if the page content has been displayed
-        let pageDisplayed = false;
-
-        // Check if user is authenticated
+        // Firebase Auth state check (for persistent login)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is authenticated
-                console.log("Authenticated user:", user);
-
-                // Only display the content if the page hasn't been displayed yet
-                if (!pageDisplayed) {
-                    // Display user data
-                    document.getElementById('playerName').textContent = `Player Name: ${user.displayName || 'John Doe'}`;
-                    document.getElementById('winsLosses').textContent = `Wins: 10 | Losses: 5`;  // Placeholder until you fetch actual data
-                    document.getElementById('playerInfo').textContent = `More info about ${user.displayName || 'John Doe'}...`;
-                    pageDisplayed = true; // Prevent multiple updates
-                }
+                // If the user is logged in, display their info
+                document.getElementById("userName").textContent = user.email;
+                document.getElementById("profileInfo").style.display = "block";
             } else {
-                // User is not authenticated, redirect to login
+                // If the user is not logged in, redirect to the login page
                 window.location.href = 'index.html';
             }
         });
 
-        // Log out function
-        function logOut() {
+        // Function to handle logout
+        function logout() {
             signOut(auth)
                 .then(() => {
-                    console.log('User logged out');
-                    // Clear session or any local storage data if needed
-                    localStorage.removeItem('loggedInUser');
-                    window.location.href = 'index.html'; // Redirect to login page
+                    // Sign-out successful
+                    localStorage.removeItem("loggedInUser");  // Remove user info from localStorage
+                    window.location.href = 'index.html';  // Redirect to login page
                 })
                 .catch((error) => {
-                    console.error('Error during logout:', error);
+                    // An error happened
+                    console.error('Error during sign-out:', error.code, error.message);
                 });
         }
-    </script>
-</head>
-<body>
-    <!-- Dark Mode Toggle -->
-    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
-    <div class="profile-container">
-        <!-- Logo -->
-        <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
-
-        <!-- Player Info -->
-        <div class="profile-info">
-            <h2 id="playerName">Player Name: John Doe</h2>
-            <p id="winsLosses">Wins: 10 | Losses: 5</p>
-            <p id="playerInfo">More info about the player...</p>
-        </div>
-
-        <!-- Buttons -->
-        <div class="profile-buttons">
-            <button onclick="window.location.href='dna_extractor.html'">DNA Extractor</button>
-            <button onclick="window.location.href='monster_collection.html'">Monster Collection</button>
-            <button onclick="window.location.href='train_monster.html'">Train Monster</button>
-            <button onclick="window.location.href='pvp_battle.html'">PVP Battle</button>
-            <button onclick="window.location.href='help.html'">Help</button>
-        </div>
-
-        <!-- Log Out Button -->
-        <button onclick="logOut()" class="logout-button">Log Out</button>
-
-        <!-- Version Number -->
-        <footer>
-            <p>Version: <span id="versionNumber">1.0.0</span></p>
-        </footer>
-    </div>
-
-    <script>
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
 
@@ -118,51 +74,30 @@
             }
         });
     </script>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
-    <style>
-        /* Dark Mode Styling */
-        body.dark-mode {
-            background-color: #121212;
-            color: white;
-        }
+    <div class="profile-container">
+        <h1>Welcome to Barcode Masters</h1>
 
-        /* Button Styles */
-        button {
-            padding: 12px 24px;
-            font-size: 16px;
-            margin: 10px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-        }
+        <!-- User Profile Information -->
+        <div id="profileInfo" style="display:none;">
+            <h2>User Information</h2>
+            <p><strong>Email:</strong> <span id="userName"></span></p>
 
-        /* Button hover effect */
-        button:hover {
-            background-color: #45a049;
-        }
+            <!-- Logout Button -->
+            <button onclick="logout()" class="btn-logout">Log Out</button>
+        </div>
 
-        /* Dark mode button text color */
-        body.dark-mode button {
-            color: white;
-            background-color: #333;
-        }
+        <!-- If user is not logged in, this message will be shown -->
+        <p id="notLoggedInMessage" style="display:none;">You are not logged in! Please log in first.</p>
+    </div>
 
-        /* Dark mode button hover effect */
-        body.dark-mode button:hover {
-            background-color: #555;
-        }
-
-        /* Log Out Button */
-        .logout-button {
-            background-color: #f44336; /* Red color */
-            margin-top: 20px;
-        }
-
-        .logout-button:hover {
-            background-color: #e53935; /* Darker red on hover */
-        }
-    </style>
+    <!-- Version Number -->
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.0</span></p>
+    </footer>
 </body>
 </html>
