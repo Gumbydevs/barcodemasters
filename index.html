@@ -27,7 +27,9 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
-        const auth = getAuth(app);
+        
+        // Export the auth object to make it available outside the module
+        export const auth = getAuth(app);
     </script>
 </head>
 <body>
@@ -55,7 +57,9 @@
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
 
-    <script>
+    <script type="module">
+        import { auth } from './index.html'; // Import the auth object from the module
+
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
 
