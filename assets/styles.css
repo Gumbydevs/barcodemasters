@@ -3,10 +3,10 @@
   position: fixed;
   top: 10px;
   right: 10px;
-  background-color: #888;  /* Grey background */
-  border: 2px solid #666;  /* Darker grey border */
-  padding: 6px;  /* Padding around the icon */
-  border-radius: 4px;  /* Slight rounded corners */
+  background-color: #888;  /* Light gray background */
+  border: 2px solid #666;  /* Darker gray border */
+  padding: 6px;
+  border-radius: 4px;
   cursor: pointer;
   z-index: 9999;
   display: flex;
@@ -17,12 +17,10 @@
   transition: all 0.3s ease;
 }
 
-/* On hover, the background becomes darker */
 #dark-mode-toggle:hover {
-  background-color: #555;
+  background-color: #555;  /* Darker gray on hover */
 }
 
-/* For dark mode, make sure the button stands out */
 body.dark-mode #dark-mode-toggle {
   background-color: #666;
   border-color: #444;
