@@ -9,7 +9,7 @@
 </head>
 <body>
     <!-- Dark Mode Toggle -->
-    <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
     <div class="login-container">
         <!-- Logo -->
@@ -27,7 +27,32 @@
         </form>
     </div>
 
+    <!-- Version Number -->
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.0</span></p>
+    </footer>
+
     <script>
+        // Handle dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+
+        // Check for stored theme preference
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+
+            // Save the theme preference
+            if (document.body.classList.contains("dark-mode")) {
+                localStorage.setItem("theme", "dark");
+            } else {
+                localStorage.removeItem("theme");
+            }
+        });
+
         // Sample user data
         const users = [
             { username: "player1", password: "password123", name: "Player One", wins: 5, losses: 3 },
@@ -55,29 +80,6 @@
             
             // Call the login function
             login(username, password);
-        });
-
-        // Dark Mode Toggle Functionality
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const body = document.body;
-
-        // Check for saved dark mode preference in localStorage
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            body.classList.add('dark-mode');
-        }
-
-        // Toggle dark mode on button click
-        darkModeToggle.addEventListener('click', function() {
-            body.classList.toggle('dark-mode');
-            
-            // Save the dark mode preference in localStorage
-            if (body.classList.contains('dark-mode')) {
-                localStorage.setItem('darkMode', 'enabled');
-                darkModeToggle.textContent = '🌞'; // Change the button icon to light mode
-            } else {
-                localStorage.setItem('darkMode', 'disabled');
-                darkModeToggle.textContent = '🌙'; // Change the button icon to dark mode
-            }
         });
     </script>
 </body>

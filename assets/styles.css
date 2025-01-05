@@ -1,64 +1,90 @@
-/* Base styles for the page */
+/* General styles for both light and dark modes */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fff;
+  color: #000;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 body.dark-mode {
-  background-color: #333;
+  background-color: #2c2c2c;
   color: #fff;
 }
 
-/* Centering the login container */
-.login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+h1 {
   text-align: center;
-}
-
-.logo {
-  max-width: 80%; /* Scale logo responsively */
-  height: auto;
+  font-size: 24px;
   margin-bottom: 20px;
 }
 
-/* Input fields and buttons */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  max-width: 300px;
+  width: 100%;
+}
+
+label {
+  font-size: 14px;
+  text-align: left;
+  width: 100%;
+}
+
 input {
-  margin-bottom: 10px;
   padding: 10px;
   width: 100%;
-  max-width: 300px;
-  font-size: 16px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 5px;
+  font-size: 16px;
 }
 
 button {
   padding: 10px;
-  font-size: 16px;
-  cursor: pointer;
   background-color: #4CAF50;
   color: white;
   border: none;
+  border-radius: 5px;
+  cursor: pointer;
   width: 100%;
-  max-width: 300px;
-  border-radius: 4px;
+  font-size: 16px;
 }
 
 button:hover {
   background-color: #45a049;
 }
 
-/* Dark mode toggle button */
-.dark-mode-toggle {
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.logo {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+  max-width: 200px;
+}
+
+footer {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 14px;
+}
+
+#darkModeToggle {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -68,18 +94,12 @@ button:hover {
   cursor: pointer;
 }
 
-/* Responsive design for mobile */
-@media screen and (max-width: 600px) {
+@media (max-width: 768px) {
   .login-container {
-      padding: 10px;
-  }
-  
-  .logo {
-      max-width: 80%;
+      padding: 15px;
   }
 
-  input, button {
+  button {
       font-size: 14px;
-      padding: 8px;
   }
 }
