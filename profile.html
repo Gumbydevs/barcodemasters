@@ -54,7 +54,8 @@
             signOut(auth)
                 .then(() => {
                     console.log('User logged out');
-                    localStorage.removeItem('loggedInUser'); // Clear user data from localStorage
+                    // Clear session or any local storage data if needed
+                    localStorage.removeItem('loggedInUser');
                     window.location.href = 'index.html'; // Redirect to login page
                 })
                 .catch((error) => {
