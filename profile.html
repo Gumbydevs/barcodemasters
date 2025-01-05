@@ -5,73 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Profile</title>
     <link rel="stylesheet" href="assets/styles.css">
+    <script src="assets/script.js" defer></script>
 </head>
 <body>
     <div class="profile-container">
-        <!-- Logo Section -->
+        <!-- Display the logo -->
         <div class="logo-container">
             <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo" class="logo">
         </div>
+        
+        <h2>Welcome, <span id="username">Player</span></h2>
 
-        <!-- Random Tip / Lore Section -->
+        <!-- Game Tip -->
         <div class="tip-container">
-            <p id="randomTip"></p>
+            <p id="random-tip">Tip: Always train your monsters to increase their strength!</p>
         </div>
 
-        <!-- Profile Info Section -->
-        <div class="profile-info">
-            <h2>Welcome, <span id="usernameDisplay"></span></h2>
-            <p><strong>Wins:</strong> <span id="winsDisplay"></span></p>
-            <p><strong>Losses:</strong> <span id="lossesDisplay"></span></p>
-        </div>
-
-        <!-- Navigation Buttons -->
+        <!-- Navigation buttons -->
         <div class="navigation-buttons">
-            <button onclick="window.location.href = 'dnaExtractor.html';">DNA Extractor</button>
-            <button onclick="window.location.href = 'monsterCollection.html';">Monster Collection</button>
-            <button onclick="window.location.href = 'trainMonster.html';">Train Monster</button>
-            <button onclick="window.location.href = 'pvpBattle.html';">PVP Battle</button>
-            <button onclick="window.location.href = 'help.html';">Help</button>
+            <button onclick="window.location.href='dna_extractor.html'">DNA Extractor</button>
+            <button onclick="window.location.href='monster_collection.html'">Monster Collection</button>
+            <button onclick="window.location.href='train_monster.html'">Train Monster</button>
+            <button onclick="window.location.href='pvp_battle.html'">PVP Battle</button>
+            <button onclick="window.location.href='help.html'">Help</button>
         </div>
 
-        <!-- Logout Button -->
-        <button id="logoutButton">Logout</button>
+        <!-- Version number display -->
+        <footer>
+            <span id="version">Version: 1.0.0</span>
+        </footer>
+
+        <!-- Logout button -->
+        <button onclick="logout()">Logout</button>
     </div>
 
     <script>
-        // Retrieve logged-in user data from localStorage
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-        
-        if (loggedInUser) {
-            document.getElementById('usernameDisplay').textContent = loggedInUser.name;
-            document.getElementById('winsDisplay').textContent = loggedInUser.wins;
-            document.getElementById('lossesDisplay').textContent = loggedInUser.losses;
-        } else {
-            window.location.href = 'index.html'; // Redirect to login if no user is logged in
-        }
-
-        // Handle logout
-        document.getElementById('logoutButton').addEventListener('click', function() {
-            localStorage.removeItem('loggedInUser');
-            window.location.href = 'index.html'; // Redirect to login page
-        });
-
-        // Randomizing Tip / Lore
-        const tips = [
-            "Did you know? Scanning barcodes can unlock different monster types based on their ID!",
-            "Tip: Collect monsters from different environments for a better team!",
-            "Lore: The Barcode Masters are a secret organization studying the genetics of monsters.",
-            "Fun Fact: Your monster's strength is influenced by how many battles it wins!",
-            "Did you know? Every barcode has a hidden rarity tied to your monster's abilities."
-        ];
-
-        // Randomly select a tip from the array and display it
-        function displayRandomTip() {
-            const randomIndex = Math.floor(Math.random() * tips.length);
-            document.getElementById('randomTip').textContent = tips[randomIndex];
-        }
-
-        displayRandomTip();
+        // Display version number dynamically
+        const versionNumber = "1.0.0"; // Update this version number in one place
+        document.getElementById('version').textContent = `Version: ${versionNumber}`;
     </script>
 </body>
 </html>

@@ -15,3 +15,14 @@ function login(username, password) {
       alert('Invalid username or password!');
   }
 }
+
+// Function to update the version number dynamically
+function updateVersionNumber() {
+    const versionNumber = "1.0.0";  // Change this version in one place
+    document.getElementById('version').textContent = `Version: ${versionNumber}`;
+}
+
+// Run the version update script on profile page load
+if (window.location.pathname.includes('profile.html')) {
+    updateVersionNumber();
+}
