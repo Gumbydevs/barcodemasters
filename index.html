@@ -30,11 +30,12 @@
 
         // Function to handle Firebase Authentication
         function loginWithFirebase(username, password) {
+            console.log("Attempting to log in with", username, password);  // Debugging login attempt
             signInWithEmailAndPassword(auth, username, password)
                 .then((userCredential) => {
                     // Successful login
                     const user = userCredential.user;
-                    console.log("User logged in:", user);
+                    console.log("Login successful:", user);  // Debugging successful login
                     localStorage.setItem("loggedInUser", JSON.stringify(user));  // Store user info in localStorage
                     window.location.href = 'profile.html'; // Redirect to the profile page
                 })
@@ -80,6 +81,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // If the user is already logged in, redirect to profile page
+                console.log("User already logged in:", user);  // Debugging current user state
                 window.location.href = 'profile.html';
             }
         });
