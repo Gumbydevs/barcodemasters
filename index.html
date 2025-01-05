@@ -28,6 +28,22 @@
         const analytics = getAnalytics(app);
         const auth = getAuth(app); // Initialize Firebase Auth
 
+        // Function to handle Firebase Authentication
+        function loginWithFirebase(username, password) {
+            signInWithEmailAndPassword(auth, username, password)
+                .then((userCredential) => {
+                    // Successful login
+                    const user = userCredential.user;
+                    console.log("User logged in:", user);
+                    window.location.href = 'profile.html'; // Redirect to the profile page
+                })
+                .catch((error) => {
+                    // Handle errors and log them
+                    console.error('Error during login:', error.code, error.message);
+                    alert('Invalid username or password!');
+                });
+        }
+
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
 
@@ -47,21 +63,6 @@
                 localStorage.removeItem("theme");
             }
         });
-
-        // Function to handle Firebase Authentication
-        function loginWithFirebase(username, password) {
-            signInWithEmailAndPassword(auth, username, password)
-                .then((userCredential) => {
-                    // Successful login
-                    const user = userCredential.user;
-                    console.log("User logged in:", user);
-                    window.location.href = 'profile.html'; // Redirect to the profile page
-                })
-                .catch((error) => {
-                    // Handle errors
-                    alert('Invalid username or password!');
-                });
-        }
 
         // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(event) {
