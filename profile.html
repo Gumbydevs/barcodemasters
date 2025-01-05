@@ -26,16 +26,23 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // Variable to track if the page content has been displayed
+        let pageDisplayed = false;
+
         // Check if user is authenticated
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // User is authenticated
                 console.log("Authenticated user:", user);
 
-                // Display user data
-                document.getElementById('playerName').textContent = `Player Name: ${user.displayName || 'John Doe'}`;
-                document.getElementById('winsLosses').textContent = `Wins: 10 | Losses: 5`;  // Placeholder until you fetch actual data
-                document.getElementById('playerInfo').textContent = `More info about ${user.displayName || 'John Doe'}...`;
+                // Only display the content if the page hasn't been displayed yet
+                if (!pageDisplayed) {
+                    // Display user data
+                    document.getElementById('playerName').textContent = `Player Name: ${user.displayName || 'John Doe'}`;
+                    document.getElementById('winsLosses').textContent = `Wins: 10 | Losses: 5`;  // Placeholder until you fetch actual data
+                    document.getElementById('playerInfo').textContent = `More info about ${user.displayName || 'John Doe'}...`;
+                    pageDisplayed = true; // Prevent multiple updates
+                }
             } else {
                 // User is not authenticated, redirect to login
                 window.location.href = 'index.html';
@@ -109,18 +116,6 @@
                 localStorage.removeItem("theme");
             }
         });
-
-        // Display user data from localStorage
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-
-        if (loggedInUser) {
-            document.getElementById('playerName').textContent = `Player Name: ${loggedInUser.email || 'Unknown'}`;
-            document.getElementById('winsLosses').textContent = `Wins: 10 | Losses: 5`;  // Replace with actual win/loss data if available
-            document.getElementById('playerInfo').textContent = `More info about ${loggedInUser.email || 'Unknown'}...`;
-        } else {
-            // If no user is logged in, redirect to login page
-            window.location.href = 'index.html';
-        }
     </script>
 
     <style>
