@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Masters - DNA Extractor</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <style>
+        .dna-extractor-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .scanning-feedback {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(0, 255, 0, 0.1);
+            display: none;
+        }
+
+        .monster-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .monster-image-placeholder {
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin: 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .monster-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #interactive.viewport {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        #interactive.viewport > canvas, #interactive.viewport > video {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .scanner-overlay {
+            display: none;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+
+        .scan-button {
+            padding: 1rem 2rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 1rem 0;
+            transition: background-color 0.3s;
+        }
+
+        .scan-button:hover {
+            background: #45a049;
+        }
+
+        #scan-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        /* Dark mode specific styles */
+        body.dark-mode .scan-button {
+            background: #3b8d3b;
+        }
+
+        body.dark-mode .scan-button:hover {
+            background: #357a35;
+        }
+    </style>
+</head>
+<body>
+    <!-- Dark Mode Toggle -->
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="dna-extractor-container">
+        <div class="logo-container">
+            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+        </div>
+
+        <h1>DNA Extractor</h1>
+        
+        <div id="interactive" class="viewport">
+            <video autoplay="true" preload="auto" src="" muted="true" playsinline="true"></video>
+            <canvas class="drawingBuffer"></canvas>
+            <div class="scanner-overlay"></div>
+        </div>
+
+        <button class="scan-button" id="startButton">Start Scanning</button>
+        
+        <div class="scanning-feedback" id="scanningFeedback">
+            Preparing scanner...
+        </div>
+
+        <div class="monster-result" id="monsterResult">
+            <h2 id="monsterName">Monster Name</h2>
+            
+            <div class="monster-image-placeholder" id="monsterImage">
+                AI generated appearance placeholder
+            </div>
+
+            <span class="monster-type-badge" id="monsterType">Type</span>
+            
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <span>Level</span>
+                    <span id="monsterLevel">1</span>
+                </div>
+                <div class="stat-item">
+                    <span>Experience</span>
+                    <span id="monsterXP">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>HP</span>
+                    <span id="monsterHP">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>AP</span>
+                    <span id="monsterAP">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Speed</span>
+                    <span id="monsterSpeed">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <p id="errorMessage" style="color: red; display: none;"></p>
+    </div>
+
+    <!-- Version Number -->
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.0</span></p>
+    </footer>
+
+    <!-- Firebase SDK (Modules) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Initialize scanner
+        let codeReader;
+        let selectedDeviceId;
+
+        async function initializeScanner() {
+            codeReader = new ZXing.BrowserMultiFormatReader();
+            try {
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+                selectedDeviceId = videoInputDevices[0].deviceId;
+                
+                document.getElementById('startButton').addEventListener('click', () => {
+                    startScanning();
+                });
+            } catch (err) {
+                console.error(err);
+                showError('Failed to initialize scanner. Please check camera permissions.');
+            }
+        }
+
+        async function startScanning() {
+            try {
+                const result = await codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
+                    if (result) {
+                        // Here we'll add the monster generation logic
+                        console.log('Barcode found:', result.text);
+                        document.getElementById('result-text').textContent = result.text;
+                        document.getElementById('scan-result').style.display = 'block';
+                        
+                        // Generate and save monster
+                        generateMonster(result.text);
+                    }
+                    if (err && !(err instanceof ZXing.NotFoundException)) {
+                        console.error(err);
+                        showError('Error during scanning.');
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                showError('Failed to start scanning. Please check camera permissions.');
+            }
+        }
+
+        // Feedback messages for scanning process
+        const scanningMessages = [
+            "Scanning for DNA...",
+            "DNA sequence detected!",
+            "Analyzing genetic structure...",
+            "Extracting monster DNA...",
+            "Synthesizing creature...",
+            "Monster creation successful!"
+        ];
+
+        let currentMessageIndex = 0;
+        let feedbackInterval;
+
+        function updateScanningFeedback() {
+            const feedbackElement = document.getElementById('scanningFeedback');
+            feedbackElement.style.display = 'block';
+            feedbackElement.textContent = scanningMessages[currentMessageIndex];
+            currentMessageIndex = (currentMessageIndex + 1) % scanningMessages.length;
+        }
+
+        function startFeedbackMessages() {
+            currentMessageIndex = 0;
+            updateScanningFeedback();
+            feedbackInterval = setInterval(updateScanningFeedback, 1000);
+        }
+
+        function stopFeedbackMessages() {
+            clearInterval(feedbackInterval);
+        }
+
+        // Monster types with their base stat modifiers
+        const monsterTypes = [
+            { type: 'Feral', hpMod: 1.0, apMod: 1.2, speedMod: 1.3 },
+            { type: 'Fighter', hpMod: 1.2, apMod: 1.2, speedMod: 1.0 },
+            { type: 'Caster', hpMod: 0.8, apMod: 1.4, speedMod: 1.0 },
+            { type: 'Ranged', hpMod: 0.9, apMod: 1.3, speedMod: 1.1 },
+            { type: 'Tank', hpMod: 1.5, apMod: 0.8, speedMod: 0.7 }
+        ];
+
+        // Random name generation (simplified version)
+        const namePrefix = ['Shadow', 'Flame', 'Frost', 'Storm', 'Terra', 'Cosmic', 'Ancient', 'Mystic', 'Crystal', 'Dragon'];
+        const nameSuffix = ['fang', 'claw', 'wing', 'heart', 'soul', 'spirit', 'blade', 'strike', 'guard', 'scale'];
+
+        function generateMonsterName() {
+            const prefix = namePrefix[Math.floor(Math.random() * namePrefix.length)];
+            const suffix = nameSuffix[Math.floor(Math.random() * nameSuffix.length)];
+            return `${prefix}${suffix}`;
+        }
+
+        // Function to generate seeded random number
+        function seededRandom(seed) {
+            const x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        // Function to generate monster from barcode
+        async function generateMonster(barcode) {
+            startFeedbackMessages();
+
+            // Create a hash from the barcode for seeding
+            let seed = 0;
+            for (let i = 0; i < barcode.length; i++) {
+                seed = ((seed << 5) - seed) + barcode.charCodeAt(i);
+                seed = seed & seed; // Convert to 32-bit integer
+            }
+
+            // Generate base stats using the seed
+            const baseHP = Math.floor(seededRandom(seed) * 50) + 50; // 50-100
+            const baseAP = Math.floor(seededRandom(seed + 1) * 30) + 20; // 20-50
+            const baseSpeed = Math.floor(seededRandom(seed + 2) * 40) + 30; // 30-70
+
+            // Determine level (with rare chances for higher levels)
+            const levelRoll = seededRandom(seed + 3);
+            let level = 1;
+            if (levelRoll > 0.95) level = 3;
+            else if (levelRoll > 0.85) level = 2;
+
+            // Select monster type
+            const typeIndex = Math.floor(seededRandom(seed + 4) * monsterTypes.length);
+            const monsterType = monsterTypes[typeIndex];
+
+            // Apply type modifiers and level bonuses
+            const levelMultiplier = 1 + (level - 1) * 0.3; // 30% increase per level
+            const monster = {
+                id: Date.now().toString(),
+                name: generateMonsterName(),
+                barcode: barcode,
+                type: monsterType.type,
+                level: level,
+                experience: 0,
+                hp: Math.floor(baseHP * monsterType.hpMod * levelMultiplier),
+                ap: Math.floor(baseAP * monsterType.apMod * levelMultiplier),
+                speed: Math.floor(baseSpeed * monsterType.speedMod * levelMultiplier),
+                dateCreated: new Date().toISOString()
+            };
+
+            // Display monster info
+            document.getElementById('monsterName').textContent = monster.name;
+            document.getElementById('monsterType').textContent = monster.type;
+            document.getElementById('monsterLevel').textContent = monster.level;
+            document.getElementById('monsterXP').textContent = monster.experience;
+            document.getElementById('monsterHP').textContent = monster.hp;
+            document.getElementById('monsterAP').textContent = monster.ap;
+            document.getElementById('monsterSpeed').textContent = monster.speed;
+
+            // Show monster result container
+            document.getElementById('monsterResult').style.display = 'block';
+
+            // Save to Firebase
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    await setDoc(doc(collection(db, `users/${user.uid}/monsters`), monster.id), monster);
+                    console.log('Monster saved successfully!');
+                    stopFeedbackMessages();
+                    document.getElementById('scanningFeedback').textContent = 'Monster successfully added to your collection!';
+                }
+            } catch (error) {
+                console.error('Error saving monster:', error);
+                showError('Failed to save monster. Please try again.');
+                stopFeedbackMessages();
+            }
+        }
+
+        // Function to show error message
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Handle dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        });
+
+        // Initialize scanner when page loads
+        window.addEventListener('load', initializeScanner);
+    </script>
+</body>
+</html>
