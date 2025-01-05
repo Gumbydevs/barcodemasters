@@ -20,6 +20,9 @@
             padding: 1rem;
             box-sizing: border-box;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .profile-layout {
@@ -95,14 +98,17 @@
             text-align: center;
             max-width: 600px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
         }
 
         .navigation-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            width: 100%;
+            width: 90%;
+            max-width: 1000px;
             padding: 1rem;
+            margin: 0 auto;
+            grid-template-columns: repeat(4, 1fr);
         }
 
         .nav-button {
@@ -154,6 +160,34 @@
             border-color: rgba(0, 0, 0, 0.3);
         }
 
+        /* Desktop Specific Styles */
+        @media screen and (min-width: 1024px) {
+            .navigation-grid {
+                grid-template-columns: repeat(4, 1fr);
+                grid-template-rows: repeat(2, auto);
+                max-width: 800px;
+                margin: 2rem auto;
+            }
+
+            .nav-button {
+                min-width: 150px;
+            }
+
+            /* Position logout button in the center of the second row */
+            .nav-button:last-child {
+                grid-column: 2 / 4;
+            }
+        }
+
+        /* Tablet styles */
+        @media (max-width: 1023px) and (min-width: 769px) {
+            .navigation-grid {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 700px;
+            }
+        }
+
+        /* Mobile styles */
         @media (max-width: 768px) {
             .profile-layout {
                 flex-direction: column;
