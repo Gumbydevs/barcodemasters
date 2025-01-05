@@ -134,119 +134,12 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-        // Monster generation constants
-        const monsterTypes = [
-            { type: 'Feral', hpMod: 1.0, apMod: 1.2, speedMod: 1.3 },
-            { type: 'Fighter', hpMod: 1.2, apMod: 1.2, speedMod: 1.0 },
-            { type: 'Caster', hpMod: 0.8, apMod: 1.4, speedMod: 1.0 },
-            { type: 'Ranged', hpMod: 0.9, apMod: 1.3, speedMod: 1.1 },
-            { type: 'Tank', hpMod: 1.5, apMod: 0.8, speedMod: 0.7 }
-        ];
-
-        const namePrefix = ['Shadow', 'Flame', 'Frost', 'Storm', 'Terra', 'Cosmic', 'Ancient', 'Mystic', 'Crystal', 'Dragon'];
-        const nameSuffix = ['fang', 'claw', 'wing', 'heart', 'soul', 'spirit', 'blade', 'strike', 'guard', 'scale'];
-
-        function generateMonsterName() {
-            const prefix = namePrefix[Math.floor(Math.random() * namePrefix.length)];
-            const suffix = nameSuffix[Math.floor(Math.random() * nameSuffix.length)];
-            return `${prefix}${suffix}`;
-        }
-
-        function seededRandom(seed) {
-            const x = Math.sin(seed++) * 10000;
-            return x - Math.floor(x);
-        }
-
-        async function generateMonster(barcode) {
-            try {
-                updateDebugMessage('Generating monster from DNA...');
-
-                // Create a hash from the barcode for seeding
-                let seed = 0;
-                for (let i = 0; i < barcode.length; i++) {
-                    seed = ((seed << 5) - seed) + barcode.charCodeAt(i);
-                    seed = seed & seed; // Convert to 32-bit integer
-                }
-
-                // Generate base stats using the seed
-                const baseHP = Math.floor(seededRandom(seed) * 50) + 50; // 50-100
-                const baseAP = Math.floor(seededRandom(seed + 1) * 30) + 20; // 20-50
-                const baseSpeed = Math.floor(seededRandom(seed + 2) * 40) + 30; // 30-70
-
-                // Determine level (with rare chances for higher levels)
-                const levelRoll = seededRandom(seed + 3);
-                let level = 1;
-                if (levelRoll > 0.95) level = 3;
-                else if (levelRoll > 0.85) level = 2;
-
-                // Select monster type
-                const typeIndex = Math.floor(seededRandom(seed + 4) * monsterTypes.length);
-                const monsterType = monsterTypes[typeIndex];
-
-                // Apply type modifiers and level bonuses
-                const levelMultiplier = 1 + (level - 1) * 0.3; // 30% increase per level
-                const monster = {
-                    id: Date.now().toString(),
-                    name: generateMonsterName(),
-                    barcode: barcode,
-                    type: monsterType.type,
-                    level: level,
-                    experience: 0,
-                    hp: Math.floor(baseHP * monsterType.hpMod * levelMultiplier),
-                    ap: Math.floor(baseAP * monsterType.apMod * levelMultiplier),
-                    speed: Math.floor(baseSpeed * monsterType.speedMod * levelMultiplier),
-                    dateCreated: new Date().toISOString()
-                };
-
-                // Save to Firebase
-                try {
-                    const user = auth.currentUser;
-                    if (user) {
-                        await setDoc(doc(collection(db, `users/${user.uid}/monsters`), monster.id), monster);
-                        updateDebugMessage('Monster successfully created and saved!');
-                        
-                        // Display the monster
-                        displayMonsterResult(monster);
-                    }
-                } catch (error) {
-                    console.error('Error saving monster:', error);
-                    showError('Failed to save monster to collection');
-                }
-
-            } catch (error) {
-                console.error('Error generating monster:', error);
-                showError('Failed to generate monster');
+        // Helper functions
+        function updateDebugMessage(message) {
+            const debugElement = document.getElementById('debugMessage');
+            if (debugElement) {
+                debugElement.textContent = message;
             }
-        }
-
-        function displayMonsterResult(monster) {
-            const monsterResult = document.getElementById('monsterResult');
-            monsterResult.innerHTML = `
-                <h2>${monster.name}</h2>
-                <div class="monster-image-placeholder">
-                    AI generated appearance placeholder
-                </div>
-                <div class="monster-type-badge">${monster.type}</div>
-                <div class="monster-stats">
-                    <div class="stat-item">
-                        <span>Level</span>
-                        <span>${monster.level}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>HP</span>
-                        <span>${monster.hp}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>AP</span>
-                        <span>${monster.ap}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Speed</span>
-                        <span>${monster.speed}</span>
-                    </div>
-                </div>
-            `;
-            monsterResult.style.display = 'block';
         }
 
         function showError(message) {
@@ -309,7 +202,7 @@
                         if (result) {
                             updateDebugMessage('Barcode found: ' + result.text);
                             stopScanning();
-                            extractMonsterDNA(result.text);
+                            generateMonster(result.text);
                         }
                         if (err && !(err instanceof ZXing.NotFoundException)) {
                             console.error('Scanning error:', err);
@@ -325,94 +218,6 @@
                 showError(err.message || 'Failed to start scanning');
                 resetUI();
             }
-        }
-
-        async function extractMonsterDNA(barcode) {
-            try {
-                updateDebugMessage('Extracting monster DNA...');
-
-                // Create a hash from the barcode for seeding
-                let seed = 0;
-                for (let i = 0; i < barcode.length; i++) {
-                    seed = ((seed << 5) - seed) + barcode.charCodeAt(i);
-                    seed = seed & seed; // Convert to 32-bit integer
-                }
-
-                // Generate base stats using the seed
-                const baseHP = Math.floor(seededRandom(seed) * 50) + 50; // 50-100
-                const baseAP = Math.floor(seededRandom(seed + 1) * 30) + 20; // 20-50
-                const baseSpeed = Math.floor(seededRandom(seed + 2) * 40) + 30; // 30-70
-
-                // Determine level (with rare chances for higher levels)
-                const levelRoll = seededRandom(seed + 3);
-                let level = 1;
-                if (levelRoll > 0.95) level = 3;
-                else if (levelRoll > 0.85) level = 2;
-
-                // Select monster type
-                const typeIndex = Math.floor(seededRandom(seed + 4) * monsterTypes.length);
-                const monsterType = monsterTypes[typeIndex];
-
-                // Apply type modifiers and level bonuses
-                const levelMultiplier = 1 + (level - 1) * 0.3; // 30% increase per level
-                const monster = {
-                    id: Date.now().toString(),
-                    name: generateMonsterName(),
-                    barcode: barcode,
-                    type: monsterType.type,
-                    level: level,
-                    experience: 0,
-                    hp: Math.floor(baseHP * monsterType.hpMod * levelMultiplier),
-                    ap: Math.floor(baseAP * monsterType.apMod * levelMultiplier),
-                    speed: Math.floor(baseSpeed * monsterType.speedMod * levelMultiplier),
-                    dateCreated: new Date().toISOString()
-                };
-
-                // Save to Firebase
-                const user = auth.currentUser;
-                if (user) {
-                    await setDoc(doc(collection(db, `users/${user.uid}/monsters`), monster.id), monster);
-                    updateDebugMessage('Monster DNA extracted and saved!');
-                    displayMonsterResult(monster);
-                }
-
-            } catch (error) {
-                console.error('Error generating monster:', error);
-                showError('Failed to extract monster DNA');
-                resetUI();
-            }
-        }
-
-        function displayMonsterResult(monster) {
-            const monsterResult = document.getElementById('monsterResult');
-            if (!monsterResult) return;
-            
-            monsterResult.innerHTML = `
-                <h2>${monster.name}</h2>
-                <div class="monster-image-placeholder">
-                    AI generated appearance placeholder
-                </div>
-                <div class="monster-type-badge">${monster.type}</div>
-                <div class="monster-stats">
-                    <div class="stat-item">
-                        <span>Level</span>
-                        <span>${monster.level}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>HP</span>
-                        <span>${monster.hp}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>AP</span>
-                        <span>${monster.ap}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Speed</span>
-                        <span>${monster.speed}</span>
-                    </div>
-                </div>
-            `;
-            monsterResult.style.display = 'block';
         }
 
         function stopScanning() {
