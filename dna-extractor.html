@@ -15,80 +15,18 @@
             box-sizing: border-box;
         }
 
-        .scanning-feedback {
-            margin: 1rem 0;
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(0, 255, 0, 0.1);
-            display: none;
-        }
-
-        .monster-result {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: none;
-        }
-
-        .monster-image-placeholder {
-            width: 200px;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            margin: 1rem auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 1rem;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .stat-item {
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .monster-type-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
         #interactive.viewport {
             position: relative;
             width: 100%;
             height: 300px;
+            margin: 1rem 0;
         }
 
         #interactive.viewport > canvas, #interactive.viewport > video {
             max-width: 100%;
             width: 100%;
-        }
-
-        .scanner-overlay {
-            display: none;
-            position: absolute;
-            width: 100%;
             height: 100%;
-            top: 0;
-            left: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 2;
+            object-fit: cover;
         }
 
         .scan-button {
@@ -100,47 +38,33 @@
             cursor: pointer;
             font-size: 1rem;
             margin: 1rem 0;
-            transition: background-color 0.3s;
-            -webkit-tap-highlight-color: transparent; /* For mobile */
-            touch-action: manipulation; /* For better mobile touch handling */
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
             user-select: none;
-            position: relative; /* Ensure it's above other elements */
-            z-index: 100; /* Make sure button is clickable */
+            position: relative;
+            z-index: 100;
         }
 
         .scan-button:active {
-            background: #3d8b40; /* Darker shade for feedback */
-            transform: scale(0.98); /* Slight scale for feedback */
+            background: #3d8b40;
+            transform: scale(0.98);
         }
 
-        /* Dark mode specific styles */
+        #statusMessages {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Dark mode styles */
         body.dark-mode .scan-button {
             background: #3b8d3b;
         }
 
         body.dark-mode .scan-button:active {
             background: #2d6d2d;
-        }
-
-        .scan-button:hover {
-            background: #45a049;
-        }
-
-        #scan-result {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            display: none;
-        }
-
-        /* Dark mode specific styles */
-        body.dark-mode .scan-button {
-            background: #3b8d3b;
-        }
-
-        body.dark-mode .scan-button:hover {
-            background: #357a35;
         }
     </style>
 </head>
@@ -155,62 +79,23 @@
 
         <h1>DNA Extractor</h1>
         
-        <div id="interactive" class="viewport">
-            <video autoplay="true" preload="auto" src="" muted="true" playsinline="true"></video>
-            <canvas class="drawingBuffer"></canvas>
-            <div class="scanner-overlay"></div>
-        </div>
-
-        <button class="scan-button" id="startButton" onclick="handleScanButtonClick()">Start Scanning</button>
-        
-        <div class="scanning-feedback" id="scanningFeedback">
-            Preparing scanner...
-        </div>
-
-        <div class="monster-result" id="monsterResult">
-            <h2 id="monsterName">Monster Name</h2>
-            
-            <div class="monster-image-placeholder" id="monsterImage">
-                AI generated appearance placeholder
-            </div>
-
-            <span class="monster-type-badge" id="monsterType">Type</span>
-            
-            <div class="stat-grid">
-                <div class="stat-item">
-                    <span>Level</span>
-                    <span id="monsterLevel">1</span>
-                </div>
-                <div class="stat-item">
-                    <span>Experience</span>
-                    <span id="monsterXP">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>HP</span>
-                    <span id="monsterHP">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>AP</span>
-                    <span id="monsterAP">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>Speed</span>
-                    <span id="monsterSpeed">0</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Status Messages -->
-        <div id="statusMessages" style="margin-top: 1rem; padding: 1rem; border-radius: 8px; background: rgba(255, 255, 255, 0.1);">
+        <div id="statusMessages">
             <p id="errorMessage" style="color: red; display: none;"></p>
-            <p id="debugMessage" style="color: inherit;">Ready to scan...</p>
+            <p id="debugMessage">Ready to scan...</p>
         </div>
 
-        <!-- Camera Selection -->
-        <div style="margin-top: 1rem;">
-            <select id="cameraSelect" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: inherit;">
-                <option value="">Loading cameras...</option>
-            </select>
+        <!-- Scanner Viewport -->
+        <div id="interactive" class="viewport" style="display: none;">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+
+        <!-- Scan Button -->
+        <button class="scan-button" id="startButton">Start Camera</button>
+
+        <!-- Monster Result -->
+        <div id="monsterResult" style="display: none;">
+            <!-- Monster details will be populated here -->
         </div>
     </div>
 
@@ -219,12 +104,13 @@
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
 
-    <!-- Firebase SDK (Modules) -->
+    <!-- Main Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -240,31 +126,41 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Initialize scanner
-        let codeReader;
-        let selectedDeviceId;
+        // Global variables
+        let codeReader = null;
+        let selectedDeviceId = null;
 
+        // Device detection
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        // Helper functions
+        function updateDebugMessage(message) {
+            const debugElement = document.getElementById('debugMessage');
+            if (debugElement) {
+                debugElement.textContent = message;
+            }
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Scanner functions
         async function initializeScanner() {
             try {
                 updateDebugMessage('Initializing scanner...');
                 
-                // Initialize code reader with specific formats for better performance
-                codeReader = new ZXing.BrowserMultiFormatReader(null, {
-                    possibleFormats: [
-                        ZXing.BarcodeFormat.QR_CODE,
-                        ZXing.BarcodeFormat.EAN_13,
-                        ZXing.BarcodeFormat.EAN_8,
-                        ZXing.BarcodeFormat.UPC_A,
-                        ZXing.BarcodeFormat.UPC_E
-                    ]
-                });
-                
-                // Check for media devices support
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     throw new Error('Camera access is not supported by this browser');
                 }
 
-                // List available devices
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 
@@ -272,235 +168,102 @@
                     throw new Error('No camera found on device');
                 }
 
-                // Prefer back camera on mobile
+                // Prefer back camera
                 const backCamera = videoDevices.find(device => 
                     device.label.toLowerCase().includes('back') ||
                     device.label.toLowerCase().includes('rear'));
                 
                 selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
                 
-                updateDebugMessage('Scanner ready. Click "Start Camera" to begin scanning.');
+                updateDebugMessage('Scanner ready. Click "Start Camera" to begin.');
                 
             } catch (err) {
                 console.error('Scanner initialization error:', err);
                 showError(err.message || 'Failed to initialize scanner');
-                updateDebugMessage('Scanner initialization failed. ' + err.message);
             }
         }
 
         async function startScanning() {
-            updateDebugMessage('Starting camera...');
-            
+            const videoElement = document.getElementById('interactive');
+            if (!videoElement) {
+                showError('Video element not found');
+                return;
+            }
+
             try {
-                // Hide the start button while scanning
+                updateDebugMessage('Starting camera...');
                 document.getElementById('startButton').style.display = 'none';
-                
-                // Show the video element
-                const videoElement = document.getElementById('video');
                 videoElement.style.display = 'block';
-                
-                // For iOS Safari, we need to handle things slightly differently
-                if (isIOS && isSafari) {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: 'environment',
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        }
-                    });
-                    videoElement.srcObject = stream;
-                }
-                
-                updateDebugMessage('Starting barcode detection...');
-                
+
                 await codeReader.decodeFromVideoDevice(
-                    selectedDeviceId, 
-                    'video', 
+                    selectedDeviceId,
+                    'video',
                     (result, err) => {
                         if (result) {
-                            // Success! We found a barcode
                             updateDebugMessage('Barcode found: ' + result.text);
                             stopScanning();
                             generateMonster(result.text);
                         }
-                        
                         if (err && !(err instanceof ZXing.NotFoundException)) {
                             console.error('Scanning error:', err);
                             updateDebugMessage('Scanning error: ' + err.message);
                         }
                     }
                 );
-                
-                updateDebugMessage('Scanner active - point camera at a barcode');
-                
+
+                updateDebugMessage('Camera active - point at a barcode');
+
             } catch (err) {
                 console.error('Scanning error:', err);
-                document.getElementById('startButton').style.display = 'block';
                 showError(err.message || 'Failed to start scanning');
-                updateDebugMessage('Failed to start scanner: ' + err.message);
+                resetUI();
             }
         }
 
         function stopScanning() {
             if (codeReader) {
                 codeReader.reset();
-                document.getElementById('startButton').style.display = 'block';
-                document.getElementById('video').style.display = 'none';
+                resetUI();
             }
         }
 
-        // Feedback messages for scanning process
-        const scanningMessages = [
-            "Scanning for DNA...",
-            "DNA sequence detected!",
-            "Analyzing genetic structure...",
-            "Extracting monster DNA...",
-            "Synthesizing creature...",
-            "Monster creation successful!"
-        ];
-
-        let currentMessageIndex = 0;
-        let feedbackInterval;
-
-        function updateScanningFeedback() {
-            const feedbackElement = document.getElementById('scanningFeedback');
-            feedbackElement.style.display = 'block';
-            feedbackElement.textContent = scanningMessages[currentMessageIndex];
-            currentMessageIndex = (currentMessageIndex + 1) % scanningMessages.length;
+        function resetUI() {
+            document.getElementById('startButton').style.display = 'block';
+            document.getElementById('interactive').style.display = 'none';
         }
 
-        function startFeedbackMessages() {
-            currentMessageIndex = 0;
-            updateScanningFeedback();
-            feedbackInterval = setInterval(updateScanningFeedback, 1000);
-        }
-
-        function stopFeedbackMessages() {
-            clearInterval(feedbackInterval);
-        }
-
-        // Monster types with their base stat modifiers
-        const monsterTypes = [
-            { type: 'Feral', hpMod: 1.0, apMod: 1.2, speedMod: 1.3 },
-            { type: 'Fighter', hpMod: 1.2, apMod: 1.2, speedMod: 1.0 },
-            { type: 'Caster', hpMod: 0.8, apMod: 1.4, speedMod: 1.0 },
-            { type: 'Ranged', hpMod: 0.9, apMod: 1.3, speedMod: 1.1 },
-            { type: 'Tank', hpMod: 1.5, apMod: 0.8, speedMod: 0.7 }
-        ];
-
-        // Random name generation (simplified version)
-        const namePrefix = ['Shadow', 'Flame', 'Frost', 'Storm', 'Terra', 'Cosmic', 'Ancient', 'Mystic', 'Crystal', 'Dragon'];
-        const nameSuffix = ['fang', 'claw', 'wing', 'heart', 'soul', 'spirit', 'blade', 'strike', 'guard', 'scale'];
-
-        function generateMonsterName() {
-            const prefix = namePrefix[Math.floor(Math.random() * namePrefix.length)];
-            const suffix = nameSuffix[Math.floor(Math.random() * nameSuffix.length)];
-            return `${prefix}${suffix}`;
-        }
-
-        // Function to generate seeded random number
-        function seededRandom(seed) {
-            const x = Math.sin(seed++) * 10000;
-            return x - Math.floor(x);
-        }
-
-        // Function to generate monster from barcode
-        async function generateMonster(barcode) {
-            startFeedbackMessages();
-
-            // Create a hash from the barcode for seeding
-            let seed = 0;
-            for (let i = 0; i < barcode.length; i++) {
-                seed = ((seed << 5) - seed) + barcode.charCodeAt(i);
-                seed = seed & seed; // Convert to 32-bit integer
-            }
-
-            // Generate base stats using the seed
-            const baseHP = Math.floor(seededRandom(seed) * 50) + 50; // 50-100
-            const baseAP = Math.floor(seededRandom(seed + 1) * 30) + 20; // 20-50
-            const baseSpeed = Math.floor(seededRandom(seed + 2) * 40) + 30; // 30-70
-
-            // Determine level (with rare chances for higher levels)
-            const levelRoll = seededRandom(seed + 3);
-            let level = 1;
-            if (levelRoll > 0.95) level = 3;
-            else if (levelRoll > 0.85) level = 2;
-
-            // Select monster type
-            const typeIndex = Math.floor(seededRandom(seed + 4) * monsterTypes.length);
-            const monsterType = monsterTypes[typeIndex];
-
-            // Apply type modifiers and level bonuses
-            const levelMultiplier = 1 + (level - 1) * 0.3; // 30% increase per level
-            const monster = {
-                id: Date.now().toString(),
-                name: generateMonsterName(),
-                barcode: barcode,
-                type: monsterType.type,
-                level: level,
-                experience: 0,
-                hp: Math.floor(baseHP * monsterType.hpMod * levelMultiplier),
-                ap: Math.floor(baseAP * monsterType.apMod * levelMultiplier),
-                speed: Math.floor(baseSpeed * monsterType.speedMod * levelMultiplier),
-                dateCreated: new Date().toISOString()
-            };
-
-            // Display monster info
-            document.getElementById('monsterName').textContent = monster.name;
-            document.getElementById('monsterType').textContent = monster.type;
-            document.getElementById('monsterLevel').textContent = monster.level;
-            document.getElementById('monsterXP').textContent = monster.experience;
-            document.getElementById('monsterHP').textContent = monster.hp;
-            document.getElementById('monsterAP').textContent = monster.ap;
-            document.getElementById('monsterSpeed').textContent = monster.speed;
-
-            // Show monster result container
-            document.getElementById('monsterResult').style.display = 'block';
-
-            // Save to Firebase
-            try {
-                const user = auth.currentUser;
-                if (user) {
-                    await setDoc(doc(collection(db, `users/${user.uid}/monsters`), monster.id), monster);
-                    console.log('Monster saved successfully!');
-                    stopFeedbackMessages();
-                    document.getElementById('scanningFeedback').textContent = 'Monster successfully added to your collection!';
-                }
-            } catch (error) {
-                console.error('Error saving monster:', error);
-                showError('Failed to save monster. Please try again.');
-                stopFeedbackMessages();
-            }
-        }
-
-        // Function to show error message
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-        
-        // Function to update debug message
-        function updateDebugMessage(message) {
-            const debugElement = document.getElementById('debugMessage');
-            debugElement.textContent = message;
-        }
-        
-        // Add a cleanup function for when the page is closed/navigated away from
-        window.addEventListener('beforeunload', () => {
-            if (codeReader) {
-                codeReader.reset();
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeScanner();
+            
+            // Button click handler
+            const startButton = document.getElementById('startButton');
+            if (startButton) {
+                startButton.addEventListener('click', async () => {
+                    if (isIOS && isSafari) {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ 
+                                video: { facingMode: 'environment' } 
+                            });
+                            stream.getTracks().forEach(track => track.stop());
+                        } catch (err) {
+                            showError('Please allow camera access to scan barcodes');
+                            return;
+                        }
+                    }
+                    startScanning();
+                });
             }
         });
 
-        // Check authentication state
+        // Auth check
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = 'index.html';
             }
         });
 
-        // Handle dark mode toggle
+        // Dark mode
         const darkModeToggle = document.getElementById("darkModeToggle");
         const savedTheme = localStorage.getItem("theme");
         
@@ -511,58 +274,6 @@
         darkModeToggle.addEventListener("click", function() {
             document.body.classList.toggle("dark-mode");
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-        });
-
-        // iOS Safari specific check
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-        // Function to request camera permissions explicitly
-        async function requestCameraPermission() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    } 
-                });
-                stream.getTracks().forEach(track => track.stop()); // Stop the stream right away
-                return true;
-            } catch (err) {
-                console.error('Camera permission error:', err);
-                showError('Please allow camera access to scan barcodes');
-                return false;
-            }
-        }
-
-        // Handle scan button click with permission check
-        async function handleScanButtonClick() {
-            updateDebugMessage('Button clicked');
-            
-            // For iOS Safari, request permission first
-            if (isIOS && isSafari) {
-                const hasPermission = await requestCameraPermission();
-                if (!hasPermission) return;
-            }
-            
-            startScanning();
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded - initializing...');
-            
-            const button = document.getElementById('startButton');
-            
-            // Add multiple event listeners for better mobile support
-            button.addEventListener('click', handleScanButtonClick);
-            button.addEventListener('touchend', function(e) {
-                e.preventDefault(); // Prevent double-firing on mobile
-                handleScanButtonClick();
-            });
-            
-            initializeScanner();
         });
     </script>
 </body>
