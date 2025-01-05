@@ -8,7 +8,7 @@
     <script src="assets/script.js" defer></script>
     <!-- Firebase SDK -->
     <script type="module">
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 
         // Your Firebase config
@@ -41,6 +41,19 @@
                 window.location.href = 'index.html';
             }
         });
+
+        // Log out function
+        function logOut() {
+            signOut(auth)
+                .then(() => {
+                    console.log('User logged out');
+                    localStorage.removeItem('loggedInUser'); // Clear user data from localStorage
+                    window.location.href = 'index.html'; // Redirect to login page
+                })
+                .catch((error) => {
+                    console.error('Error during logout:', error);
+                });
+        }
     </script>
 </head>
 <body>
@@ -66,6 +79,9 @@
             <button onclick="window.location.href='pvp_battle.html'">PVP Battle</button>
             <button onclick="window.location.href='help.html'">Help</button>
         </div>
+
+        <!-- Log Out Button -->
+        <button onclick="logOut()" class="logout-button">Log Out</button>
 
         <!-- Version Number -->
         <footer>
@@ -93,6 +109,18 @@
                 localStorage.removeItem("theme");
             }
         });
+
+        // Display user data from localStorage
+        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
+        if (loggedInUser) {
+            document.getElementById('playerName').textContent = `Player Name: ${loggedInUser.email || 'Unknown'}`;
+            document.getElementById('winsLosses').textContent = `Wins: 10 | Losses: 5`;  // Replace with actual win/loss data if available
+            document.getElementById('playerInfo').textContent = `More info about ${loggedInUser.email || 'Unknown'}...`;
+        } else {
+            // If no user is logged in, redirect to login page
+            window.location.href = 'index.html';
+        }
     </script>
 
     <style>
@@ -128,6 +156,16 @@
         /* Dark mode button hover effect */
         body.dark-mode button:hover {
             background-color: #555;
+        }
+
+        /* Log Out Button */
+        .logout-button {
+            background-color: #f44336; /* Red color */
+            margin-top: 20px;
+        }
+
+        .logout-button:hover {
+            background-color: #e53935; /* Darker red on hover */
         }
     </style>
 </body>
