@@ -4,60 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Help</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="styles.css">
     <style>
-        /* Keep the existing styles from profile.html */
         body {
             margin: 0;
             padding: 0;
             min-height: 100vh;
             width: 100%;
-            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            color: #000;
         }
 
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+
+        /* Container for help content */
         .help-container {
             width: 100%;
-            max-width: 100%;
             padding: 1rem;
             box-sizing: border-box;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            overflow-y: auto;
         }
 
+        /* Layout for the help page */
         .help-layout {
+            padding-top: 2rem;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
             gap: 2rem;
-            padding: 1rem;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
         }
 
-        .logo-container {
-            width: 100%;
-            max-width: 200px;
-            display: flex;
-            justify-content: center;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-
-        .logo-container img {
-            max-width: 100%;
-            height: auto;
-            object-fit: contain;
-        }
-
+        /* Style for the help info section */
         .help-info {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 1rem;
             padding: 1rem;
             background: rgba(255, 255, 255, 0.1);
@@ -69,181 +60,45 @@
             text-align: center;
         }
 
-        .help-info h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: #ffd700;
-        }
-
-        .help-content {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 100%;
-            box-sizing: border-box;
-            text-align: left;
-        }
-
-        .navigation-grid {
-            display: grid;
-            gap: 1rem;
-            width: 90%;
-            max-width: 1000px;
-            padding: 1rem;
-            margin: 0 auto;
-            grid-template-columns: repeat(4, 1fr);
-        }
-
-        .nav-button {
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: inherit;
-            font-size: 1rem;
+        /* Dark mode button */
+        .dark-mode-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(128, 128, 128, 0.3);
         }
 
-        .nav-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            border-color: rgba(128, 128, 128, 0.5);
-        }
-
-        /* Light mode specific styles */
-        body:not(.dark-mode) .nav-button {
-            background: rgba(200, 200, 200, 0.2);
-            border: 1px solid rgba(0, 0, 0, 0.2);
-        }
-
-        body:not(.dark-mode) .nav-button:hover {
-            background: rgba(200, 200, 200, 0.3);
-            border-color: rgba(0, 0, 0, 0.3);
-        }
-
-        /* Desktop Specific Styles */
-        @media screen and (min-width: 1024px) {
-            .navigation-grid {
-                grid-template-columns: repeat(4, 1fr);
-                grid-template-rows: repeat(3, auto);
-                max-width: 800px;
-                margin: 2rem auto;
-            }
-
-            .nav-button {
-                min-width: 150px;
-            }
-
-            /* Position logout button in the center of the last row */
-            .nav-button:last-child {
-                grid-column: 2 / 4;
-            }
-        }
-
-        /* Tablet styles */
-        @media (max-width: 1023px) and (min-width: 769px) {
-            .navigation-grid {
-                grid-template-columns: repeat(3, 1fr);
-                max-width: 700px;
-            }
-        }
-
-        /* Mobile styles */
-        @media (max-width: 768px) {
-            .help-layout {
-                flex-direction: column;
-                text-align: center;
-                padding: 0.5rem;
-                gap: 1rem;
-            }
-
-            .logo-container {
-                padding: 0.5rem;
-                margin-top: 2rem;
-            }
-
-            .help-info {
-                flex-direction: column;
-                width: 90%;
-                margin: 0 auto;
-                padding: 0.75rem;
-            }
-
-            .navigation-grid {
-                grid-template-columns: repeat(2, 1fr);
-                padding: 0.5rem;
-                gap: 0.75rem;
-                width: 90%;
-                margin: 0 auto;
-            }
-
-            .nav-button {
-                padding: 0.75rem;
-                font-size: 0.9rem;
-            }
-
-            .help-content {
-                width: 90%;
-                margin: 1rem auto;
-                padding: 0.75rem;
-            }
-        }
-
-        @media screen and (max-width: 428px) {
-            .help-container {
-                padding: 0.5rem;
-            }
-
-            .logo-container {
-                margin-top: 3rem;
-            }
-
-            .navigation-grid {
-                width: 95%;
-            }
-
-            .nav-button {
-                padding: 0.6rem;
-                font-size: 0.85rem;
-            }
-
-            .help-info {
-                width: 95%;
-            }
+        /* Dark mode button when in dark mode */
+        .dark-mode-btn.dark {
+            background-color: #444;
         }
     </style>
 </head>
 <body>
-    <!-- Dark Mode Toggle -->
-    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
+    <!-- Dark mode toggle button -->
+    <button id="darkModeToggle" class="dark-mode-btn">Dark Mode</button>
+
+    <!-- Help page content -->
     <div class="help-container">
         <div class="help-layout">
-            <!-- Logo -->
-            <div class="logo-container">
-                <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
-            </div>
-
-            <!-- Help Info -->
             <div class="help-info">
-                <h2>Welcome to Barcode Masters!</h2>
-            </div>
+                <h1>Welcome to Barcode Masters!</h1>
 
-            <!-- Help Content -->
-            <div class="help-content">
-                <h3>What is Barcode Masters?</h3>
+                <h2>What is Barcode Masters?</h2>
                 <p>Barcode Masters is an exciting and innovative game where players collect, train, and battle unique monsters. Each monster is created by extracting DNA from barcodes and QR codes, allowing for endless variety and strategic depth. The ultimate goal is to become the master of all other battlers by training your monsters and competing against other players.</p>
 
-                <h3>How to Get Started</h3>
+                <h2>How to Get Started</h2>
 
-                <h4>Creating an Account</h4>
-                <p>Currently, accounts must be created directly by the game developer. If you are interested in testing Barcode Masters and do not have an account, please email <b>gumbydev@icloud.com</b> to request access. Make sure to include your name and any relevant information in your email.</p>
+                <h3>Creating an Account</h3>
+                <p>Currently, accounts must be created directly by the game developer. If you are interested in testing Barcode Masters and do not have an account, please email <strong>gumbydev@icloud.com</strong> to request access. Make sure to include your name and any relevant information in your email.</p>
 
-                <h4>Extracting DNA</h4>
+                <h3>Extracting DNA</h3>
                 <p>Once you have an account, you can begin extracting DNA from barcodes and QR codes. This DNA is used to generate unique monsters that you can train and battle with. To extract DNA:</p>
                 <ol>
                     <li>Open the barcode scanning feature within the game.</li>
@@ -251,7 +106,7 @@
                     <li>The game will generate a monster based on the scanned code.</li>
                 </ol>
 
-                <h4>Training Your Monsters</h4>
+                <h3>Training Your Monsters</h3>
                 <p>Training is a key part of becoming a master. You can train your monsters to improve their stats and abilities:</p>
                 <ol>
                     <li>Go to the "Training" section in the game.</li>
@@ -260,7 +115,7 @@
                     <li>Complete the training tasks to enhance your monster's abilities.</li>
                 </ol>
 
-                <h4>Battling Other Players</h4>
+                <h3>Battling Other Players</h3>
                 <p>Test your skills by battling other players:</p>
                 <ol>
                     <li>Navigate to the "Battle" section.</li>
@@ -269,38 +124,39 @@
                     <li>Use strategic moves and abilities to defeat your opponent and climb the leaderboards.</li>
                 </ol>
 
-                <h3>Feedback and Support</h3>
-                <p>We value your feedback and are constantly working to improve the game. If you encounter any issues or have suggestions, please reach out via email at <b>gumbydev@icloud.com</b>.</p>
+                <h2>Feedback and Support</h2>
+                <p>We value your feedback and are constantly working to improve the game. If you encounter any issues or have suggestions, please reach out via email at <strong>gumbydev@icloud.com</strong>.</p>
 
                 <p>Thank you for joining Barcode Masters. Get ready to scan, train, and battle your way to the top!</p>
             </div>
         </div>
-
-        <!-- Navigation Buttons -->
-        <div class="navigation-grid">
-            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
-            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
-            <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
-            <button class="nav-button" onclick="location.href='pvp-battle.html'">PVP Battle</button>
-            <button class="nav-button" onclick="location.href='player-profile.html'">Player Profile</button>
-            <button class="nav-button" onclick="location.href='help.html'">Help</button>
-            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
-            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
-        </div>
-
-        <!-- Error Message -->
-        <p id="errorMessage" style="color: red; display: none;"></p>
     </div>
 
-    <!-- Version Number -->
-    <footer>
-        <p>Version: <span id="versionNumber">1.0.0</span></p>
-    </footer>
+    <script>
+        // Dark Mode Toggle Function
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
 
-    <!-- Firebase SDK (Modules) -->
-    <script type="module">
-        // Your Firebase-related scripts go here (same as profile page)
-        // Make sure to include the same Firebase initialization and dark mode toggle
+        // Check if dark mode is already set in localStorage
+        if(localStorage.getItem('darkMode') === 'enabled') {
+            body.classList.add('dark-mode');
+            darkModeToggle.classList.add('dark');
+            darkModeToggle.textContent = 'Light Mode';
+        }
+
+        // Add event listener to toggle dark mode
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.classList.add('dark');
+                darkModeToggle.textContent = 'Light Mode';
+            } else {
+                localStorage.removeItem('darkMode');
+                darkModeToggle.classList.remove('dark');
+                darkModeToggle.textContent = 'Dark Mode';
+            }
+        });
     </script>
 </body>
 </html>
