@@ -33,6 +33,12 @@
         <p>Version: <span id="versionNumber">1.0.01</span></p>
     </footer>
 
+    <!-- Debugging Section -->
+    <div id="debugLogs" style="position: fixed; bottom: 10px; left: 10px; background-color: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; max-width: 300px;">
+        <h3>Debug Logs</h3>
+        <pre id="logs"></pre>
+    </div>
+
     <!-- Firebase SDK (Modules) -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -67,21 +73,19 @@
         async function loginWithFirebase(email, password) {
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                // Successful login
                 const user = userCredential.user;
-                console.log("User logged in:", user);
 
                 // Log user UID and email to verify data
-                console.log("User UID:", user.uid);
-                console.log("User Email:", user.email);
+                logDebug(`User logged in: ${JSON.stringify(user)}`);
+                logDebug(`User UID: ${user.uid}`);
+                logDebug(`User Email: ${user.email}`);
 
                 // Check if user exists in the Firestore database
                 const userRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(userRef);
 
                 if (!docSnap.exists()) {
-                    // Log that the user does not exist
-                    console.log("User does not exist in Firestore. Adding to database...");
+                    logDebug("User does not exist in Firestore. Adding to database...");
 
                     // Add the user to the Firestore database if they don't exist
                     await setDoc(userRef, {
@@ -89,11 +93,10 @@
                         email: user.email,
                         uid: user.uid,
                         createdAt: serverTimestamp(),
-                        // Add any other user info you want to store
                     });
-                    console.log("User added to Firestore database.");
+                    logDebug("User added to Firestore database.");
                 } else {
-                    console.log("User already exists in Firestore.");
+                    logDebug("User already exists in Firestore.");
                 }
 
                 // Store user info in localStorage
@@ -102,10 +105,12 @@
                     uid: user.uid
                 }));
 
-                // Redirect to profile page
-                window.location.href = 'profile.html';
+                // Temporary block of redirection for debugging
+                // window.location.href = 'profile.html';
+                logDebug("User info saved. Redirection blocked for debugging.");
+
             } catch (error) {
-                console.error('Error during login:', error.code, error.message);
+                logDebug(`Error during login: ${error.code} - ${error.message}`);
                 let errorMessage = 'An error occurred during login.';
                 
                 switch (error.code) {
@@ -125,6 +130,12 @@
                 
                 showError(errorMessage);
             }
+        }
+
+        // Function to log debug messages on page
+        function logDebug(message) {
+            const logContainer = document.getElementById('logs');
+            logContainer.textContent += message + '\n';
         }
 
         // Handle dark mode toggle
@@ -152,7 +163,8 @@
         // Check if user is already logged in
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                window.location.href = 'profile.html';
+                // Avoid redirection for now
+                logDebug("User already logged in. Redirection blocked.");
             }
         });
     </script>
