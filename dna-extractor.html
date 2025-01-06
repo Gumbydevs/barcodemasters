@@ -58,6 +58,35 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        /* Monster Card Styles */
+        .monster-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .monster-image {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 4px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .monster-stats p {
+            margin: 0;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
         /* Dark mode styles */
         body.dark-mode .scan-button {
             background: #3b8d3b;
@@ -92,6 +121,7 @@
 
         <!-- Scan Button -->
         <button class="scan-button" id="startButton">Start Camera</button>
+        
         <!-- Navigation Buttons -->
         <div class="navigation-grid">
             <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
@@ -118,10 +148,10 @@
 
     <!-- Main Script -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+      import { getFirestore, doc, setDoc, collection, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -194,7 +224,6 @@
                 showError(err.message || 'Failed to initialize scanner');
             }
         }
-
         async function startScanning() {
             const videoElement = document.getElementById('interactive');
             if (!videoElement) {
@@ -245,145 +274,145 @@
         }
 
         // Monster generation constants
-const MONSTER_TYPES = ['Feral', 'Fighter', 'Caster', 'Ranged', 'Tank'];
-const BASE_STAT_RANGES = {
-    HP: { min: 50, max: 200 },
-    AP: { min: 10, max: 50 },
-    Speed: { min: 5, max: 20 }
-};
-
-// Generate a deterministic hash from QR code data
-function generateHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    // Convert to 9-character string format AAABBBCCC
-    const hashStr = Math.abs(hash).toString().padStart(9, '0');
-    return hashStr.slice(0, 9);
-}
-
-// Seeded random number generator
-function seededRandom(seed) {
-    const x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-}
-
-// Generate monster name
-function generateName(seed) {
-    const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Iron'];
-    const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'guard'];
-    
-    const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
-    const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
-    
-    return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
-}
-
-// Determine monster level (1-3)
-function determineLevel(seed) {
-    const rand = seededRandom(seed);
-    if (rand < 0.05) return 3;      // 5% chance for level 3
-    if (rand < 0.20) return 2;      // 15% chance for level 2
-    return 1;                       // 80% chance for level 1
-}
-
-async function generateMonster(qrData) {
-    updateDebugMessage('DNA sequence detected! Analyzing...');
-    
-    // Get current user
-    const user = auth.currentUser;
-    if (!user) {
-        showError('Must be logged in to generate monsters');
-        return;
-    }
-
-    try {
-        // Generate unique hash for this QR code
-        const hash = generateHash(qrData);
-        
-        // Check if hash already exists in user's usedHash
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
-            showError('This DNA sequence has already been extracted!');
-            return;
-        }
-
-        // Generate monster stats
-        const seed = parseInt(hash, 16);
-        const level = determineLevel(seed);
-        const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
-        
-        // Calculate base stats
-        const HP = Math.floor(seededRandom(seed + 3) * 
-            (BASE_STAT_RANGES.HP.max - BASE_STAT_RANGES.HP.min) + 
-            BASE_STAT_RANGES.HP.min);
-        const AP = Math.floor(seededRandom(seed + 4) * 
-            (BASE_STAT_RANGES.AP.max - BASE_STAT_RANGES.AP.min) + 
-            BASE_STAT_RANGES.AP.min);
-        const Speed = Math.floor(seededRandom(seed + 5) * 
-            (BASE_STAT_RANGES.Speed.max - BASE_STAT_RANGES.Speed.min) + 
-            BASE_STAT_RANGES.Speed.min);
-
-        // Create monster object
-        const monster = {
-            hash,
-            monsterName: generateName(seed),
-            type: MONSTER_TYPES[typeIndex],
-            level,
-            HP: Math.round(HP * (1 + (level - 1) * 0.3)),  // 30% increase per level
-            AP: Math.round(AP * (1 + (level - 1) * 0.3)),
-            Speed: Math.round(Speed * (1 + (level - 1) * 0.3)),
-            experience: 0,
-            ownerId: user.uid,
-            dateCreated: new Date().toISOString()
+        const MONSTER_TYPES = ['Feral', 'Fighter', 'Caster', 'Ranged', 'Tank'];
+        const BASE_STAT_RANGES = {
+            HP: { min: 50, max: 200 },
+            AP: { min: 10, max: 50 },
+            Speed: { min: 5, max: 20 }
         };
 
-        // Save to global monsters collection
-        await setDoc(doc(db, 'monsters', hash), monster);
+        // Generate a deterministic hash from QR code data
+        function generateHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            // Convert to 9-character string format AAABBBCCC
+            const hashStr = Math.abs(hash).toString().padStart(9, '0');
+            return hashStr.slice(0, 9);
+        }
 
-        // Save to user's monsters collection
-        await setDoc(doc(db, `users/${user.uid}/monsters`, hash), monster);
+        // Seeded random number generator
+        function seededRandom(seed) {
+            const x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
 
-        // Update user's usedHash array
-        await updateDoc(userRef, {
-            usedHash: arrayUnion(hash)
-        });
+        // Generate monster name
+        function generateName(seed) {
+            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Iron'];
+            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'guard'];
+            
+            const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
+            const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
+            
+            return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
+        }
 
-        // Display the monster
-        displayMonster(monster);
-        updateDebugMessage('Monster successfully generated and added to your collection!');
+        // Determine monster level (1-3)
+        function determineLevel(seed) {
+            const rand = seededRandom(seed);
+            if (rand < 0.05) return 3;      // 5% chance for level 3
+            if (rand < 0.20) return 2;      // 15% chance for level 2
+            return 1;                       // 80% chance for level 1
+        }
 
-    } catch (error) {
-        console.error('Error generating monster:', error);
-        showError('Failed to generate monster: ' + error.message);
-    }
-}
+        async function generateMonster(qrData) {
+            updateDebugMessage('DNA sequence detected! Analyzing...');
+            
+            // Get current user
+            const user = auth.currentUser;
+            if (!user) {
+                showError('Must be logged in to generate monsters');
+                return;
+            }
 
-function displayMonster(monster) {
-    const monsterResult = document.getElementById('monsterResult');
-    monsterResult.style.display = 'block';
-    monsterResult.innerHTML = `
-        <div class="monster-card">
-            <h2>${monster.monsterName}</h2>
-            <div class="monster-image">
-                <p>AI Generated Appearance Placeholder</p>
-            </div>
-            <div class="monster-stats">
-                <p>Level: ${monster.level}</p>
-                <p>Type: ${monster.type}</p>
-                <p>HP: ${monster.HP}</p>
-                <p>AP: ${monster.AP}</p>
-                <p>Speed: ${monster.Speed}</p>
-                <p>Hash ID: ${monster.hash}</p>
-            </div>
-        </div>
-    `;
-}
+            try {
+                // Generate unique hash for this QR code
+                const hash = generateHash(qrData);
+                
+                // Check if hash already exists in user's usedHash
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
+                    showError('This DNA sequence has already been extracted!');
+                    return;
+                }
+
+                // Generate monster stats
+                const seed = parseInt(hash, 16);
+                const level = determineLevel(seed);
+                const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
+                
+                // Calculate base stats
+                const HP = Math.floor(seededRandom(seed + 3) * 
+                    (BASE_STAT_RANGES.HP.max - BASE_STAT_RANGES.HP.min) + 
+                    BASE_STAT_RANGES.HP.min);
+                const AP = Math.floor(seededRandom(seed + 4) * 
+                    (BASE_STAT_RANGES.AP.max - BASE_STAT_RANGES.AP.min) + 
+                    BASE_STAT_RANGES.AP.min);
+                const Speed = Math.floor(seededRandom(seed + 5) * 
+                    (BASE_STAT_RANGES.Speed.max - BASE_STAT_RANGES.Speed.min) + 
+                    BASE_STAT_RANGES.Speed.min);
+
+                // Create monster object
+                const monster = {
+                    hash,
+                    monsterName: generateName(seed),
+                    type: MONSTER_TYPES[typeIndex],
+                    level,
+                    HP: Math.round(HP * (1 + (level - 1) * 0.3)),  // 30% increase per level
+                    AP: Math.round(AP * (1 + (level - 1) * 0.3)),
+                    Speed: Math.round(Speed * (1 + (level - 1) * 0.3)),
+                    experience: 0,
+                    ownerId: user.uid,
+                    dateCreated: new Date().toISOString()
+                };
+
+                // Save to global monsters collection
+                await setDoc(doc(db, 'monsters', hash), monster);
+
+                // Save to user's monsters collection
+                await setDoc(doc(db, `users/${user.uid}/monsters`, hash), monster);
+
+                // Update user's usedHash array
+                await updateDoc(userRef, {
+                    usedHash: arrayUnion(hash)
+                });
+
+                // Display the monster
+                displayMonster(monster);
+                updateDebugMessage('Monster successfully generated and added to your collection!');
+
+            } catch (error) {
+                console.error('Error generating monster:', error);
+                showError('Failed to generate monster: ' + error.message);
+            }
+        }
+
+        function displayMonster(monster) {
+            const monsterResult = document.getElementById('monsterResult');
+            monsterResult.style.display = 'block';
+            monsterResult.innerHTML = `
+                <div class="monster-card">
+                    <h2>${monster.monsterName}</h2>
+                    <div class="monster-image">
+                        <p>AI Generated Appearance Placeholder</p>
+                    </div>
+                    <div class="monster-stats">
+                        <p>Level: ${monster.level}</p>
+                        <p>Type: ${monster.type}</p>
+                        <p>HP: ${monster.HP}</p>
+                        <p>AP: ${monster.AP}</p>
+                        <p>Speed: ${monster.Speed}</p>
+                        <p>Hash ID: ${monster.hash}</p>
+                    </div>
+                </div>
+            `;
+        }
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
@@ -405,6 +434,20 @@ function displayMonster(monster) {
                         }
                     }
                     startScanning();
+                });
+            }
+
+            // Logout button handler
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', () => {
+                    auth.signOut()
+                        .then(() => {
+                            window.location.href = 'index.html';
+                        })
+                        .catch((error) => {
+                            showError('Logout failed: ' + error.message);
+                        });
                 });
             }
         });
