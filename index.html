@@ -24,20 +24,24 @@
             <input type="password" id="password" required>
             
             <button type="submit" class="btn-login">Login</button>
-            <p id="errorMessage" style="color: red; display: none;"></p>
         </form>
+
+        <!-- Error Message Display -->
+        <p id="errorMessage" style="color: red; display: none;"></p>
+
+        <!-- Debug Info Section (Initially Hidden) -->
+        <button id="toggleDebugBtn">Toggle Debug Info</button> <!-- This button is always visible -->
+        <div id="debugSection" style="display:none; background-color: #f1f1f1; padding: 10px; margin-top: 10px; border: 1px solid #ccc;">
+            <pre id="debugLogs"></pre>
+            <!-- Go to Profile button, initially hidden -->
+            <button id="goToProfileBtn" style="display:none;">Go to Profile</button>
+        </div>
     </div>
 
     <!-- Version Number -->
     <footer>
-        <p>Version: <span id="versionNumber">1.0.02</span></p>
+        <p>Version: <span id="versionNumber">1.0.01</span></p>
     </footer>
-
-    <!-- Debug Info Section (Initially Visible for Testing) -->
-    <div id="debugSection" style="background-color: #f1f1f1; padding: 10px; margin: 10px; border: 1px solid #ccc;">
-        <button id="toggleDebugBtn">Toggle Debug Info</button>
-        <pre id="debugLogs"></pre>
-    </div>
 
     <!-- Firebase SDK (Modules) -->
     <script type="module">
@@ -62,11 +66,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Function to show error message
+        // Function to show error message on the page
         function showError(message) {
             const errorElement = document.getElementById('errorMessage');
             errorElement.textContent = message;
             errorElement.style.display = 'block';
+        }
+
+        // Function to log messages to the debug section
+        function logToDebug(message) {
+            const debugLogs = document.getElementById("debugLogs");
+            debugLogs.textContent += message + "\n"; // Append log message
         }
 
         // Function to handle Firebase Authentication
@@ -75,27 +85,24 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 // Successful login
                 const user = userCredential.user;
-                console.log("User logged in:", user);
+                logToDebug("User logged in: " + user);
 
                 // Log user UID and email to verify data
                 logToDebug("User UID: " + user.uid);
                 logToDebug("User Email: " + user.email);
 
-                // Check if user exists in the Firestore database
+                // Check if user exists in Firestore
                 const userRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(userRef);
 
                 if (!docSnap.exists()) {
-                    // Log that the user does not exist
                     logToDebug("User does not exist in Firestore. Adding to database...");
-
-                    // Add the user to the Firestore database if they don't exist
+                    // Add user to Firestore
                     await setDoc(userRef, {
                         username: user.displayName || 'New User',
                         email: user.email,
                         uid: user.uid,
                         createdAt: serverTimestamp(),
-                        // Add any other user info you want to store
                     });
                     logToDebug("User added to Firestore database.");
                 } else {
@@ -108,12 +115,23 @@
                     uid: user.uid
                 }));
 
-                // Redirect to profile page
-                window.location.href = 'profile.html';
+                // Check if debug section is visible
+                const debugSection = document.getElementById("debugSection");
+
+                if (debugSection.style.display === "none") {
+                    // If debug section is not visible, automatically redirect
+                    window.location.href = 'profile.html';
+                } else {
+                    // If debug section is visible, show manual redirect button
+                    const goToProfileBtn = document.getElementById("goToProfileBtn");
+                    goToProfileBtn.style.display = "inline-block";  // Show manual button
+                }
+
             } catch (error) {
-                console.error('Error during login:', error.code, error.message);
                 let errorMessage = 'An error occurred during login.';
-                
+                logToDebug('Error during login: ' + error.code + " - " + error.message);
+
+                // Set error message based on error type
                 switch (error.code) {
                     case 'auth/invalid-email':
                         errorMessage = 'Please enter a valid email address.';
@@ -128,26 +146,18 @@
                         errorMessage = 'Too many failed attempts. Please try again later.';
                         break;
                 }
-                
+
+                // Show error on the page
                 showError(errorMessage);
             }
         }
 
-        // Function to log messages to the debug section
-        function logToDebug(message) {
-            const debugLogs = document.getElementById("debugLogs");
-            debugLogs.textContent += message + "\n"; // Append log message
-        }
-
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
-
-        // Check for stored theme preference
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme === "dark") {
             document.body.classList.add("dark-mode");
         }
-
         darkModeToggle.addEventListener("click", function() {
             document.body.classList.toggle("dark-mode");
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
@@ -165,7 +175,17 @@
         const toggleDebugBtn = document.getElementById("toggleDebugBtn");
         toggleDebugBtn.addEventListener("click", function() {
             const debugSection = document.getElementById("debugSection");
-            debugSection.style.display = (debugSection.style.display === "none" || debugSection.style.display === "") ? "block" : "none";
+            const goToProfileBtn = document.getElementById("goToProfileBtn");
+
+            const isVisible = debugSection.style.display === "block";
+            debugSection.style.display = isVisible ? "none" : "block";
+            goToProfileBtn.style.display = isVisible ? "none" : "inline-block";
+        });
+
+        // Go to Profile button functionality
+        const goToProfileBtn = document.getElementById("goToProfileBtn");
+        goToProfileBtn.addEventListener("click", function() {
+            window.location.href = 'profile.html';
         });
 
         // Check if user is already logged in

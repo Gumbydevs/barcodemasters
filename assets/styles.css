@@ -149,6 +149,30 @@ body.dark-mode footer {
   border-color: #888;
 }
 
+/* Optional: You can modify these styles for better visual positioning */
+.btn-toggle-debug {
+  display: block;
+  margin-top: 10px;
+  padding: 8px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.btn-toggle-debug:hover {
+  background-color: #45a049;
+}
+
+#debugSection {
+  margin-top: 10px;
+  background-color: #f1f1f1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  display: none; /* Initially hidden */
+}
+
 /* Footer with version number at the bottom left */
 footer {
   position: fixed;
