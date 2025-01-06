@@ -218,7 +218,7 @@
                 
                 selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
                 
-                updateDebugMessage('Scanner ready. Click "Start Camera" to begin.');
+                updateDebugMessage('Scanner ready. Click "Start Scanner" below to begin.');
                 
             } catch (err) {
                 console.error('Scanner initialization error:', err);
@@ -233,7 +233,7 @@
             }
 
             try {
-                updateDebugMessage('Starting camera...');
+                updateDebugMessage('Starting scanner viewport...');
                 document.getElementById('startButton').style.display = 'none';
                 videoElement.style.display = 'block';
 
@@ -242,7 +242,7 @@
                     'video',
                     (result, err) => {
                         if (result) {
-                            updateDebugMessage('Barcode found: ' + result.text);
+                            updateDebugMessage('Code found: ' + result.text);
                             stopScanning();
                             generateMonster(result.text);
                         }
@@ -253,7 +253,7 @@
                     }
                 );
 
-                updateDebugMessage('Camera active - point at a barcode');
+                updateDebugMessage('Scanner active - point at a barcode');
 
             } catch (err) {
                 console.error('Scanning error:', err);
@@ -275,7 +275,7 @@
         }
 
         // Monster generation constants
-        const MONSTER_TYPES = ['Feral', 'Fighter', 'Caster', 'Ranged', 'Tank'];
+        const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
         const BASE_STAT_RANGES = {
             HP: { min: 50, max: 200 },
             AP: { min: 10, max: 50 },
@@ -303,8 +303,8 @@
 
         // Generate monster name
         function generateName(seed) {
-            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Iron'];
-            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'guard'];
+            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic','Iron','Night', 'Gale', 'Ember', 'Vortex', 'Blaze', 'Titan', 'Venom', 'Echo','Inferno', 'Thunderstrike', 'Zephyr', 'Rogue', 'Onyx', 'Phantom', 'Spectre','Tempest', 'Glacier', 'Eclipse', 'Lava', 'Celestial', 'Viper', 'Obsidian','Solar', 'Blizzard', 'Pulse', 'Crimson', 'Oblivion', 'Rage', 'Tornado','Comet', 'Infernal', 'Vengeful', 'Spectral', 'Ironclad', 'Dusk', 'Radiant','Fury', 'Celestia', 'Cinder', 'Wraith', 'Abyss', 'Gloom', 'Volcanic','Primal', 'Stormclaw', 'Lurker', 'Dread', 'Shiver', 'Tundra', 'Scorch','Rift', 'Blight', 'Tempestuous', 'Monolith', 'Vanguard', 'Ashen', 'Savage','Phantom', 'Obsidian', 'Arctic', 'Stormbreaker', 'Venomous', 'Titanic','Sable', 'Havoc', 'Nimbus', 'Scalebound', 'Blowtorch', 'Aether', 'Typhoon'];
+            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'guard','scorch', 'rage', 'whisper', 'bane', 'shard', 'storm', 'fang', 'scourge','slash', 'tide', 'vessel', 'flame', 'bane', 'spirit', 'burst', 'strike','whip', 'reaver', 'flame', 'fury', 'scythe', 'shield', 'devil', 'spike','shadow', 'wraith', 'spirit', 'tear', 'wrath', 'talon', 'wolverine','viper', 'howl', 'fang', 'vigil', 'cage', 'shackle', 'lock', 'mancer','warden', 'pierce', 'blight', 'crusher', 'bender', 'blood', 'fang','whip', 'fang', 'lash', 'seeker', 'prowler', 'hunter', 'rend', 'slicer','breaker', 'warrior', 'hunter', 'flinger', 'wing', 'lance', 'marauder','raider', 'crush', 'reaper', 'grip', 'soul', 'vanguard', 'sunder','killer', 'smasher', 'victor', 'slayer', 'crusher', 'brawler', 'champion','destroyer', 'terminator', 'scourge', 'destroyer', 'reaver', 'conqueror','beast', 'warlord', 'herald', 'overlord', 'ranger', 'sentinel', 'champ','titan', 'behemoth', 'knight', 'warden', 'ravager', 'tamer', 'phantom','phantom', 'avenger', 'savior', 'ripper', 'raider', 'prowler', 'harbinger','vindicator', 'reclaimer', 'gladiator', 'wraith', 'exterminator', 'blow','striker', 'mauler'];
             
             const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
             const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
