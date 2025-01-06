@@ -70,11 +70,18 @@
                 const user = userCredential.user;
                 console.log("User logged in:", user);
 
+                // Log user UID and email to verify data
+                console.log("User UID:", user.uid);
+                console.log("User Email:", user.email);
+
                 // Check if user exists in the Firestore database
                 const userRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(userRef);
 
                 if (!docSnap.exists()) {
+                    // Log that the user does not exist
+                    console.log("User does not exist in Firestore. Adding to database...");
+
                     // Add the user to the Firestore database if they don't exist
                     await setDoc(userRef, {
                         username: user.displayName || 'New User',
@@ -84,6 +91,8 @@
                         // Add any other user info you want to store
                     });
                     console.log("User added to Firestore database.");
+                } else {
+                    console.log("User already exists in Firestore.");
                 }
 
                 // Store user info in localStorage
