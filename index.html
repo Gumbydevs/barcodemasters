@@ -37,6 +37,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -52,6 +53,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Function to show error message
         function showError(message) {
@@ -67,10 +69,30 @@
                 // Successful login
                 const user = userCredential.user;
                 console.log("User logged in:", user);
+
+                // Check if user exists in the Firestore database
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (!docSnap.exists()) {
+                    // Add the user to the Firestore database if they don't exist
+                    await setDoc(userRef, {
+                        username: user.displayName || 'New User',
+                        email: user.email,
+                        uid: user.uid,
+                        createdAt: serverTimestamp(),
+                        // Add any other user info you want to store
+                    });
+                    console.log("User added to Firestore database.");
+                }
+
+                // Store user info in localStorage
                 localStorage.setItem("loggedInUser", JSON.stringify({
                     email: user.email,
                     uid: user.uid
                 }));
+
+                // Redirect to profile page
                 window.location.href = 'profile.html';
             } catch (error) {
                 console.error('Error during login:', error.code, error.message);
