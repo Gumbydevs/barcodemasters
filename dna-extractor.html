@@ -334,11 +334,22 @@
                 const hash = generateHash(qrData);
                 
                 // Check if hash already exists in user's usedHash
+                // Check if hash already exists in user's usedHash
                 const userRef = doc(db, 'users', user.uid);
                 const userDoc = await getDoc(userRef);
-                
-                if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
-                    showError('This DNA sequence has already been extracted!');
+
+                // If user document doesn't exist, create it
+                if (!userDoc.exists()) {
+                    await setDoc(userRef, {
+                        email: user.email,
+                        joinDate: new Date().toISOString(),
+                        usedHash: []
+                    });
+                }
+
+                    // Now check for duplicate hash
+                    if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
+                        showError('This DNA sequence has already been extracted!');
                     return;
                 }
 
