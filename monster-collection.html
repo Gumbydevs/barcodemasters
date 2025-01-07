@@ -116,25 +116,36 @@
     
         // Create separate functions for rename and delete that will be called from the card
         async function renameMonster(monsterId, currentName) {
-            if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
-                return;
-            }
-    
-            const newName = prompt("Enter new name for the monster:", currentName);
-            if (!newName || newName.trim() === "") return;
-    
-            try {
-                const user = auth.currentUser;
-                const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
-                await updateDoc(monsterRef, {
-                    monsterName: newName.trim()
-                });
-                await fetchMonsters();
-            } catch (error) {
-                console.error("Error renaming monster:", error);
-                showError("Failed to rename monster. Please try again.");
-            }
+    if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
+        return;
+    }
+
+    const newName = prompt("Enter new name for the monster:", currentName);
+    if (!newName || newName.trim() === "") return;
+
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            console.error('No user logged in');
+            return;
         }
+        
+        // Get reference to the specific monster document
+        const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
+        
+        // Update the monster document with the new name
+        await updateDoc(monsterRef, {
+            monsterName: newName.trim()
+        });
+        
+        // Refresh the display
+        await fetchMonsters();
+        
+    } catch (error) {
+        console.error("Error renaming monster:", error);
+        showError("Failed to rename monster. Please try again.");
+    }
+}
     
         async function deleteMonster(monsterId, monsterName) {
             if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
