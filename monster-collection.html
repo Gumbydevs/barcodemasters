@@ -8,13 +8,15 @@
     <style>
         /* Add/update these styles */
         .collection-container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-            padding-top: 4rem; /* Added space for logo */
-            box-sizing: border-box;
+         width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 1rem;
+          padding-top: 6rem; /* Increased from 4rem */
+           box-sizing: border-box;
+         min-height: 100vh; /* Ensures minimum full viewport height */
         }
+        
 
         .collection-stats {
             display: grid;
@@ -42,7 +44,9 @@
 
         /* Make logo responsive */
         .logo-container {
-            padding-top: 1rem;
+         padding-top: 2rem; /* Increased padding */
+         position: relative;
+        z-index: 1;
         }
 
         .logo-container img {
