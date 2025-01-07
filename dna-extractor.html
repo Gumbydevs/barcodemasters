@@ -165,9 +165,9 @@
         // Constants
         const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
         const BASE_STAT_RANGES = {
-            HP: { min: 50, max: 200 },
-            AP: { min: 10, max: 50 },
-            Speed: { min: 5, max: 20 }
+            HP: { min: 5, max: 50 },
+            AP: { min: 1, max: 30 },
+            Speed: { min: 1, max: 20 }
         };
 
         let codeReader = null;
@@ -279,8 +279,8 @@
         }
 
         function generateName(seed) {
-            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic'];
-            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike'];
+            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon', 'Astro', 'Hyper', 'Ultra', 'Mega', 'Omega', 'Alpha', 'Proto', 'Neo', 'Retro', 'Wild', 'Savage', 'Primal', 'Ancient', 'Dark', 'Light', 'Divine', 'Infernal', 'Celestial', 'Spectral', 'Phantom', 'Ghost', 'Spirit', 'Core', 'Vector', 'Binary', 'Mecha', 'Robo', 'Nano', 'Byte', 'Data', 'Digital', 'Virtual', 'Crypto', 'Steam', 'Spark', 'Surge', 'Pulse', 'Wave', 'Sonic', 'Echo', 'Bass', 'Flux', 'Flow', 'Stream', 'Ocean', 'Sky', 'Nova', 'Nebula', 'Comet', 'Meteor', 'Planet', 'World', 'Realm', 'Zone', 'Matrix', 'Cube', 'Prism', 'Metal', 'Leaf', 'Forest', 'Desert', 'Mountain', 'Cave', 'Castle', 'Tower', 'Temple', 'Nexus', 'Gate', 'Dawn', 'Dusk', 'Twilight', 'Rune', 'Glyph', 'Sigil', 'Mythic', 'Legend', 'Lunar', 'Solar', 'Astral', 'Ethereal', 'Arcane', 'Mystic', 'Ember', 'Blaze', 'Infinity', 'Zero', 'Apex', 'Prime', 'Elite', 'Royal', 'Feral', 'Rapid', 'Swift', 'Mighty', 'Supreme', 'Ultimate'];
+            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'beam', 'pulse', 'wave', 'quake', 'storm', 'fury', 'rage', 'wrath', 'might', 'power', 'force', 'surge', 'blast', 'burst', 'nova', 'flare', 'spark', 'shock', 'bolt', 'slash', 'cut', 'pierce', 'crush', 'smash', 'slam', 'crash', 'boom', 'break', 'shatter', 'splinter', 'rend', 'tear', 'shred', 'drill', 'sting', 'bite', 'guard', 'shield', 'ward', 'aegis', 'armor', 'shell', 'scale', 'hide', 'skin', 'form', 'shape', 'shift', 'phase', 'drift', 'flow', 'stream', 'tide', 'current', 'force', 'rush', 'dash', 'sprint', 'leap', 'bound', 'dive', 'soar', 'glide', 'float', 'rise', 'fall', 'crash', 'impact', 'strike', 'hit', 'shot', 'fire', 'blaze', 'flame', 'frost', 'ice', 'storm', 'tempest', 'gale', 'breeze', 'wind', 'air', 'earth', 'stone', 'rock', 'crystal', 'gem', 'jewel', 'core', 'heart', 'soul', 'spirit', 'mind', 'thought', 'dream', 'wish', 'hope', 'fate', 'destiny', 'doom', 'bane', 'curse', 'hex', 'spell', 'charm', 'rune', 'sigil', 'mark', 'sign', 'symbol', 'code', 'cipher', 'script', 'text', 'word', 'song', 'tune', 'melody', 'rhythm', 'beat', 'pulse'];
             
             const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
             const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
