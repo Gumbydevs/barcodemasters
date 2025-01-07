@@ -308,6 +308,15 @@
         const userRef = doc(db, 'users', user.uid);
 
         try {
+            // Check if the monster already exists
+            const monsterRef = doc(db, 'monsters', hash);
+            const monsterSnapshot = await getDoc(monsterRef);
+
+            if (monsterSnapshot.exists()) {
+                updateDebugMessage('Monster already exists!');
+                return; // If the monster exists, stop further execution
+            }
+
             // Create the monster data
             const seed = parseInt(hash, 16);
             const level = seededRandom(seed) < 0.2 ? 2 : 1;
@@ -328,8 +337,8 @@
 
             console.log('Generated monster:', monster);
 
-            // Save monster data only to the main monsters collection
-            await setDoc(doc(db, 'monsters', hash), monster);
+            // Save monster data to the monsters collection
+            await setDoc(monsterRef, monster);
             
             // Update the user's usedHash array
             await updateDoc(userRef, {
@@ -350,6 +359,7 @@
         showError(error.message || 'Failed to generate monster');
     }
 }
+
 
         function displayMonster(monster) {
             console.log('Displaying monster:', monster);
