@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Head section remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -45,13 +44,11 @@
 
     <!-- Firebase SDK (Modules) -->
     <script type="module">
-        // Import statements remain the same
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/latest/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/latest/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/latest/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-
-        // Firebase configuration remains the same
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -61,13 +58,6 @@
             appId: "1:827677074735:web:3bace3d02034348bc82dda",
             measurementId: "G-14YTBBLTPZ"
         };
-        // Check if Firebase is initialized
-            if (!firebase.apps.length) {
-            initializeApp(firebaseConfig);
-         }   
-        else {
-            firebase.app(); // If Firebase is already initialized
-        }
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -140,7 +130,62 @@
             }
         }
 
-        // Function to handle redirection
+        // Function to handle Firebase Authentication
+        async function loginWithFirebase(email, password) {
+            try {
+                logToDebug(`Attempting login for email: ${email}`);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                logToDebug(`Authentication successful for UID: ${user.uid}`);
+
+                // Check if user exists in Firestore
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+
+                if (!docSnap.exists()) {
+                    logToDebug("User not found in Firestore - creating new user document");
+                    await createUserInFirestore(user);
+                } else {
+                    logToDebug("User found in Firestore");
+                }
+
+                // Store user info in localStorage
+                localStorage.setItem("loggedInUser", JSON.stringify({
+                    email: user.email,
+                    uid: user.uid
+                }));
+
+                // Handle redirect
+                handleRedirect();
+
+            } catch (error) {
+                let errorMessage = 'An error occurred during login.';
+                
+                // Handle specific Firebase errors
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Please enter a valid email address.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your connection and try again.';
+                        break;
+                }
+
+                showError(errorMessage);
+                logToDebug(`Login error: ${error.code} - ${error.message}`, 'error');
+            }
+        }
+
+        // Function to handle redirect
         function handleRedirect() {
             const debugSection = document.getElementById("debugSection");
             const goToProfileBtn = document.getElementById("goToProfileBtn");
@@ -155,62 +200,6 @@
                 return true;
             }
         }
-
-        // Function to handle Firebase Authentication
-        async function loginWithFirebase(email, password) {
-    try {
-        logToDebug(`Attempting login for email: ${email}`);
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        logToDebug(`Authentication successful for UID: ${user.uid}`);
-
-        // Check if user exists in Firestore
-        const userRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(userRef);
-
-        if (!docSnap.exists()) {
-            logToDebug("User not found in Firestore - creating new user document");
-            await createUserInFirestore(user);
-        } else {
-            logToDebug("User found in Firestore");
-        }
-
-        // Store user info in localStorage
-        localStorage.setItem("loggedInUser", JSON.stringify({
-            email: user.email,
-            uid: user.uid
-        }));
-
-        // Handle redirect
-        handleRedirect();
-
-    } catch (error) {
-        let errorMessage = 'An error occurred during login.';
-        
-        // Handle specific Firebase errors
-        switch (error.code) {
-            case 'auth/invalid-email':
-                errorMessage = 'Please enter a valid email address.';
-                break;
-            case 'auth/user-not-found':
-                errorMessage = 'No account found with this email.';
-                break;
-            case 'auth/wrong-password':
-                errorMessage = 'Incorrect password.';
-                break;
-            case 'auth/too-many-requests':
-                errorMessage = 'Too many failed attempts. Please try again later.';
-                break;
-            case 'auth/network-request-failed':
-                errorMessage = 'Network error. Please check your connection and try again.';
-                break;
-        }
-
-        showError(errorMessage);
-        logToDebug(`Login error: ${error.code} - ${error.message}`, 'error');
-    }
-}
-
 
         // Dark mode toggle functionality
         const darkModeToggle = document.getElementById("darkModeToggle");
