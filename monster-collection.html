@@ -97,11 +97,12 @@
         }
 
         .stat-item {
-            padding: 0.25rem;
+            padding: 0.5rem;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 4px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 0.875rem;
         }
 
@@ -128,6 +129,45 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: inherit;
             min-width: 120px;
+        }
+
+        .xp-progress {
+            background: rgba(255,255,255,0.1);
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .xp-progress-bar {
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s ease;
+        }
+
+        /* Navigation Grid */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .nav-button {
+            padding: 0.75rem 1rem;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: #1976D2;
         }
 
         /* Dark mode specific styles */
@@ -201,7 +241,7 @@
                 <option value="">All Types</option>
                 <option value="Feral">Feral</option>
                 <option value="Fighter">Fighter</option>
-                <option value="Caster">Caster</option>
+                <option value="Mage">Mage</option>
                 <option value="Ranged">Ranged</option>
                 <option value="Tank">Tank</option>
             </select>
@@ -214,10 +254,23 @@
             <select id="sortBy" class="sort-select">
                 <option value="dateCreated">Date Created</option>
                 <option value="level">Level</option>
-                <option value="hp">HP</option>
-                <option value="ap">AP</option>
-                <option value="speed">Speed</option>
+                <option value="HP">HP</option>
+                <option value="AP">AP</option>
+                <option value="Speed">Speed</option>
             </select>
+        </div>
+
+        <!-- Navigation Grid -->
+        <div class="navigation-grid">
+            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
+            <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
+            <button class="nav-button" onclick="location.href='pvp-battle.html'">PVP Battle</button>
+            <button class="nav-button" onclick="location.href='player-profile.html'">Player Profile</button>
+            <button class="nav-button" onclick="location.href='help.html'">Help</button>
+            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
+            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
+            <button class="nav-button" id="logoutButton">Logout</button>
         </div>
 
         <!-- Monsters Grid -->
@@ -257,15 +310,29 @@
 
         let currentMonsters = [];
 
+        // Format date function
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
         // Function to create monster card HTML
         function createMonsterCard(monster) {
+            // Calculate XP to next level
+            const xpToNextLevel = monster.level * 100;
+            const xpProgress = (monster.experience / xpToNextLevel) * 100;
+            
             return `
-                <div class="monster-card" data-id="${monster.id}">
+                <div class="monster-card" data-id="${monster.hash}">
                     <div class="monster-image-placeholder">
-                        AI generated appearance placeholder
+                        ${monster.type} - Level ${monster.level}
                     </div>
                     <div class="monster-info">
-                        <div class="monster-name">${monster.name}</div>
+                        <div class="monster-name">${monster.monsterName}</div>
                         <span class="monster-type-badge">${monster.type}</span>
                         <div class="monster-stats">
                             <div class="stat-item">
@@ -274,20 +341,27 @@
                             </div>
                             <div class="stat-item">
                                 <span>XP</span>
-                                <span>${monster.experience}</span>
+                                <span>${monster.experience}/${xpToNextLevel}</span>
                             </div>
                             <div class="stat-item">
                                 <span>HP</span>
-                                <span>${monster.hp}</span>
+                                <span>${monster.HP}</span>
                             </div>
                             <div class="stat-item">
                                 <span>AP</span>
-                                <span>${monster.ap}</span>
+                                <span>${monster.AP}</span>
                             </div>
                             <div class="stat-item">
                                 <span>Speed</span>
-                                <span>${monster.speed}</span>
+                                <span>${monster.Speed}</span>
                             </div>
+                            <div class="stat-item">
+                                <span>Created</span>
+                                <span>${formatDate(monster.dateCreated)}</span>
+                            </div>
+                        </div>
+                        <div class="xp-progress">
+                            <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
                         </div>
                     </div>
                 </div>
@@ -322,10 +396,20 @@
             }
 
             filtered.sort((a, b) => {
-                if (sortBy === 'dateCreated') {
-                    return new Date(b.dateCreated) - new Date(a.dateCreated);
+                switch(sortBy) {
+                    case 'dateCreated':
+                        return new Date(b.dateCreated) - new Date(a.dateCreated);
+                    case 'level':
+                        return b.level - a.level;
+                    case 'HP':
+                        return b.HP - a.HP;
+                    case 'AP':
+                        return b.AP - a.AP;
+                    case 'Speed':
+                        return b.Speed - a.Speed;
+                    default:
+                        return 0;
                 }
-                return b[sortBy] - a[sortBy];
             });
 
             const monstersGrid = document.getElementById('monstersGrid');
@@ -347,6 +431,7 @@
                     ...doc.data()
                 }));
 
+                console.log('Fetched monsters:', currentMonsters); // Debug log
                 updateCollectionStats(currentMonsters);
                 filterAndSortMonsters();
             } catch (error) {
@@ -366,6 +451,15 @@
         document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
         document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
         document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
+
+        // Add event listener for logout button
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                showError('Logout failed: ' + error.message);
+            });
+        });
 
         // Check authentication state
         onAuthStateChanged(auth, (user) => {
