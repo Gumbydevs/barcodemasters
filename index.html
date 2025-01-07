@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Head section remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,12 +45,12 @@
 
     <!-- Firebase SDK (Modules) -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
+        // Import statements remain the same
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
+        // Firebase configuration remains the same
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -65,16 +66,21 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Enhanced debug logging function with timestamps
+        // Debug state management
+        let isDebugMode = false;
+
+        // Enhanced debug logging function
         function logToDebug(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
             const debugLogs = document.getElementById("debugLogs");
             const prefix = type === 'error' ? '❌ ERROR' : '✓ INFO';
-            debugLogs.textContent += `[${timestamp}] ${prefix}: ${message}\n`;
-            debugLogs.scrollTop = debugLogs.scrollHeight; // Auto-scroll to bottom
+            const logMessage = `[${timestamp}] ${prefix}: ${message}\n`;
+            debugLogs.textContent += logMessage;
+            debugLogs.scrollTop = debugLogs.scrollHeight;
+            console.log(logMessage); // Also log to console for additional debugging
         }
 
-        // Function to show error message on the page
+        // Function to show error message
         function showError(message) {
             const errorElement = document.getElementById('errorMessage');
             errorElement.textContent = message;
@@ -82,12 +88,19 @@
             logToDebug(message, 'error');
         }
 
-        // Function to create user in Firestore
-        async function createUserInFirestore(user) {
+        // Function to create user in Firestore with retry
+        async function createUserInFirestore(user, retryCount = 0) {
             try {
+                logToDebug(`Attempting to create user in Firestore (Attempt ${retryCount + 1})`);
                 const userRef = doc(db, "users", user.uid);
-                logToDebug(`Attempting to create user in Firestore with UID: ${user.uid}`);
                 
+                // Check again if user exists (double-check)
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) {
+                    logToDebug("User already exists in Firestore (double-check)");
+                    return true;
+                }
+
                 const userData = {
                     username: user.displayName || 'New User',
                     email: user.email,
@@ -97,11 +110,41 @@
                 };
 
                 await setDoc(userRef, userData);
-                logToDebug("Successfully created user in Firestore");
-                return true;
+                
+                // Verify the user was created
+                const verifySnap = await getDoc(userRef);
+                if (verifySnap.exists()) {
+                    logToDebug("Successfully created and verified user in Firestore");
+                    return true;
+                } else {
+                    throw new Error("User creation verification failed");
+                }
             } catch (error) {
                 logToDebug(`Failed to create user in Firestore: ${error.message}`, 'error');
-                throw error; // Re-throw to handle in calling function
+                
+                // Retry logic
+                if (retryCount < 2) {
+                    logToDebug(`Retrying user creation (Attempt ${retryCount + 2})`);
+                    return await createUserInFirestore(user, retryCount + 1);
+                }
+                
+                throw error;
+            }
+        }
+
+        // Function to handle redirection
+        function handleRedirect() {
+            const debugSection = document.getElementById("debugSection");
+            const goToProfileBtn = document.getElementById("goToProfileBtn");
+            
+            if (debugSection.style.display === "block") {
+                logToDebug("Debug mode active - manual redirect required");
+                goToProfileBtn.style.display = "inline-block";
+                return false; // Don't redirect automatically
+            } else {
+                logToDebug("Debug mode inactive - redirecting automatically");
+                window.location.href = 'profile.html';
+                return true;
             }
         }
 
@@ -130,17 +173,8 @@
                     uid: user.uid
                 }));
 
-                // Handle redirect based on debug section visibility
-                const debugSection = document.getElementById("debugSection");
-                const goToProfileBtn = document.getElementById("goToProfileBtn");
-
-                if (debugSection.style.display === "block") {
-                    logToDebug("Debug mode active - showing manual redirect button");
-                    goToProfileBtn.style.display = "inline-block";
-                } else {
-                    logToDebug("Debug mode inactive - redirecting automatically");
-                    window.location.href = 'profile.html';
-                }
+                // Handle redirect
+                handleRedirect();
 
             } catch (error) {
                 let errorMessage = 'An error occurred during login.';
@@ -165,7 +199,7 @@
             }
         }
 
-        // Handle dark mode toggle
+        // Dark mode toggle functionality
         const darkModeToggle = document.getElementById("darkModeToggle");
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme === "dark") {
@@ -188,7 +222,10 @@
         const toggleDebugBtn = document.getElementById("toggleDebugBtn");
         toggleDebugBtn.addEventListener("click", function() {
             const debugSection = document.getElementById("debugSection");
-            debugSection.style.display = debugSection.style.display === "none" ? "block" : "none";
+            const isVisible = debugSection.style.display === "block";
+            debugSection.style.display = isVisible ? "none" : "block";
+            isDebugMode = !isVisible;
+            logToDebug(`Debug mode ${isDebugMode ? 'enabled' : 'disabled'}`);
         });
 
         // Go to Profile button functionality
@@ -198,11 +235,18 @@
             window.location.href = 'profile.html';
         });
 
-        // Check if user is already logged in
+        // Modified check for logged-in user
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                logToDebug("User already logged in - redirecting to profile");
-                window.location.href = 'profile.html';
+                logToDebug("User already logged in");
+                if (!isDebugMode) {
+                    logToDebug("Redirecting to profile (debug mode off)");
+                    window.location.href = 'profile.html';
+                } else {
+                    logToDebug("Debug mode on - manual redirect required");
+                    const goToProfileBtn = document.getElementById("goToProfileBtn");
+                    goToProfileBtn.style.display = "inline-block";
+                }
             }
         });
 
