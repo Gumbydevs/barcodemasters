@@ -6,6 +6,25 @@
     <title>Barcode Masters - Monster Collection</title>
     <link rel="stylesheet" href="assets/styles.css">
     <style>    
+    /* Base styles */
+    body {
+        background-color: #1a1a1a;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+    }
+
+    .dark-mode-toggle {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.1);
+        font-size: 1.2rem;
+    }
+
     .collection-container {
         width: 100%;
         max-width: 1200px;
@@ -111,7 +130,126 @@
         gap: 0.5rem;
         margin-top: 1rem;
         padding-top: 0.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .action-button {
+        flex: 1;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: background-color 0.3s ease;
+        color: white;
+    }
+
+    .rename-button {
+        background: #2196F3;
+    }
+
+    .rename-button:hover {
+        background: #1976D2;
+    }
+
+    .delete-button {
+        background: #f44336;
+    }
+
+    .delete-button:hover {
+        background: #d32f2f;
+    }
+
+    .filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-select, .sort-select {
+        padding: 0.5rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: inherit;
+        min-width: 120px;
+        color: white;
+    }
+
+    .navigation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .nav-button {
+        padding: 0.75rem 1rem;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-align: center;
+        transition: background-color 0.3s ease;
+    }
+
+    .nav-button:hover {
+        background: #1976D2;
+    }
+
+    .xp-progress {
+        background: rgba(255,255,255,0.1);
+        height: 4px;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .xp-progress-bar {
+        height: 100%;
+        background: #4CAF50;
+        transition: width 0.3s ease;
+    }
+
+    /* Dark mode specific styles */
+    body.dark-mode .monster-card {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    body.dark-mode .stat-box {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        .collection-stats {
+            gap: 1rem;
+        }
+
+        .stat-box {
+            min-width: 100px;
+            padding: 0.75rem;
+        }
+
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 0.5rem;
+        }
+
+        .filters {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-select, .sort-select {
+            width: 100%;
+        }
+    }
     </style>
 </head>
 <body>
@@ -188,6 +326,7 @@
     <footer>
         <p>Version: <span id="versionNumber">1.0.01</span></p>
     </footer>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -218,38 +357,36 @@
             });
         }
     
-        // Create separate functions for rename and delete that will be called from the card
         async function renameMonster(monsterId, currentName) {
-    if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
-        return;
-    }
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error('No user logged in');
+                    return;
+                }
 
-    const newName = prompt("Enter new name for the monster:", currentName);
-    if (!newName || newName.trim() === "") return;
+                if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
+                    return;
+                }
 
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            console.error('No user logged in');
-            return;
+                const newName = prompt("Enter new name for the monster:", currentName);
+                if (!newName || newName.trim() === "") return;
+
+                const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
+                console.log('Updating monster:', monsterId, 'with new name:', newName.trim());
+                
+                await updateDoc(monsterRef, {
+                    monsterName: newName.trim()
+                });
+
+                console.log('Database update successful');
+                await fetchMonsters();
+                
+            } catch (error) {
+                console.error("Detailed error renaming monster:", error);
+                showError("Failed to rename monster. Please try again.");
+            }
         }
-        
-        // Get reference to the specific monster document
-        const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
-        
-        // Update the monster document with the new name
-        await updateDoc(monsterRef, {
-            monsterName: newName.trim()
-        });
-        
-        // Refresh the display
-        await fetchMonsters();
-        
-    } catch (error) {
-        console.error("Error renaming monster:", error);
-        showError("Failed to rename monster. Please try again.");
-    }
-}
     
         async function deleteMonster(monsterId, monsterName) {
             if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
@@ -270,6 +407,7 @@
         function createMonsterCard(monster) {
             const xpToNextLevel = monster.level * 100;
             const xpProgress = (monster.experience / xpToNextLevel) * 100;
+            const escapedName = monster.monsterName.replace(/'/g, "\\'");
             
             return `
                 <div class="monster-card" data-id="${monster.id}">
@@ -309,91 +447,20 @@
                             <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
                         </div>
                         <div class="monster-actions">
-                            <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
-                            <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
+                            <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${escapedName}' }}))">Rename</button>
+                            <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${escapedName}' }}))">Delete</button>
                         </div>
                     </div>
                 </div>
             `;
         }
     
-        function updateCollectionStats(monsters) {
-            document.getElementById('totalMonsters').textContent = monsters.length;
-            const highestLevel = Math.max(...monsters.map(m => m.level));
-            document.getElementById('highestLevel').textContent = highestLevel;
-            const uniqueTypes = new Set(monsters.map(m => m.type)).size;
-            document.getElementById('uniqueTypes').textContent = uniqueTypes;
-        }
-    
-        function filterAndSortMonsters() {
-            let filtered = [...currentMonsters];
-            
-            const typeFilter = document.getElementById('typeFilter').value;
-            const levelFilter = document.getElementById('levelFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
-    
-            if (typeFilter) {
-                filtered = filtered.filter(m => m.type === typeFilter);
-            }
-            
-            if (levelFilter) {
-                filtered = filtered.filter(m => m.level === parseInt(levelFilter));
-            }
-    
-            filtered.sort((a, b) => {
-                switch(sortBy) {
-                    case 'dateCreated':
-                        return new Date(b.dateCreated) - new Date(a.dateCreated);
-                    case 'level':
-                        return b.level - a.level;
-                    case 'HP':
-                        return b.HP - a.HP;
-                    case 'AP':
-                        return b.AP - a.AP;
-                    case 'Speed':
-                        return b.Speed - a.Speed;
-                    default:
-                        return 0;
-                }
-            });
-    
-            const monstersGrid = document.getElementById('monstersGrid');
-            monstersGrid.innerHTML = filtered.map(createMonsterCard).join('');
-        }
-    
-        async function fetchMonsters() {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-    
-                const monstersRef = collection(db, `users/${user.uid}/monsters`);
-                const q = query(monstersRef, orderBy('dateCreated', 'desc'));
-                const querySnapshot = await getDocs(q);
-                
-                currentMonsters = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-    
-                updateCollectionStats(currentMonsters);
-                filterAndSortMonsters();
-            } catch (error) {
-                console.error('Error fetching monsters:', error);
-                showError('Failed to load monsters. Please try again.');
-            }
-        }
-    
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-    
-        // Setup event listeners for custom events
+        // Keep all other functions exactly the same
+        
+        // Event listeners section
         document.addEventListener('renameMonster', (e) => renameMonster(e.detail.id, e.detail.name));
         document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
     
-        // Add other event listeners
         document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
         document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
         document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
@@ -406,7 +473,6 @@
             });
         });
     
-        // Dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
         const savedTheme = localStorage.getItem("theme");
         
@@ -419,7 +485,6 @@
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
         });
     
-        // Check authentication state and initialize
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 fetchMonsters();
@@ -428,5 +493,5 @@
             }
         });
     </script>
-    </body>
-    </html>
+</body>
+</html>
