@@ -348,15 +348,105 @@
     
         // Keep the rename and delete functions the same
         async function renameMonster(monsterId, currentName) {
-            // ... keep the rename function the same ...
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            console.error('No user logged in');
+            return;
         }
-    
+
+        if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
+            return;
+        }
+
+        const newName = prompt("Enter new name for the monster:", currentName);
+        if (!newName || newName.trim() === "") return;
+
+        const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
+        console.log('Updating monster:', monsterId, 'with new name:', newName.trim());
+        
+        await updateDoc(monsterRef, {
+            monsterName: newName.trim()
+        });
+
+        console.log('Database update successful');
+        await fetchMonsters();
+        
+    } catch (error) {
+        console.error("Detailed error renaming monster:", error);
+        showError("Failed to rename monster. Please try again.");
+    }
+}
+           
         async function deleteMonster(monsterId, monsterName) {
-            // ... keep the delete function the same ...
+            async function deleteMonster(monsterId, monsterName) {
+    if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        const user = auth.currentUser;
+        const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
+        await deleteDoc(monsterRef);
+        await fetchMonsters();
+    } catch (error) {
+        console.error("Error deleting monster:", error);
+        showError("Failed to delete monster. Please try again.");
+    }
+}
         }
     
         function createMonsterCard(monster) {
-            // ... keep the createMonsterCard function the same ...
+            function createMonsterCard(monster) {
+    const xpToNextLevel = monster.level * 100;
+    const xpProgress = (monster.experience / xpToNextLevel) * 100;
+    const escapedName = monster.monsterName.replace(/'/g, "\\'");
+    
+    return `
+        <div class="monster-card" data-id="${monster.id}">
+            <div class="monster-image-placeholder">
+                ${monster.type} - Level ${monster.level}
+            </div>
+            <div class="monster-info">
+                <div class="monster-name">${monster.monsterName}</div>
+                <span class="monster-type-badge">${monster.type}</span>
+                <div class="monster-stats">
+                    <div class="stat-item">
+                        <span>Level</span>
+                        <span>${monster.level}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>XP</span>
+                        <span>${monster.experience}/${xpToNextLevel}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>HP</span>
+                        <span>${monster.HP}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>AP</span>
+                        <span>${monster.AP}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Speed</span>
+                        <span>${monster.Speed}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Created</span>
+                        <span>${formatDate(monster.dateCreated)}</span>
+                    </div>
+                </div>
+                <div class="xp-progress">
+                    <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                </div>
+                <div class="monster-actions">
+                    <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${escapedName}' }}))">Rename</button>
+                    <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${escapedName}' }}))">Delete</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
         }
      
         // Keep all the event listeners the same
