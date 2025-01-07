@@ -263,8 +263,21 @@
 
 
     <script type="module">
-        // Keep all the imports and Firebase config the same
-        
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -279,8 +292,6 @@
                 day: 'numeric' 
             });
         }
-
-        // Add back the missing functions
         function updateCollectionStats(monsters) {
             document.getElementById('totalMonsters').textContent = monsters.length;
             const highestLevel = Math.max(...monsters.map(m => m.level));
@@ -310,188 +321,106 @@
                         return new Date(b.dateCreated) - new Date(a.dateCreated);
                     case 'level':
                         return b.level - a.level;
-                    case 'HP':
-                        return b.HP - a.HP;
-                    case 'AP':
-                        return b.AP - a.AP;
-                    case 'Speed':
-                        return b.Speed - a.Speed;
+                        case 'name':
+                        return a.name.localeCompare(b.name);
                     default:
                         return 0;
                 }
             });
 
-            const monstersGrid = document.getElementById('monstersGrid');
-            monstersGrid.innerHTML = filtered.map(createMonsterCard).join('');
+            renderMonsters(filtered);
         }
 
-        async function fetchMonsters() {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
+        function renderMonsters(monsters) {
+            const monstersGrid = document.getElementById('monstersGrid');
+            monstersGrid.innerHTML = '';
 
-                const monstersRef = collection(db, `users/${user.uid}/monsters`);
-                const q = query(monstersRef, orderBy('dateCreated', 'desc'));
-                const querySnapshot = await getDocs(q);
-                
-                currentMonsters = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+            monsters.forEach(monster => {
+                const card = document.createElement('div');
+                card.classList.add('monster-card');
+                card.innerHTML = `
+                    <div class="monster-image-placeholder">Image Placeholder</div>
+                    <div class="monster-info">
+                        <div class="monster-name">${monster.name}</div>
+                        <div class="monster-type-badge">${monster.type}</div>
+                        <div class="monster-stats">
+                            <div class="stat-item"><span>Level</span><span>${monster.level}</span></div>
+                            <div class="stat-item"><span>XP</span><span>${monster.xp}</span></div>
+                        </div>
+                        <div class="xp-progress">
+                            <div class="xp-progress-bar" style="width: ${(monster.xp / monster.nextLevelXp) * 100}%"></div>
+                        </div>
+                        <div class="monster-actions">
+                            <button class="rename-button" onclick="renameMonster('${monster.id}')">Rename</button>
+                            <button class="delete-button" onclick="deleteMonster('${monster.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+                monstersGrid.appendChild(card);
+            });
+        }
 
-                updateCollectionStats(currentMonsters);
-                filterAndSortMonsters();
-            } catch (error) {
-                console.error('Error fetching monsters:', error);
-                showError('Failed to load monsters. Please try again.');
+        function renameMonster(monsterId) {
+            const newName = prompt('Enter new name for the monster:');
+            if (newName) {
+                const monsterRef = doc(db, 'monsters', monsterId);
+                updateDoc(monsterRef, { name: newName }).then(() => {
+                    alert('Monster renamed successfully.');
+                    fetchMonsters();
+                }).catch(error => {
+                    console.error('Error renaming monster:', error);
+                });
             }
         }
 
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-    
-        // Keep the rename and delete functions the same
-        async function renameMonster(monsterId, currentName) {
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            console.error('No user logged in');
-            return;
+        function deleteMonster(monsterId) {
+            const confirmDelete = confirm('Are you sure you want to delete this monster?');
+            if (confirmDelete) {
+                const monsterRef = doc(db, 'monsters', monsterId);
+                deleteDoc(monsterRef).then(() => {
+                    alert('Monster deleted successfully.');
+                    fetchMonsters();
+                }).catch(error => {
+                    console.error('Error deleting monster:', error);
+                });
+            }
         }
 
-        if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
-            return;
+        function fetchMonsters() {
+            const monstersRef = collection(db, 'monsters');
+            const monstersQuery = query(monstersRef, orderBy('dateCreated', 'desc'));
+
+            getDocs(monstersQuery).then(snapshot => {
+                currentMonsters = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateCollectionStats(currentMonsters);
+                filterAndSortMonsters();
+            }).catch(error => {
+                console.error('Error fetching monsters:', error);
+            });
         }
 
-        const newName = prompt("Enter new name for the monster:", currentName);
-        if (!newName || newName.trim() === "") return;
-
-        const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
-        console.log('Updating monster:', monsterId, 'with new name:', newName.trim());
-        
-        await updateDoc(monsterRef, {
-            monsterName: newName.trim()
-        });
-
-        console.log('Database update successful');
-        await fetchMonsters();
-        
-    } catch (error) {
-        console.error("Detailed error renaming monster:", error);
-        showError("Failed to rename monster. Please try again.");
-    }
-}
-           
-        async function deleteMonster(monsterId, monsterName) {
-            async function deleteMonster(monsterId, monsterName) {
-    if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
-        return;
-    }
-
-    try {
-        const user = auth.currentUser;
-        const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
-        await deleteDoc(monsterRef);
-        await fetchMonsters();
-    } catch (error) {
-        console.error("Error deleting monster:", error);
-        showError("Failed to delete monster. Please try again.");
-    }
-}
-        }
-    
-        function createMonsterCard(monster) {
-            function createMonsterCard(monster) {
-    const xpToNextLevel = monster.level * 100;
-    const xpProgress = (monster.experience / xpToNextLevel) * 100;
-    const escapedName = monster.monsterName.replace(/'/g, "\\'");
-    
-    return `
-        <div class="monster-card" data-id="${monster.id}">
-            <div class="monster-image-placeholder">
-                ${monster.type} - Level ${monster.level}
-            </div>
-            <div class="monster-info">
-                <div class="monster-name">${monster.monsterName}</div>
-                <span class="monster-type-badge">${monster.type}</span>
-                <div class="monster-stats">
-                    <div class="stat-item">
-                        <span>Level</span>
-                        <span>${monster.level}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>XP</span>
-                        <span>${monster.experience}/${xpToNextLevel}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>HP</span>
-                        <span>${monster.HP}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>AP</span>
-                        <span>${monster.AP}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Speed</span>
-                        <span>${monster.Speed}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Created</span>
-                        <span>${formatDate(monster.dateCreated)}</span>
-                    </div>
-                </div>
-                <div class="xp-progress">
-                    <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
-                </div>
-                <div class="monster-actions">
-                    <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${escapedName}' }}))">Rename</button>
-                    <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${escapedName}' }}))">Delete</button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-        }
-     
-        // Keep all the event listeners the same
-        document.addEventListener('renameMonster', (e) => renameMonster(e.detail.id, e.detail.name));
-        document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
-    
-        document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
-        document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
-        document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
-    
         document.getElementById('logoutButton').addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            }).catch((error) => {
-                showError('Logout failed: ' + error.message);
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            }).catch(error => {
+                console.error('Error logging out:', error);
             });
         });
-    
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        const savedTheme = localStorage.getItem("theme");
-        
-        if (savedTheme === "dark") {
-            document.body.classList.add("dark-mode");
-        }
-    
-        darkModeToggle.addEventListener("click", function() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
         });
-    
-        onAuthStateChanged(auth, (user) => {
+
+        onAuthStateChanged(auth, user => {
             if (user) {
                 fetchMonsters();
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
             }
         });
+
     </script>
 </body>
 </html>
-   
+
+                   
