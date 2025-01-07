@@ -6,8 +6,176 @@
     <title>Barcode Masters - Monster Collection</title>
     <link rel="stylesheet" href="assets/styles.css">
     <style>
-        /* All your existing styles remain exactly the same */
-        /* Keep all style content unchanged */
+        .collection-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .collection-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo-container img {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        .collection-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-box h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: #a8b3cf;
+        }
+
+        .stat-box p {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select, .sort-select {
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+            backdrop-filter: blur(5px);
+        }
+
+        .filter-select:hover, .sort-select:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .filter-select:focus, .sort-select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .nav-button {
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .nav-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        #logoutButton:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+        }
+
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: #a8b3cf;
+        }
+
+        #darkModeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        #darkModeToggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode {
+            background: #121212;
+            color: white;
+        }
+
+        body.dark-mode .stat-box,
+        body.dark-mode .monster-card {
+            background: rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -62,10 +230,9 @@
 
         <div class="navigation-grid">
             <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
-            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
             <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
             <button class="nav-button" onclick="location.href='pvp-battle.html'">PVP Battle</button>
-            <button class="nav-button" onclick="location.href='player-profile.html'">Player Profile</button>
+            <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
             <button class="nav-button" onclick="location.href='help.html'">Help</button>
             <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
             <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
@@ -82,234 +249,500 @@
     <footer>
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, orderBy, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    
-        const firebaseConfig = {
-            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
-            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
-            projectId: "barcodemasters-b4b9b",
-            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
-            messagingSenderId: "827677074735",
-            appId: "1:827677074735:web:3bace3d02034348bc82dda",
-            measurementId: "G-14YTBBLTPZ"
-        };
-    
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-    
-        let currentMonsters = [];
-    
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
+    <style>
+        /* Monster Card Styles */
+        .monster-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .monster-image-placeholder {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .monster-image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .monster-card:hover .monster-image-placeholder::before {
+            transform: translateX(100%);
+        }
+
+        .monster-info {
+            flex: 1;
+        }
+
+        .monster-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+        }
+
+        .monster-type-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(52, 152, 219, 0.1));
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .stat-item span:first-child {
+            color: #a8b3cf;
+        }
+
+        .stat-item span:last-child {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .xp-progress {
+            background: rgba(0, 0, 0, 0.2);
+            height: 6px;
+            border-radius: 3px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .xp-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            transition: width 0.6s ease;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .xp-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .monster-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-button {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rename-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+        }
+
+        .rename-button:hover {
+            background: linear-gradient(135deg, #2980b9, #2573a7);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .delete-button {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+        }
+
+        .delete-button:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Error Message Styling */
+        #errorMessage {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.1));
+            border-left: 4px solid #e74c3c;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            color: #e74c3c;
+            font-size: 0.95rem;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        /* Type-specific badge colors */
+        .monster-type-badge[data-type="Feral"] {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(142, 68, 173, 0.1));
+            border-color: rgba(155, 89, 182, 0.2);
+        }
+
+        .monster-type-badge[data-type="Fighter"] {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(192, 57, 43, 0.1));
+            border-color: rgba(231, 76, 60, 0.2);
+        }
+
+        .monster-type-badge[data-type="Mage"] {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(41, 128, 185, 0.1));
+            border-color: rgba(52, 152, 219, 0.2);
+        }
+
+        .monster-type-badge[data-type="Ranged"] {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.1));
+            border-color: rgba(46, 204, 113, 0.2);
+        }
+
+        .monster-type-badge[data-type="Tank"] {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.3), rgba(211, 84, 0, 0.1));
+            border-color: rgba(243, 156, 18, 0.2);
+        }
+    </style>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+        authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+        projectId: "barcodemasters-b4b9b",
+        storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+        messagingSenderId: "827677074735",
+        appId: "1:827677074735:web:3bace3d02034348bc82dda",
+        measurementId: "G-14YTBBLTPZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentMonsters = [];
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    async function renameMonster(monsterId, currentName) {
+        if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
+            return;
+        }
+
+        const newName = prompt("Enter new name for the monster:", currentName);
+        if (!newName || newName.trim() === "") return;
+
+        try {
+            const monsterRef = doc(db, 'monsters', monsterId);
+            await updateDoc(monsterRef, {
+                monsterName: newName.trim()
             });
+            showToast('Monster renamed successfully!');
+            await fetchMonsters();
+        } catch (error) {
+            console.error("Error renaming monster:", error);
+            showError("Failed to rename monster. Please try again.");
         }
-    
-        // Create separate functions for rename and delete that will be called from the card
-        async function renameMonster(monsterId, currentName) {
-            if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
-                return;
-            }
-    
-            const newName = prompt("Enter new name for the monster:", currentName);
-            if (!newName || newName.trim() === "") return;
-    
-            try {
-                const user = auth.currentUser;
-                const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
-                await updateDoc(monsterRef, {
-                    monsterName: newName.trim()
-                });
-                await fetchMonsters();
-            } catch (error) {
-                console.error("Error renaming monster:", error);
-                showError("Failed to rename monster. Please try again.");
-            }
+    }
+
+    async function deleteMonster(monsterId, monsterName) {
+        if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
+            return;
         }
-    
-        async function deleteMonster(monsterId, monsterName) {
-            if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
-                return;
-            }
-    
-            try {
-                const user = auth.currentUser;
-                const monsterRef = doc(db, `users/${user.uid}/monsters`, monsterId);
-                await deleteDoc(monsterRef);
-                await fetchMonsters();
-            } catch (error) {
-                console.error("Error deleting monster:", error);
-                showError("Failed to delete monster. Please try again.");
-            }
+
+        try {
+            const monsterRef = doc(db, 'monsters', monsterId);
+            await deleteDoc(monsterRef);
+            showToast('Monster deleted successfully!');
+            await fetchMonsters();
+        } catch (error) {
+            console.error("Error deleting monster:", error);
+            showError("Failed to delete monster. Please try again.");
         }
-    
-        function createMonsterCard(monster) {
-            const xpToNextLevel = monster.level * 100;
-            const xpProgress = (monster.experience / xpToNextLevel) * 100;
-            
-            return `
-                <div class="monster-card" data-id="${monster.id}">
-                    <div class="monster-image-placeholder">
-                        ${monster.type} - Level ${monster.level}
+    }
+
+    function createMonsterCard(monster) {
+        const xpToNextLevel = monster.level * 100;
+        const xpProgress = (monster.experience / xpToNextLevel) * 100;
+        
+        return `
+            <div class="monster-card" data-id="${monster.id}">
+                <div class="monster-image-placeholder">
+                    ${monster.type} - Level ${monster.level}
+                </div>
+                <div class="monster-info">
+                    <div class="monster-name">${monster.monsterName}</div>
+                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                    <div class="monster-stats">
+                        <div class="stat-item">
+                            <span>Level</span>
+                            <span>${monster.level}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>XP</span>
+                            <span>${monster.experience}/${xpToNextLevel}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>HP</span>
+                            <span>${monster.HP}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>AP</span>
+                            <span>${monster.AP}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Speed</span>
+                            <span>${monster.Speed}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Created</span>
+                            <span>${formatDate(monster.dateCreated)}</span>
+                        </div>
                     </div>
-                    <div class="monster-info">
-                        <div class="monster-name">${monster.monsterName}</div>
-                        <span class="monster-type-badge">${monster.type}</span>
-                        <div class="monster-stats">
-                            <div class="stat-item">
-                                <span>Level</span>
-                                <span>${monster.level}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>XP</span>
-                                <span>${monster.experience}/${xpToNextLevel}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>HP</span>
-                                <span>${monster.HP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>AP</span>
-                                <span>${monster.AP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Speed</span>
-                                <span>${monster.Speed}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Created</span>
-                                <span>${formatDate(monster.dateCreated)}</span>
-                            </div>
-                        </div>
-                        <div class="xp-progress">
-                            <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
-                        </div>
-                        <div class="monster-actions">
-                            <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
-                            <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
-                        </div>
+                    <div class="xp-progress">
+                        <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                    </div>
+                    <div class="monster-actions">
+                        <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
+                        <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
                     </div>
                 </div>
-            `;
-        }
-    
-        function updateCollectionStats(monsters) {
-            document.getElementById('totalMonsters').textContent = monsters.length;
-            const highestLevel = Math.max(...monsters.map(m => m.level));
-            document.getElementById('highestLevel').textContent = highestLevel;
-            const uniqueTypes = new Set(monsters.map(m => m.type)).size;
-            document.getElementById('uniqueTypes').textContent = uniqueTypes;
-        }
-    
-        function filterAndSortMonsters() {
-            let filtered = [...currentMonsters];
-            
-            const typeFilter = document.getElementById('typeFilter').value;
-            const levelFilter = document.getElementById('levelFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
-    
-            if (typeFilter) {
-                filtered = filtered.filter(m => m.type === typeFilter);
-            }
-            
-            if (levelFilter) {
-                filtered = filtered.filter(m => m.level === parseInt(levelFilter));
-            }
-    
-            filtered.sort((a, b) => {
-                switch(sortBy) {
-                    case 'dateCreated':
-                        return new Date(b.dateCreated) - new Date(a.dateCreated);
-                    case 'level':
-                        return b.level - a.level;
-                    case 'HP':
-                        return b.HP - a.HP;
-                    case 'AP':
-                        return b.AP - a.AP;
-                    case 'Speed':
-                        return b.Speed - a.Speed;
-                    default:
-                        return 0;
-                }
-            });
-    
-            const monstersGrid = document.getElementById('monstersGrid');
-            monstersGrid.innerHTML = filtered.map(createMonsterCard).join('');
-        }
-    
-        async function fetchMonsters() {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-    
-                const monstersRef = collection(db, `users/${user.uid}/monsters`);
-                const q = query(monstersRef, orderBy('dateCreated', 'desc'));
-                const querySnapshot = await getDocs(q);
-                
-                currentMonsters = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-    
-                updateCollectionStats(currentMonsters);
-                filterAndSortMonsters();
-            } catch (error) {
-                console.error('Error fetching monsters:', error);
-                showError('Failed to load monsters. Please try again.');
-            }
-        }
-    
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-    
-        // Setup event listeners for custom events
-        document.addEventListener('renameMonster', (e) => renameMonster(e.detail.id, e.detail.name));
-        document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
-    
-        // Add other event listeners
-        document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
-        document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
-        document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
-    
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            }).catch((error) => {
-                showError('Logout failed: ' + error.message);
-            });
-        });
-    
-        // Dark mode toggle
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        const savedTheme = localStorage.getItem("theme");
+            </div>
+        `;
+    }
+
+    function updateCollectionStats(monsters) {
+        document.getElementById('totalMonsters').textContent = monsters.length;
+        const highestLevel = Math.max(...monsters.map(m => m.level), 0);
+        document.getElementById('highestLevel').textContent = highestLevel;
+        const uniqueTypes = new Set(monsters.map(m => m.type)).size;
+        document.getElementById('uniqueTypes').textContent = uniqueTypes;
+    }
+
+    function filterAndSortMonsters() {
+        let filtered = [...currentMonsters];
         
-        if (savedTheme === "dark") {
-            document.body.classList.add("dark-mode");
+        const typeFilter = document.getElementById('typeFilter').value;
+        const levelFilter = document.getElementById('levelFilter').value;
+        const sortBy = document.getElementById('sortBy').value;
+
+        if (typeFilter) {
+            filtered = filtered.filter(m => m.type === typeFilter);
         }
-    
-        darkModeToggle.addEventListener("click", function() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-        });
-    
-        // Check authentication state and initialize
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                fetchMonsters();
-            } else {
-                window.location.href = 'index.html';
+        
+        if (levelFilter) {
+            filtered = filtered.filter(m => m.level === parseInt(levelFilter));
+        }
+
+        filtered.sort((a, b) => {
+            switch(sortBy) {
+                case 'dateCreated':
+                    return new Date(b.dateCreated) - new Date(a.dateCreated);
+                case 'level':
+                    return b.level - a.level;
+                case 'HP':
+                    return b.HP - a.HP;
+                case 'AP':
+                    return b.AP - a.AP;
+                case 'Speed':
+                    return b.Speed - a.Speed;
+                default:
+                    return 0;
             }
         });
-    </script>
+
+        const monstersGrid = document.getElementById('monstersGrid');
+        monstersGrid.innerHTML = filtered.map(createMonsterCard).join('');
+    }
+
+    async function fetchMonsters() {
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const monstersRef = collection(db, 'monsters');
+            const q = query(
+                monstersRef,
+                where('ownerId', '==', user.uid),
+                orderBy('dateCreated', 'desc')
+            );
+            
+            const querySnapshot = await getDocs(q);
+            currentMonsters = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            updateCollectionStats(currentMonsters);
+            filterAndSortMonsters();
+        } catch (error) {
+            console.error('Error fetching monsters:', error);
+            showError('Failed to load monsters. Please try again.');
+        }
+    }
+
+    function showError(message) {
+        const errorElement = document.getElementById('errorMessage');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
+    }
+
+    function showToast(message) {
+        // Create toast element if it doesn't exist
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: rgba(46, 204, 113, 0.9);
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transform: translateY(100px);
+                opacity: 0;
+                transition: all 0.3s ease;
+                z-index: 1000;
+            `;
+            document.body.appendChild(toast);
+        }
+        
+        toast.textContent = message;
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            toast.style.transform = 'translateY(100px)';
+            toast.style.opacity = '0';
+        }, 3000);
+    }
+
+    // Event Listeners
+    document.addEventListener('renameMonster', (e) => renameMonster(e.detail.id, e.detail.name));
+    document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
+    
+    document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
+    document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
+    document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
+
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        auth.signOut().then(() => {
+            window.location.href = 'index.html';
+        }).catch((error) => {
+            showError('Logout failed: ' + error.message);
+        });
+    });
+
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById("darkModeToggle");
+    const savedTheme = localStorage.getItem("theme");
+    
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+    }
+
+    darkModeToggle.addEventListener("click", function() {
+        document.body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+    });
+
+    // Check authentication state and initialize
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            fetchMonsters();
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+</script>
 </body>
 </html>
