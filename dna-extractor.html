@@ -144,7 +144,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, arrayUnion, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -172,15 +172,16 @@
 
         let codeReader = null;
         let selectedDeviceId = null;
-
         function updateDebugMessage(message) {
             document.getElementById('debugMessage').textContent = message;
+            console.log('Debug:', message);
         }
 
         function showError(message) {
             const errorElement = document.getElementById('errorMessage');
             errorElement.textContent = message;
             errorElement.style.display = 'block';
+            console.error('Error:', message);
         }
 
         function hideError() {
@@ -189,6 +190,9 @@
 
         async function initializeScanner() {
             try {
+                updateDebugMessage('Initializing scanner...');
+                hideError();
+
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     throw new Error('Camera access not supported');
                 }
@@ -207,7 +211,6 @@
                 
                 selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
                 
-                // Initialize ZXing
                 codeReader = new ZXing.BrowserMultiFormatReader();
                 updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
             } catch (err) {
@@ -293,35 +296,25 @@
 
         async function generateMonster(qrData) {
             try {
+                updateDebugMessage('Generating monster...');
                 const user = auth.currentUser;
                 if (!user) {
                     throw new Error('Must be logged in to generate monsters');
                 }
 
                 const hash = generateHash(qrData);
+                console.log('Generated hash:', hash);
+
                 const userRef = doc(db, 'users', user.uid);
+                let monster = null;
 
-                const monster = await runTransaction(db, async (transaction) => {
-                    const userDoc = await transaction.get(userRef);
-                    
-                    if (!userDoc.exists()) {
-                        await setDoc(userRef, {
-                            email: user.email,
-                            joinDate: new Date().toISOString(),
-                            usedHash: []
-                        });
-                    }
-
-                    const userData = userDoc.data() || { usedHash: [] };
-                    if (userData.usedHash && userData.usedHash.includes(hash)) {
-                        throw new Error('This DNA sequence has already been extracted!');
-                    }
-
+                try {
+                    // Create the monster data first
                     const seed = parseInt(hash, 16);
                     const level = seededRandom(seed) < 0.2 ? 2 : 1;
                     const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
 
-                    const newMonster = {
+                    monster = {
                         hash,
                         monsterName: generateName(seed),
                         type: MONSTER_TYPES[typeIndex],
@@ -334,25 +327,38 @@
                         dateCreated: new Date().toISOString()
                     };
 
-                    await setDoc(doc(db, 'monsters', hash), newMonster);
-                    await setDoc(doc(db, `users/${user.uid}/monsters`, hash), newMonster);
+                    console.log('Generated monster:', monster);
+
+                    // Save monster data
+                    await setDoc(doc(db, 'monsters', hash), monster);
+                    await setDoc(doc(db, `users/${user.uid}/monsters`, hash), monster);
                     await updateDoc(userRef, {
                         usedHash: arrayUnion(hash)
                     });
 
-                    return newMonster;
-                });
+                    // Display the monster
+                    displayMonster(monster);
+                    updateDebugMessage('Monster generated successfully!');
 
-                displayMonster(monster);
-                updateDebugMessage('Monster generated successfully!');
+                } catch (error) {
+                    console.error('Error saving monster:', error);
+                    throw new Error('Failed to save monster data');
+                }
 
             } catch (error) {
+                console.error('Error in generateMonster:', error);
                 showError(error.message || 'Failed to generate monster');
             }
         }
 
         function displayMonster(monster) {
+            console.log('Displaying monster:', monster);
             const monsterResult = document.getElementById('monsterResult');
+            if (!monsterResult) {
+                console.error('Monster result element not found!');
+                return;
+            }
+            
             monsterResult.style.display = 'block';
             monsterResult.innerHTML = `
                 <div class="monster-card">
