@@ -4,150 +4,200 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Help</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
     <style>
-        /* Basic styles */
-        body {
+        /* Basic Reset */
+        * {
             margin: 0;
             padding: 0;
-            min-height: 100vh;
-            width: 100%;
-            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* Base Styles */
+        body {
             font-family: Arial, sans-serif;
-            background-color: #fff;
-            color: #000;
-            transition: all 0.3s ease;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            color: #333;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        /* Dark mode styles */
+        /* Dark Mode */
         body.dark-mode {
-            background-color: #333;
-            color: #fff;
+            background-color: #1a1a1a;
+            color: #ffffff;
         }
 
-        /* Container for help content */
-        .help-container {
-            width: 100%;
-            padding: 1rem;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-
-        /* Layout for the help page */
-        .help-layout {
-            padding-top: 2rem;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Style for the help info section */
-        .help-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 90%;
-            max-width: 900px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        /* Dark mode for the help container */
-        body.dark-mode .help-info {
-            background: rgba(0, 0, 0, 0.5); /* dark background for main content */
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        /* Dark mode button */
-        .dark-mode-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem 1rem;
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
             background-color: #007bff;
-            color: #fff;
+            color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+            z-index: 1000;
         }
 
-        /* Dark mode button when in dark mode */
-        .dark-mode-btn.dark {
-            background-color: #444;
+        .dark-mode .dark-mode-toggle {
+            background-color: #4a4a4a;
         }
 
-        /* Specific styles for text */
-        h1, h2, h3, p {
-            color: inherit; /* Text color should be inherited from body (light/dark) */
+        /* Main Container */
+        .help-container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            transition: background-color 0.3s ease;
         }
 
-        /* List items */
+        .dark-mode .help-container {
+            background-color: #2d2d2d;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Typography */
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: #007bff;
+            margin: 25px 0 15px;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #007bff;
+            margin: 20px 0 10px;
+            font-size: 1.4em;
+        }
+
+        .dark-mode h1,
+        .dark-mode h2,
+        .dark-mode h3 {
+            color: #4a9eff;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        /* List Styling */
         ol {
-            padding-left: 20px;
+            margin: 15px 0;
+            padding-left: 40px;
+            list-style-position: outside;
+        }
+
+        ol li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+            text-align: left;
+        }
+
+        /* Strong Text */
+        strong {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .dark-mode strong {
+            color: #4a9eff;
+        }
+
+        /* Section Spacing */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .help-container {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            h2 {
+                font-size: 1.5em;
+            }
+
+            h3 {
+                font-size: 1.2em;
+            }
+
+            .dark-mode-toggle {
+                padding: 8px 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
-    <!-- Dark mode toggle button -->
-    <button id="darkModeToggle" class="dark-mode-btn">Dark Mode</button>
-
-    <!-- Help page content -->
     <div class="help-container">
-        <div class="help-layout">
-            <div class="help-info">
-                <h1>Welcome to Barcode Masters!</h1>
+        <h1>Welcome to Barcode Masters!</h1>
 
-                <h2>What is Barcode Masters?</h2>
-                <p>Barcode Masters is an exciting and innovative game where players collect, train, and battle unique monsters. Each monster is created by extracting DNA from barcodes and QR codes, allowing for endless variety and strategic depth. The ultimate goal is to become the master of all other battlers by training your monsters and competing against other players.</p>
+        <div class="section">
+            <h2>What is Barcode Masters?</h2>
+            <p>Barcode Masters is an exciting and innovative game where players collect, train, and battle unique monsters. Each monster is created by extracting DNA from barcodes and QR codes, allowing for endless variety and strategic depth. The ultimate goal is to become the master of all other battlers by training your monsters and competing against other players.</p>
+        </div>
 
-                <h2>How to Get Started</h2>
+        <div class="section">
+            <h2>How to Get Started</h2>
 
-                <h3>Creating an Account</h3>
-                <p>Currently, accounts must be created directly by the game developer. If you are interested in testing Barcode Masters and do not have an account, please email <strong>gumbydev@icloud.com</strong> to request access. Make sure to include your name and any relevant information in your email.</p>
+            <h3>Creating an Account</h3>
+            <p>Currently, accounts must be created directly by the game developer. If you are interested in testing Barcode Masters and do not have an account, please email <strong>gumbydev@icloud.com</strong> to request access. Make sure to include your name and any relevant information in your email.</p>
 
-                <h3>Extracting DNA</h3>
-                <p>Once you have an account, you can begin extracting DNA from barcodes and QR codes. This DNA is used to generate unique monsters that you can train and battle with. To extract DNA:</p>
-                <ol>
-                    <li>Open the barcode scanning feature within the game.</li>
-                    <li>Scan a barcode or QR code using your device's camera.</li>
-                    <li>The game will generate a monster based on the scanned code.</li>
-                </ol>
+            <h3>Extracting DNA</h3>
+            <p>Once you have an account, you can begin extracting DNA from barcodes and QR codes. This DNA is used to generate unique monsters that you can train and battle with. To extract DNA:</p>
+            <ol>
+                <li>Open the barcode scanning feature within the game.</li>
+                <li>Scan a barcode or QR code using your device's camera.</li>
+                <li>The game will generate a monster based on the scanned code.</li>
+            </ol>
 
-                <h3>Training Your Monsters</h3>
-                <p>Training is a key part of becoming a master. You can train your monsters to improve their stats and abilities:</p>
-                <ol>
-                    <li>Go to the "Training" section in the game.</li>
-                    <li>Select the monster you want to train.</li>
-                    <li>Choose the type of training you want to perform (e.g., strength, agility, endurance).</li>
-                    <li>Complete the training tasks to enhance your monster's abilities.</li>
-                </ol>
+            <h3>Training Your Monsters</h3>
+            <p>Training is a key part of becoming a master. You can train your monsters to improve their stats and abilities:</p>
+            <ol>
+                <li>Go to the "Training" section in the game.</li>
+                <li>Select the monster you want to train.</li>
+                <li>Choose the type of training you want to perform (e.g., strength, agility, endurance).</li>
+                <li>Complete the training tasks to enhance your monster's abilities.</li>
+            </ol>
 
-                <h3>Battling Other Players</h3>
-                <p>Test your skills by battling other players:</p>
-                <ol>
-                    <li>Navigate to the "Battle" section.</li>
-                    <li>Choose an opponent from the list of available players.</li>
-                    <li>Select your team of monsters and start the battle.</li>
-                    <li>Use strategic moves and abilities to defeat your opponent and climb the leaderboards.</li>
-                </ol>
+            <h3>Battling Other Players</h3>
+            <p>Test your skills by battling other players:</p>
+            <ol>
+                <li>Navigate to the "Battle" section.</li>
+                <li>Choose an opponent from the list of available players.</li>
+                <li>Select your team of monsters and start the battle.</li>
+                <li>Use strategic moves and abilities to defeat your opponent and climb the leaderboards.</li>
+            </ol>
+        </div>
 
-                <h2>Feedback and Support</h2>
-                <p>We value your feedback and are constantly working to improve the game. If you encounter any issues or have suggestions, please reach out via email at <strong>gumbydev@icloud.com</strong>.</p>
+        <div class="section">
+            <h2>Feedback and Support</h2>
+            <p>We value your feedback and are constantly working to improve the game. If you encounter any issues or have suggestions, please reach out via email at <strong>gumbydev@icloud.com</strong>.</p>
 
-                <p>Thank you for joining Barcode Masters. Get ready to scan, train, and battle your way to the top!</p>
-            </div>
+            <p>Thank you for joining Barcode Masters. Get ready to scan, train, and battle your way to the top!</p>
         </div>
     </div>
 
@@ -156,25 +206,19 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const body = document.body;
 
-        // Check if dark mode is already set in localStorage
-        if(localStorage.getItem('darkMode') === 'enabled') {
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
             body.classList.add('dark-mode');
-            darkModeToggle.classList.add('dark');
-            darkModeToggle.textContent = 'Light Mode';
+            darkModeToggle.textContent = '☀️';
         }
 
-        // Add event listener to toggle dark mode
+        // Toggle dark mode
         darkModeToggle.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
-            if (body.classList.contains('dark-mode')) {
-                localStorage.setItem('darkMode', 'enabled');
-                darkModeToggle.classList.add('dark');
-                darkModeToggle.textContent = 'Light Mode';
-            } else {
-                localStorage.removeItem('darkMode');
-                darkModeToggle.classList.remove('dark');
-                darkModeToggle.textContent = 'Dark Mode';
-            }
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            darkModeToggle.textContent = isDark ? '☀️' : '🌙';
         });
     </script>
 </body>
