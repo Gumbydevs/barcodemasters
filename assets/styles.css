@@ -82,19 +82,19 @@ input:focus {
 }
 
 .btn-login {
-  padding: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-  width: 100%;
+    background-color: #007BFF; //background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    width: 100%;
 }
 
 .btn-login:hover {
-  background-color: #45a049;
+  background-color: #45a049; //background-color: #0056b3;
 }
 
 /* Dark Mode Specific Styles */
