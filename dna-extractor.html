@@ -58,7 +58,6 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Monster Card Styles */
         .monster-card {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
@@ -87,7 +86,6 @@
             border-radius: 4px;
         }
 
-        /* Dark mode styles */
         body.dark-mode .scan-button {
             background: #3b8d3b;
         }
@@ -98,7 +96,6 @@
     </style>
 </head>
 <body>
-    <!-- Dark Mode Toggle -->
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
     <div class="dna-extractor-container">
@@ -108,22 +105,18 @@
 
         <h1>DNA Extractor</h1>
         
-        <!-- Status Messages -->
         <div id="statusMessages">
             <p id="errorMessage" style="color: red; display: none;"></p>
             <p id="debugMessage">Ready to scan...</p>
         </div>
 
-        <!-- Scanner Viewport -->
         <div id="interactive" class="viewport" style="display: none;">
             <video id="video" autoplay playsinline muted></video>
         </div>
 
-        <!-- Scan Button -->
         <button class="scan-button" id="startButton">Start Scanner</button>
         <h5>*QR scanning is working, but barcodes are currently broken*</h5>
         
-        <!-- Navigation Buttons -->
         <div class="navigation-grid">
             <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
             <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
@@ -136,22 +129,26 @@
             <button class="nav-button" id="logoutButton">Logout</button>
         </div>
 
-        <!-- Monster Result -->
-        <div id="monsterResult" style="display: none;">
-            <!-- Monster details will be populated here -->
-        </div>
+        <div id="monsterResult" style="display: none;"></div>
     </div>
 
-    <!-- Version Number -->
     <footer>
         <p>Version: <span id="versionNumber">1.0.01</span></p>
     </footer>
 
     <!-- Main Script -->
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-      import { getFirestore, doc, setDoc, collection, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            updateDoc, 
+            arrayUnion,
+            runTransaction
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -169,19 +166,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Constants for monster generation
+        const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
+        const BASE_STAT_RANGES = {
+            HP: { min: 50, max: 200 },
+            AP: { min: 10, max: 50 },
+            Speed: { min: 5, max: 20 }
+        };
+
         // Global variables
         let codeReader = null;
         let selectedDeviceId = null;
-
-        // Device detection
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-        // Helper functions
+        // Helper Functions
         function updateDebugMessage(message) {
             const debugElement = document.getElementById('debugMessage');
             if (debugElement) {
                 debugElement.textContent = message;
+                console.log('Debug:', message);
             }
         }
 
@@ -190,41 +194,57 @@
             if (errorElement) {
                 errorElement.textContent = message;
                 errorElement.style.display = 'block';
+                console.error('Error:', message);
             }
         }
 
-        // Scanner functions
+        function hideError() {
+            const errorElement = document.getElementById('errorMessage');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        }
+
+        // Scanner Functions
         async function initializeScanner() {
             try {
                 updateDebugMessage('Initializing scanner...');
-                
+                hideError();
+
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     throw new Error('Camera access is not supported by this browser');
                 }
 
                 codeReader = new ZXing.BrowserMultiFormatReader();
-                
+                const formats = [
+                    ZXing.BarcodeFormat.QR_CODE,
+                    ZXing.BarcodeFormat.EAN_13,
+                    ZXing.BarcodeFormat.CODE_128,
+                    ZXing.BarcodeFormat.UPC_A
+                ];
+                codeReader.hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                
+
                 if (videoDevices.length === 0) {
                     throw new Error('No camera found on device');
                 }
 
-                // Prefer back camera
                 const backCamera = videoDevices.find(device => 
                     device.label.toLowerCase().includes('back') ||
-                    device.label.toLowerCase().includes('rear'));
+                    device.label.toLowerCase().includes('rear')
+                );
                 
                 selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
-                
-                updateDebugMessage('Scanner ready. Click "Start Scanner" below to begin.');
-                
+                updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
+
             } catch (err) {
                 console.error('Scanner initialization error:', err);
                 showError(err.message || 'Failed to initialize scanner');
             }
         }
+
         async function startScanning() {
             const videoElement = document.getElementById('interactive');
             if (!videoElement) {
@@ -233,6 +253,7 @@
             }
 
             try {
+                hideError();
                 updateDebugMessage('Starting scanner viewport...');
                 document.getElementById('startButton').style.display = 'none';
                 videoElement.style.display = 'block';
@@ -240,11 +261,11 @@
                 await codeReader.decodeFromVideoDevice(
                     selectedDeviceId,
                     'video',
-                    (result, err) => {
+                    async (result, err) => {
                         if (result) {
                             updateDebugMessage('Code found: ' + result.text);
                             stopScanning();
-                            generateMonster(result.text);
+                            await generateMonster(result.text);
                         }
                         if (err && !(err instanceof ZXing.NotFoundException)) {
                             console.error('Scanning error:', err);
@@ -253,7 +274,7 @@
                     }
                 );
 
-                updateDebugMessage('Scanner active - point at a barcode');
+                updateDebugMessage('Scanner active - point at a barcode or QR code');
 
             } catch (err) {
                 console.error('Scanning error:', err);
@@ -270,19 +291,13 @@
         }
 
         function resetUI() {
-            document.getElementById('startButton').style.display = 'block';
-            document.getElementById('interactive').style.display = 'none';
+            const startButton = document.getElementById('startButton');
+            const videoElement = document.getElementById('interactive');
+            if (startButton) startButton.style.display = 'block';
+            if (videoElement) videoElement.style.display = 'none';
         }
 
-        // Monster generation constants
-        const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
-        const BASE_STAT_RANGES = {
-            HP: { min: 50, max: 200 },
-            AP: { min: 10, max: 50 },
-            Speed: { min: 5, max: 20 }
-        };
-
-        // Generate a deterministic hash from QR code data
+        // Monster Generation Functions
         function generateHash(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -290,29 +305,14 @@
                 hash = ((hash << 5) - hash) + char;
                 hash = hash & hash;
             }
-            // Convert to 9-character string format AAABBBCCC
-            const hashStr = Math.abs(hash).toString().padStart(9, '0');
-            return hashStr.slice(0, 9);
+            return Math.abs(hash).toString().padStart(9, '0').slice(0, 9);
         }
 
-        // Seeded random number generator
         function seededRandom(seed) {
             const x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         }
 
-        // Generate monster name
-        function generateName(seed) {
-            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic','Iron','Night', 'Gale', 'Ember', 'Vortex', 'Blaze', 'Titan', 'Venom', 'Echo','Inferno', 'Thunderstrike', 'Zephyr', 'Rogue', 'Onyx', 'Phantom', 'Spectre','Tempest', 'Glacier', 'Eclipse', 'Lava', 'Celestial', 'Viper', 'Obsidian','Solar', 'Blizzard', 'Pulse', 'Crimson', 'Oblivion', 'Rage', 'Tornado','Comet', 'Infernal', 'Vengeful', 'Spectral', 'Ironclad', 'Dusk', 'Radiant','Fury', 'Celestia', 'Cinder', 'Wraith', 'Abyss', 'Gloom', 'Volcanic','Primal', 'Stormclaw', 'Lurker', 'Dread', 'Shiver', 'Tundra', 'Scorch','Rift', 'Blight', 'Tempestuous', 'Monolith', 'Vanguard', 'Ashen', 'Savage','Phantom', 'Obsidian', 'Arctic', 'Stormbreaker', 'Venomous', 'Titanic','Sable', 'Havoc', 'Nimbus', 'Scalebound', 'Blowtorch', 'Aether', 'Typhoon'];
-            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'guard','scorch', 'rage', 'whisper', 'bane', 'shard', 'storm', 'fang', 'scourge','slash', 'tide', 'vessel', 'flame', 'bane', 'spirit', 'burst', 'strike','whip', 'reaver', 'flame', 'fury', 'scythe', 'shield', 'devil', 'spike','shadow', 'wraith', 'spirit', 'tear', 'wrath', 'talon', 'wolverine','viper', 'howl', 'fang', 'vigil', 'cage', 'shackle', 'lock', 'mancer','warden', 'pierce', 'blight', 'crusher', 'bender', 'blood', 'fang','whip', 'fang', 'lash', 'seeker', 'prowler', 'hunter', 'rend', 'slicer','breaker', 'warrior', 'hunter', 'flinger', 'wing', 'lance', 'marauder','raider', 'crush', 'reaper', 'grip', 'soul', 'vanguard', 'sunder','killer', 'smasher', 'victor', 'slayer', 'crusher', 'brawler', 'champion','destroyer', 'terminator', 'scourge', 'destroyer', 'reaver', 'conqueror','beast', 'warlord', 'herald', 'overlord', 'ranger', 'sentinel', 'champ','titan', 'behemoth', 'knight', 'warden', 'ravager', 'tamer', 'phantom','phantom', 'avenger', 'savior', 'ripper', 'raider', 'prowler', 'harbinger','vindicator', 'reclaimer', 'gladiator', 'wraith', 'exterminator', 'blow','striker', 'mauler'];
-            
-            const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
-            const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
-            
-            return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
-        }
-
-        // Determine monster level (1-3)
         function determineLevel(seed) {
             const rand = seededRandom(seed);
             if (rand < 0.05) return 3;      // 5% chance for level 3
@@ -320,93 +320,106 @@
             return 1;                       // 80% chance for level 1
         }
 
+        function generateName(seed) {
+            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic','Iron','Night', 'Gale', 'Ember', 'Vortex', 'Blaze', 'Titan', 'Venom', 'Echo','Inferno', 'Thunderstrike', 'Zephyr', 'Rogue', 'Onyx', 'Phantom', 'Spectre','Tempest', 'Glacier', 'Eclipse', 'Lava', 'Celestial', 'Viper', 'Obsidian','Solar', 'Blizzard', 'Pulse', 'Crimson', 'Oblivion', 'Rage', 'Tornado','Comet', 'Infernal', 'Vengeful', 'Spectral', 'Ironclad', 'Dusk', 'Radiant'];
+            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'guard','scorch', 'rage', 'whisper', 'bane', 'shard', 'storm', 'fang', 'scourge','slash', 'tide', 'vessel', 'flame', 'spirit', 'burst', 'strike','whip', 'reaver', 'fury', 'scythe', 'shield', 'devil', 'spike'];
+            
+            const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
+            const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
+            
+            return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
+        }
+
+        function calculateStat(statType, seed) {
+            const range = BASE_STAT_RANGES[statType];
+            const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
+            return Math.floor(randomValue * (range.max - range.min) + range.min);
+        }
+
         async function generateMonster(qrData) {
             updateDebugMessage('DNA sequence detected! Analyzing...');
-            
-            // Get current user
-            const user = auth.currentUser;
-            if (!user) {
-                showError('Must be logged in to generate monsters');
-                return;
-            }
+            hideError();
 
             try {
-                // Generate unique hash for this QR code
+                const user = auth.currentUser;
+                if (!user) {
+                    throw new Error('Must be logged in to generate monsters');
+                }
+
                 const hash = generateHash(qrData);
-                
-                // Check if hash already exists in user's usedHash
-                // Check if hash already exists in user's usedHash
                 const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
 
-                // If user document doesn't exist, create it
-                if (!userDoc.exists()) {
-                    await setDoc(userRef, {
-                        email: user.email,
-                        joinDate: new Date().toISOString(),
-                        usedHash: []
-                    });
-                }
-
-                    // Now check for duplicate hash
-                    if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
-                        showError('This DNA sequence has already been extracted!');
-                    return;
-                }
-
-                // Generate monster stats
-                const seed = parseInt(hash, 16);
-                const level = determineLevel(seed);
-                const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
+                let monster = null;
                 
-                // Calculate base stats
-                const HP = Math.floor(seededRandom(seed + 3) * 
-                    (BASE_STAT_RANGES.HP.max - BASE_STAT_RANGES.HP.min) + 
-                    BASE_STAT_RANGES.HP.min);
-                const AP = Math.floor(seededRandom(seed + 4) * 
-                    (BASE_STAT_RANGES.AP.max - BASE_STAT_RANGES.AP.min) + 
-                    BASE_STAT_RANGES.AP.min);
-                const Speed = Math.floor(seededRandom(seed + 5) * 
-                    (BASE_STAT_RANGES.Speed.max - BASE_STAT_RANGES.Speed.min) + 
-                    BASE_STAT_RANGES.Speed.min);
+                try {
+                    // Use transaction for atomic operations
+                    monster = await runTransaction(db, async (transaction) => {
+                        const userDoc = await transaction.get(userRef);
+                        
+                        // Handle user document creation if needed
+                        if (!userDoc.exists()) {
+                            await setDoc(userRef, {
+                                email: user.email,
+                                joinDate: new Date().toISOString(),
+                                usedHash: []
+                            });
+                        }
 
-                // Create monster object
-                const monster = {
-                    hash,
-                    monsterName: generateName(seed),
-                    type: MONSTER_TYPES[typeIndex],
-                    level,
-                    HP: Math.round(HP * (1 + (level - 1) * 0.3)),  // 30% increase per level
-                    AP: Math.round(AP * (1 + (level - 1) * 0.3)),
-                    Speed: Math.round(Speed * (1 + (level - 1) * 0.3)),
-                    experience: 0,
-                    ownerId: user.uid,
-                    dateCreated: new Date().toISOString()
-                };
+                        // Check for duplicate hash
+                        const userData = userDoc.data() || { usedHash: [] };
+                        if (userData.usedHash && userData.usedHash.includes(hash)) {
+                            throw new Error('This DNA sequence has already been extracted!');
+                        }
 
-                // Save to global monsters collection
-                await setDoc(doc(db, 'monsters', hash), monster);
+                        // Generate monster stats
+                        const seed = parseInt(hash, 16);
+                        const level = determineLevel(seed);
+                        const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
 
-                // Save to user's monsters collection
-                await setDoc(doc(db, `users/${user.uid}/monsters`, hash), monster);
+                        const newMonster = {
+                            hash,
+                            monsterName: generateName(seed),
+                            type: MONSTER_TYPES[typeIndex],
+                            level,
+                            HP: Math.round(calculateStat('HP', seed) * (1 + (level - 1) * 0.3)),
+                            AP: Math.round(calculateStat('AP', seed) * (1 + (level - 1) * 0.3)),
+                            Speed: Math.round(calculateStat('Speed', seed) * (1 + (level - 1) * 0.3)),
+                            experience: 0,
+                            ownerId: user.uid,
+                            dateCreated: new Date().toISOString()
+                        };
 
-                // Update user's usedHash array
-                await updateDoc(userRef, {
-                    usedHash: arrayUnion(hash)
-                });
+                        // Save monster to collections
+                        await setDoc(doc(db, 'monsters', hash), newMonster);
+                        await setDoc(doc(db, `users/${user.uid}/monsters`, hash), newMonster);
+                        
+                        // Update user's usedHash array
+                        await updateDoc(userRef, {
+                            usedHash: arrayUnion(hash)
+                        });
 
-                // Display the monster
-                displayMonster(monster);
-                updateDebugMessage('Monster successfully generated and added to your collection!');
+                        return newMonster;
+                    });
+
+                    console.log('Monster generated successfully:', monster);
+                    displayMonster(monster);
+                    updateDebugMessage('Monster successfully generated and added to your collection!');
+
+                } catch (transactionError) {
+                    console.error('Transaction error:', transactionError);
+                    throw new Error(transactionError.message || 'Failed to generate monster');
+                }
 
             } catch (error) {
-                console.error('Error generating monster:', error);
-                showError('Failed to generate monster: ' + error.message);
+                console.error('Error in generateMonster:', error);
+                showError(error.message || 'Failed to generate monster');
             }
         }
 
         function displayMonster(monster) {
             const monsterResult = document.getElementById('monsterResult');
+            if (!monsterResult) return;
+
             monsterResult.style.display = 'block';
             monsterResult.innerHTML = `
                 <div class="monster-card">
@@ -430,7 +443,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initializeScanner();
             
-            // Button click handler
+            // Start button handler
             const startButton = document.getElementById('startButton');
             if (startButton) {
                 startButton.addEventListener('click', async () => {
@@ -486,3 +499,4 @@
     </script>
 </body>
 </html>
+
