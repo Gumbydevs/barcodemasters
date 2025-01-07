@@ -6,175 +6,89 @@
     <title>Barcode Masters - Monster Collection</title>
     <link rel="stylesheet" href="assets/styles.css">
     <style>
+        /* Add/update these styles */
         .collection-container {
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem;
+            padding-top: 4rem; /* Added space for logo */
             box-sizing: border-box;
-        }
-
-        .collection-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .logo-container img {
-            max-width: 200px;
-            height: auto;
-            margin-bottom: 1.5rem;
         }
 
         .collection-stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
             margin-bottom: 2.5rem;
+            width: 100%;
         }
 
         .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .stat-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            min-width: 0; /* Prevents overflow */
+            word-wrap: break-word; /* Allows text to wrap */
         }
 
         .stat-box h3 {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem); /* Responsive font size */
             margin: 0 0 0.5rem 0;
-            font-size: 1.1rem;
             color: #a8b3cf;
         }
 
         .stat-box p {
+            font-size: clamp(1.5rem, 4vw, 2rem);
             margin: 0;
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ffffff;
         }
 
+        /* Make logo responsive */
+        .logo-container {
+            padding-top: 1rem;
+        }
+
+        .logo-container img {
+            max-width: 100%;
+            height: auto;
+            width: auto;
+            max-height: 100px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Adjust filters for mobile */
         .filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2.5rem;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            width: 100%;
         }
 
         .filter-select, .sort-select {
-            padding: 0.75rem 1.25rem;
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.2);
-            color: #ffffff;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 150px;
-            backdrop-filter: blur(5px);
+            width: 100%;
+            min-width: 0;
         }
 
-        .filter-select:hover, .sort-select:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .filter-select:focus, .sort-select:focus {
-            outline: none;
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-        }
-
-        .navigation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .nav-button {
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-            background: linear-gradient(135deg, #34495e, #2980b9);
-        }
-
-        .nav-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        #logoutButton {
-            background: linear-gradient(135deg, #c0392b, #e74c3c);
-        }
-
-        #logoutButton:hover {
-            background: linear-gradient(135deg, #d35400, #e67e22);
-        }
-
+        /* Make monster cards more responsive */
         .monsters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            width: 100%;
         }
 
-        footer {
-            text-align: center;
-            padding: 2rem;
-            margin-top: 3rem;
-            font-size: 0.9rem;
-            color: #a8b3cf;
-        }
+        @media (max-width: 480px) {
+            .collection-container {
+                padding: 0.5rem;
+                padding-top: 4rem;
+            }
 
-        #darkModeToggle {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.75rem;
-            border-radius: 50%;
-            border: none;
-            background: rgba(0, 0, 0, 0.2);
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
+            .monster-card {
+                padding: 1rem;
+            }
 
-        #darkModeToggle:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        body.dark-mode {
-            background: #121212;
-            color: white;
-        }
-
-        body.dark-mode .stat-box,
-        body.dark-mode .monster-card {
-            background: rgba(255, 255, 255, 0.05);
+            .monster-stats {
+                grid-template-columns: 1fr 1fr;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
