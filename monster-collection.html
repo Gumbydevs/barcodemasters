@@ -456,56 +456,58 @@
             console.error("Error deleting monster:", error);
             showError("Failed to delete monster. Please try again.");
         }
-    }
+    } 
 
     function createMonsterCard(monster) {
-        const xpToNextLevel = monster.level * 100;
-        const xpProgress = (monster.experience / xpToNextLevel) * 100;
-        
-        return `
-            <div class="monster-card" data-id="${monster.id}">
+    const xpToNextLevel = monster.level * 100;
+    const xpProgress = (monster.experience / xpToNextLevel) * 100;
+    
+    return `
+        <div class="monster-card" data-id="${monster.id}">
+            <div class="monster-info">
+                <div class="monster-name">${monster.monsterName}</div>
+                <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                
                 <div class="monster-image-placeholder">
-                    ${monster.type} - Level ${monster.level}
+                    Level ${monster.level} ${monster.type}
                 </div>
-                <div class="monster-info">
-                    <div class="monster-name">${monster.monsterName}</div>
-                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                    <div class="monster-stats">
-                        <div class="stat-item">
-                            <span>Level</span>
-                            <span>${monster.level}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>XP</span>
-                            <span>${monster.experience}/${xpToNextLevel}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>HP</span>
-                            <span>${monster.HP}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>AP</span>
-                            <span>${monster.AP}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Speed</span>
-                            <span>${monster.Speed}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Created</span>
-                            <span>${formatDate(monster.dateCreated)}</span>
-                        </div>
+                
+                <div class="monster-stats">
+                    <div class="stat-item">
+                        <span>Level</span>
+                        <span>${monster.level}</span>
                     </div>
-                    <div class="xp-progress">
-                        <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                    <div class="stat-item">
+                        <span>HP</span>
+                        <span>${monster.HP}</span>
                     </div>
-                    <div class="monster-actions">
-                        <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
-                        <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
+                    <div class="stat-item">
+                        <span>AP</span>
+                        <span>${monster.AP}</span>
                     </div>
+                    <div class="stat-item">
+                        <span>Speed</span>
+                        <span>${monster.Speed}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>XP</span>
+                        <span>${monster.experience}/${xpToNextLevel}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Created</span>
+                        <span>${formatDate(monster.dateCreated)}</span>
+                    </div>
+                </div>
+                <div class="xp-progress">
+                    <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                </div>
+                <div class="monster-actions">
+                    <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
+                    <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
                 </div>
             </div>
-        `;
+        </div>
+    `;
     }
 
     function updateCollectionStats(monsters) {
