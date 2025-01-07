@@ -332,6 +332,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -467,14 +468,26 @@
         document.getElementById('logoutButton').addEventListener('click', handleLogout);
 
         // Firebase Auth state check
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById("userName").textContent = user.email;
-                updateMVPMonster(); // Update MVP monster data when user is logged in
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
+        onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const db = getFirestore(app);  // Initialize Firestore
+        const userRef = doc(db, "users", user.uid);  // Access the user's document in Firestore
+        const docSnap = await getDoc(userRef);  // Fetch the document
+
+        if (docSnap.exists()) {
+            // Assuming the username is stored in the 'username' field
+            document.getElementById("userName").textContent = docSnap.data().username;
+        } else {
+            // Handle case where the username is not found
+            console.log("No such document!");
+        }
+
+        updateMVPMonster(); // Update MVP monster data when user is logged in
+    } else {
+        window.location.href = 'index.html';
+    }
+});
+
 
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
