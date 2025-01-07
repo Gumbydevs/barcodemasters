@@ -164,190 +164,172 @@
         <p>Version: <span id="versionNumber">1.0.0</span></p>
     </footer>
     <style>
-        /* Monster Card Styles */
-        .monster-card {
+        /* Container and Layout */
+        .collection-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            padding-top: 4rem;
+            box-sizing: border-box;
+        }
+
+        /* Header and Logo */
+        .collection-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo-container {
+            padding-top: 1rem;
+        }
+
+        .logo-container img {
+            max-width: 100%;
+            height: auto;
+            width: auto;
+            max-height: 100px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Stats Boxes */
+        .collection-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            width: 100%;
+        }
+
+        .stat-box {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
             padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
+            border-radius: 12px;
+            text-align: center;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-width: 0;
+            word-wrap: break-word;
         }
 
-        .monster-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-            border-color: rgba(255, 255, 255, 0.2);
+        .stat-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .monster-image-placeholder {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .monster-image-placeholder::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }
-
-        .monster-card:hover .monster-image-placeholder::before {
-            transform: translateX(100%);
-        }
-
-        .monster-info {
-            flex: 1;
-        }
-
-        .monster-name {
-            font-size: 1.4rem;
-            font-weight: bold;
-            margin-bottom: 0.75rem;
-            color: #ffffff;
-        }
-
-        .monster-type-badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(52, 152, 219, 0.1));
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            color: #fff;
-            border: 1px solid rgba(52, 152, 219, 0.2);
-        }
-
-        .monster-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            font-size: 0.95rem;
-        }
-
-        .stat-item span:first-child {
+        .stat-box h3 {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            margin: 0 0 0.5rem 0;
             color: #a8b3cf;
         }
 
-        .stat-item span:last-child {
+        .stat-box p {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0;
             font-weight: bold;
-            color: #fff;
+            color: #ffffff;
         }
 
-        .xp-progress {
-            background: rgba(0, 0, 0, 0.2);
-            height: 6px;
-            border-radius: 3px;
-            margin: 1.5rem 0;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .xp-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #2ecc71, #27ae60);
-            transition: width 0.6s ease;
-            border-radius: 3px;
-            position: relative;
-        }
-
-        .xp-progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .monster-actions {
+        /* Filters */
+        .filters {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin-top: 1rem;
+            margin-bottom: 2rem;
+            width: 100%;
         }
 
-        .action-button {
+        .filter-select, .sort-select {
             padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            min-width: 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .filter-select:hover, .sort-select:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Navigation Buttons */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .nav-button {
+            padding: 1rem;
             border: none;
             border-radius: 8px;
-            cursor: pointer;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
             font-size: 0.95rem;
-            font-weight: 500;
+            cursor: pointer;
             transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .rename-button {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
-        }
-
-        .rename-button:hover {
-            background: linear-gradient(135deg, #2980b9, #2573a7);
+        .nav-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
         }
 
-        .delete-button {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
-        }
-
-        .delete-button:hover {
-            background: linear-gradient(135deg, #c0392b, #a93226);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
-        }
-
-        .action-button:active {
+        .nav-button:active {
             transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        /* Error Message Styling */
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        #logoutButton:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+        }
+
+        /* Monster Grid */
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            width: 100%;
+        }
+
+        /* Dark Mode Toggle */
+        #darkModeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        #darkModeToggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Error Message */
         #errorMessage {
             background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.1));
             border-left: 4px solid #e74c3c;
@@ -360,30 +342,46 @@
             display: none;
         }
 
-        /* Type-specific badge colors */
-        .monster-type-badge[data-type="Feral"] {
-            background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(142, 68, 173, 0.1));
-            border-color: rgba(155, 89, 182, 0.2);
+        /* Dark Mode */
+        body.dark-mode {
+            background: #121212;
+            color: white;
         }
 
-        .monster-type-badge[data-type="Fighter"] {
-            background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(192, 57, 43, 0.1));
-            border-color: rgba(231, 76, 60, 0.2);
+        body.dark-mode .stat-box,
+        body.dark-mode .monster-card {
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .monster-type-badge[data-type="Mage"] {
-            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(41, 128, 185, 0.1));
-            border-color: rgba(52, 152, 219, 0.2);
+        /* Responsive Adjustments */
+        @media (max-width: 480px) {
+            .collection-container {
+                padding: 0.5rem;
+                padding-top: 4rem;
+            }
+
+            .monster-card {
+                padding: 1rem;
+            }
+
+            .monster-stats {
+                grid-template-columns: 1fr 1fr;
+                font-size: 0.9rem;
+            }
+
+            .nav-button {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
         }
 
-        .monster-type-badge[data-type="Ranged"] {
-            background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.1));
-            border-color: rgba(46, 204, 113, 0.2);
-        }
-
-        .monster-type-badge[data-type="Tank"] {
-            background: linear-gradient(135deg, rgba(243, 156, 18, 0.3), rgba(211, 84, 0, 0.1));
-            border-color: rgba(243, 156, 18, 0.2);
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: #a8b3cf;
         }
     </style>
 
