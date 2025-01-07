@@ -30,10 +30,9 @@
         <p id="errorMessage" style="color: red; display: none;"></p>
 
         <!-- Debug Info Section (Initially Hidden) -->
-        <button id="toggleDebugBtn">Toggle Debug Info</button> <!-- This button is always visible -->
+        <button id="toggleDebugBtn">Toggle Debug Info</button>
         <div id="debugSection" style="display:none; background-color: #f1f1f1; padding: 10px; margin-top: 10px; border: 1px solid #ccc;">
             <pre id="debugLogs"></pre>
-            <!-- Go to Profile button, initially hidden -->
             <button id="goToProfileBtn" style="display:none;">Go to Profile</button>
         </div>
     </div>
@@ -66,47 +65,63 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Enhanced debug logging function with timestamps
+        function logToDebug(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const debugLogs = document.getElementById("debugLogs");
+            const prefix = type === 'error' ? '❌ ERROR' : '✓ INFO';
+            debugLogs.textContent += `[${timestamp}] ${prefix}: ${message}\n`;
+            debugLogs.scrollTop = debugLogs.scrollHeight; // Auto-scroll to bottom
+        }
+
         // Function to show error message on the page
         function showError(message) {
             const errorElement = document.getElementById('errorMessage');
             errorElement.textContent = message;
             errorElement.style.display = 'block';
+            logToDebug(message, 'error');
         }
 
-        // Function to log messages to the debug section
-        function logToDebug(message) {
-            const debugLogs = document.getElementById("debugLogs");
-            debugLogs.textContent += message + "\n"; // Append log message
+        // Function to create user in Firestore
+        async function createUserInFirestore(user) {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                logToDebug(`Attempting to create user in Firestore with UID: ${user.uid}`);
+                
+                const userData = {
+                    username: user.displayName || 'New User',
+                    email: user.email,
+                    uid: user.uid,
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp()
+                };
+
+                await setDoc(userRef, userData);
+                logToDebug("Successfully created user in Firestore");
+                return true;
+            } catch (error) {
+                logToDebug(`Failed to create user in Firestore: ${error.message}`, 'error');
+                throw error; // Re-throw to handle in calling function
+            }
         }
 
         // Function to handle Firebase Authentication
         async function loginWithFirebase(email, password) {
             try {
+                logToDebug(`Attempting login for email: ${email}`);
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                // Successful login
                 const user = userCredential.user;
-                logToDebug("User logged in: " + user);
-
-                // Log user UID and email to verify data
-                logToDebug("User UID: " + user.uid);
-                logToDebug("User Email: " + user.email);
+                logToDebug(`Authentication successful for UID: ${user.uid}`);
 
                 // Check if user exists in Firestore
                 const userRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(userRef);
 
                 if (!docSnap.exists()) {
-                    logToDebug("User does not exist in Firestore. Adding to database...");
-                    // Add user to Firestore
-                    await setDoc(userRef, {
-                        username: user.displayName || 'New User',
-                        email: user.email,
-                        uid: user.uid,
-                        createdAt: serverTimestamp(),
-                    });
-                    logToDebug("User added to Firestore database.");
+                    logToDebug("User not found in Firestore - creating new user document");
+                    await createUserInFirestore(user);
                 } else {
-                    logToDebug("User already exists in Firestore.");
+                    logToDebug("User found in Firestore");
                 }
 
                 // Store user info in localStorage
@@ -115,23 +130,21 @@
                     uid: user.uid
                 }));
 
-                // Check if debug section is visible
+                // Handle redirect based on debug section visibility
                 const debugSection = document.getElementById("debugSection");
+                const goToProfileBtn = document.getElementById("goToProfileBtn");
 
-                if (debugSection.style.display === "none") {
-                    // If debug section is not visible, automatically redirect
-                    window.location.href = 'profile.html';
+                if (debugSection.style.display === "block") {
+                    logToDebug("Debug mode active - showing manual redirect button");
+                    goToProfileBtn.style.display = "inline-block";
                 } else {
-                    // If debug section is visible, show manual redirect button
-                    const goToProfileBtn = document.getElementById("goToProfileBtn");
-                    goToProfileBtn.style.display = "inline-block";  // Show manual button
+                    logToDebug("Debug mode inactive - redirecting automatically");
+                    window.location.href = 'profile.html';
                 }
 
             } catch (error) {
                 let errorMessage = 'An error occurred during login.';
-                logToDebug('Error during login: ' + error.code + " - " + error.message);
-
-                // Set error message based on error type
+                
                 switch (error.code) {
                     case 'auth/invalid-email':
                         errorMessage = 'Please enter a valid email address.';
@@ -147,8 +160,8 @@
                         break;
                 }
 
-                // Show error on the page
                 showError(errorMessage);
+                logToDebug(`Login error: ${error.code} - ${error.message}`, 'error');
             }
         }
 
@@ -175,25 +188,26 @@
         const toggleDebugBtn = document.getElementById("toggleDebugBtn");
         toggleDebugBtn.addEventListener("click", function() {
             const debugSection = document.getElementById("debugSection");
-            const goToProfileBtn = document.getElementById("goToProfileBtn");
-
-            const isVisible = debugSection.style.display === "block";
-            debugSection.style.display = isVisible ? "none" : "block";
-            goToProfileBtn.style.display = isVisible ? "none" : "inline-block";
+            debugSection.style.display = debugSection.style.display === "none" ? "block" : "none";
         });
 
         // Go to Profile button functionality
         const goToProfileBtn = document.getElementById("goToProfileBtn");
         goToProfileBtn.addEventListener("click", function() {
+            logToDebug("Manual redirect to profile page");
             window.location.href = 'profile.html';
         });
 
         // Check if user is already logged in
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                logToDebug("User already logged in - redirecting to profile");
                 window.location.href = 'profile.html';
             }
         });
+
+        // Initial debug log
+        logToDebug("Login page initialized");
     </script>
 </body>
 </html>
