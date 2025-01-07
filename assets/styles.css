@@ -3,14 +3,15 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
+  height: 100%;  /* Full height of the viewport */
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  flex-direction: column;  /* Align children vertically */
   background-color: #fff;
   color: #333;
   transition: background-color 0.3s, color 0.3s;
+  overflow-y: auto;  /* Allow vertical scrolling */
 }
+
 
 body.dark-mode {
   background-color: #121212;
@@ -43,7 +44,10 @@ h1 {
   width: 100%;
   max-width: 380px;
   transition: all 0.3s ease-in-out;
+  box-sizing: border-box;  /* Ensure padding is included in width/height calculations */
+  min-height: 50vh;  /* Set minimum height so it’s not squished on small screens */
 }
+
 
 .login-container:hover {
   box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.2);
@@ -179,10 +183,14 @@ body.dark-mode footer {
 footer {
   position: fixed;
   bottom: 10px;
-  left: 10px; /* Move version number to the left */
+  left: 10px;
   font-size: 14px;
   color: inherit;
+  padding-left: 10px;  /* Adds some space from the left */
+  margin-top: 20px;  /* Prevent footer from sticking to the items above it */
+  margin-bottom: 20px;  /* Prevent footer from sticking to the very bottom */
 }
+
 
 /* Media Queries for Responsive Design */
 @media (max-width: 768px) {
