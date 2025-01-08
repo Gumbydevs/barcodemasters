@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
+    <title>Barcode Masters - Train Monster</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        /* Add/update these styles */
+        .collection-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            padding-top: 6rem; /* Increased from 4rem */
+            box-sizing: border-box;
+            min-height: 100vh; /* Ensures minimum full viewport height */
+        }
+
+        .collection-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            width: 100%;
+        }
+
+        .stat-box {
+            min-width: 0; /* Prevents overflow */
+            word-wrap: break-word; /* Allows text to wrap */
+        }
+
+        .stat-box h3 {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem); /* Responsive font size */
+            margin: 0 0 0.5rem 0;
+            color: #a8b3cf;
+        }
+
+        .stat-box p {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0;
+        }
+
+        /* Make logo responsive */
+        .logo-container {
+            padding-top: 2rem; /* Increased padding */
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-container img {
+            max-width: 100%;
+            height: auto;
+            width: auto;
+            max-height: 100px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Adjust filters for mobile */
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .filter-select, .sort-select {
+            width: 100%;
+            min-width: 0;
+        }
+
+        /* Make monster cards more responsive */
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            .collection-container {
+                padding: 0.5rem;
+                padding-top: 4rem;
+            }
+
+            .monster-card {
+                padding: 1rem;
+            }
+
+            .monster-stats {
+                grid-template-columns: 1fr 1fr;
+                font-size: 0.9rem;
+            }
+        }
+
+        .monster-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #3498db;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-button {
+            padding: 1rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .nav-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        #logoutButton:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+        }
+
+        body.dark-mode {
+            background: #121212;
+            color: white;
+        }
+
+        body.dark-mode .nav-button {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+
+        body.dark-mode .nav-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+    </style>
+</head>
+<body>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="collection-container">
+        <div class="collection-header">
+            <div class="logo-container">
+                <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+            </div>
+            <h1>Train Your Monster</h1>
+        </div>
+
+        <div class="filters">
+            <select id="monsterSelect" class="filter-select">
+                <option value="">Select a Monster</option>
+                <!-- Monster options will be dynamically added here -->
+            </select>
+        </div>
+
+        <div id="selectedMonster" style="display: none;">
+            <!-- Selected monster details will be displayed here -->
+        </div>
+
+        <div class="navigation-grid">
+            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
+            <button class="nav-button" onclick="location.href='pvp-battle.html'">PVP Battle</button>
+            <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
+            <button class="nav-button" onclick="location.href='help.html'">Help</button>
+            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
+            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
+            <button class="nav-button" id="logoutButton">Logout</button>
+        </div>
+
+        <p id="errorMessage" style="color: red; display: none;"></p>
+    </div>
+
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.02</span></p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentMonsters = [];
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        async function getUsernameById(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                    return userDoc.data().username;
+                } else {
+                    return 'Unknown User';
+                }
+            } catch (error) {
+                console.error('Error fetching username:', error);
+                return 'Unknown User';
+            }
+        }
+
+        async function createMonsterCard(monster) {
+            const xpToNextLevel = monster.level * 100;
+            const xpProgress = (monster.experience / xpToNextLevel) * 100;
+            const ownerUsername = await getUsernameById(monster.ownerId);
+
+            return `
+                <div class="monster-card" data-id="${monster.id}">
+                    <div class="monster-info">
+                        <div class="monster-name">${monster.monsterName}</div>
+                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                        
+                        <div class="monster-stats">
+                            <div class="stat-item">
+                                <span>Level</span>
+                                <span>${monster.level}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>HP</span>
+                                <span>${monster.HP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>AP</span>
+                                <span>${monster.AP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Speed</span>
+                                <span>${monster.Speed}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>XP</span>
+                                <span>${monster.experience}/${xpToNextLevel}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Created</span>
+                                <span>${formatDate(monster.dateCreated)}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Owner</span>
+                                <span>${ownerUsername}</span>
+                            </div>
+                        </div>
+                        <div class="xp-progress">
+                            <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function fetchMonsters() {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    console.log("No user logged in");
+                    return;
+                }
+
+                console.log("Fetching monsters for user:", user.uid);
+
+                const monstersRef = collection(db, 'monsters');
+                const q = query(
+                    monstersRef,
+                    where('ownerId', '==', user.uid), // Filter by ownerId
+                    orderBy('dateCreated', 'desc')
+                );
+                
+                const querySnapshot = await getDocs(q);
+                console.log("Number of monsters found:", querySnapshot.size);
+                
+                currentMonsters = querySnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    console.log("Monster data:", {
+                        id: doc.id,
+                        ownerId: data.ownerId,
+                        name: data.monsterName
+                    });
+                    return {
+                        id: doc.id,
+                        ...data
+                    };
+                });
+
+                const monsterSelect = document.getElementById('monsterSelect');
+                monsterSelect.innerHTML = '<option value="">Select a Monster</option>';
+                currentMonsters.forEach(monster => {
+                    const option = document.createElement('option');
+                    option.value = monster.id;
+                    option.textContent = monster.monsterName;
+                    monsterSelect.appendChild(option);
+                });
+
+                filterAndSortMonsters();
+            } catch (error) {
+                console.error('Error fetching monsters:', error);
+                showError('Failed to load monsters. Please try again.');
+            }
+        }
+
+        async function filterAndSortMonsters() {
+            const selectedMonsterId = document.getElementById('monsterSelect').value;
+            const filtered = selectedMonsterId ? currentMonsters.filter(m => m.id === selectedMonsterId) : currentMonsters;
+
+            // Display the selected monster details
+            if (selectedMonsterId) {
+                const selectedMonster = filtered[0];
+                const selectedMonsterDiv = document.getElementById('selectedMonster');
+                selectedMonsterDiv.innerHTML = await createMonsterCard(selectedMonster);
+                selectedMonsterDiv.style.display = 'block';
+            } else {
+                document.getElementById('selectedMonster').style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+
+        function showToast(message) {
+            // Create toast element if it doesn't exist
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: rgba(46, 204, 113, 0.9);
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    transform: translateY(100px);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                    z-index: 1000;
+                `;
+                document.body.appendChild(toast);
+            }
+            
+            toast.textContent = message;
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            });
+
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        // Event Listeners
+        document.getElementById('monsterSelect').addEventListener('change', filterAndSortMonsters);
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                showError('Logout failed: ' + error.message);
+            });
+        });
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        });
+
+        // Check authentication state and initialize
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchMonsters();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
