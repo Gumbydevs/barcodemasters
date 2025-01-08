@@ -306,60 +306,53 @@
         console.log('Generated hash:', hash);
 
         const userRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userRef);
 
-        try {
-            // Check if the monster already exists
-            const monsterRef = doc(db, 'monsters', hash);
-            const monsterSnapshot = await getDoc(monsterRef);
-
-            if (monsterSnapshot.exists()) {
-                updateDebugMessage('Monster already exists!');
-                return; // If the monster exists, stop further execution
-            }
-
-            // Create the monster data
-            const seed = parseInt(hash, 16);
-            const level = seededRandom(seed) < 0.2 ? 2 : 1;
-            const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
-
-            const monster = {
-                hash,
-                monsterName: generateName(seed),
-                type: MONSTER_TYPES[typeIndex],
-                level,
-                HP: Math.round(calculateStat('HP', seed) * (1 + (level - 1) * 0.3)),
-                AP: Math.round(calculateStat('AP', seed) * (1 + (level - 1) * 0.3)),
-                Speed: Math.round(calculateStat('Speed', seed) * (1 + (level - 1) * 0.3)),
-                experience: 0,
-                ownerId: user.uid,
-                dateCreated: new Date().toISOString()
-            };
-
-            console.log('Generated monster:', monster);
-
-            // Save monster data to the monsters collection
-            await setDoc(monsterRef, monster);
-            
-            // Update the user's usedHash array
-            await updateDoc(userRef, {
-                usedHash: arrayUnion(hash)
-            });
-
-            // Display the monster
-            displayMonster(monster);
-            updateDebugMessage('Monster generated successfully!');
-
-        } catch (error) {
-            console.error('Error saving monster:', error);
-            throw new Error('Failed to save monster data');
+        // Check if this user has already used this hash
+        if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
+            showError('You have already generated a monster from this barcode!');
+            return;
         }
+
+        // Generate the monster data
+        const seed = parseInt(hash, 16);
+        const level = seededRandom(seed) < 0.2 ? 2 : 1;
+        const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
+
+        const monster = {
+            hash,
+            monsterName: generateName(seed),
+            type: MONSTER_TYPES[typeIndex],
+            level,
+            HP: Math.round(calculateStat('HP', seed) * (1 + (level - 1) * 0.3)),
+            AP: Math.round(calculateStat('AP', seed) * (1 + (level - 1) * 0.3)),
+            Speed: Math.round(calculateStat('Speed', seed) * (1 + (level - 1) * 0.3)),
+            experience: 0,
+            ownerId: user.uid,
+            dateCreated: new Date().toISOString()
+        };
+
+        // Create a unique ID for this monster instance
+        const monsterInstanceId = `${hash}-${user.uid}`;
+        const monsterRef = doc(db, 'monsters', monsterInstanceId);
+
+        // Save monster data
+        await setDoc(monsterRef, monster);
+        
+        // Update user's usedHash array
+        await updateDoc(userRef, {
+            usedHash: arrayUnion(hash)
+        });
+
+        // Display the monster
+        displayMonster(monster);
+        updateDebugMessage('Monster generated successfully!');
 
     } catch (error) {
         console.error('Error in generateMonster:', error);
         showError(error.message || 'Failed to generate monster');
     }
 }
-
 
         function displayMonster(monster) {
             console.log('Displaying monster:', monster);
