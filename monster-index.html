@@ -122,12 +122,8 @@
                 <p id="totalMonsters">0</p>
             </div>
             <div class="stat-box">
-                <h3>Highest Level (Globa)</h3>
+                <h3>Highest Level (Global)</h3>
                 <p id="highestLevel">0</p>
-            </div>
-            <div class="stat-box">
-                <h3>Unique Types (Global)</h3>
-                <p id="uniqueTypes">0</p>
             </div>
         </div>
 
@@ -403,6 +399,8 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    const usernameCache = new Map();
+
     const firebaseConfig = {
         apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
         authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -431,54 +429,70 @@
     }
 
     async function getUsernameById(userId) {
-        try {
-            const userDoc = await getDoc(doc(db, 'users', userId));
-            if (userDoc.exists()) {
-                return userDoc.data().username;
-            } else {
-                return 'Unknown User';
-            }
-        } catch (error) {
-            console.error('Error fetching username:', error);
+    try {
+        // First, check if we already have this username stored
+        if (usernameCache.has(userId)) {
+            return usernameCache.get(userId);
+        }
+
+        // If we don't have it stored, get it from the database
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        
+        if (userDoc.exists()) {
+            // Get the username from the document
+            const username = userDoc.data().username;
+            // Save it for later use
+            usernameCache.set(userId, username);
+            return username;
+        } else {
+            console.warn(`No user document found for ID: ${userId}`);
             return 'Unknown User';
         }
+    } catch (error) {
+        console.error('Error fetching username:', error);
+        console.error('UserID that caused error:', userId);
+        return 'Unknown User';
     }
+}
 
-    async function createMonsterCard(monster) {
-        const ownerUsername = await getUsernameById(monster.ownerId);
+async function createMonsterCard(monster) {
+    // Check if we have an owner ID before trying to get the username
+    const ownerUsername = monster.ownerId ? 
+        await getUsernameById(monster.ownerId) : 
+        'Unknown User';
 
-        return `
-            <div class="monster-card" data-id="${monster.id}">
-                <div class="monster-info">
-                    <div class="monster-name">${monster.monsterName}</div>
-                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                    
-                    <div class="monster-stats">
-                        <div class="stat-item">
-                            <span>Level</span>
-                            <span>${monster.level}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>HP</span>
-                            <span>${monster.HP}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>AP</span>
-                            <span>${monster.AP}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Speed</span>
-                            <span>${monster.Speed}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Owner</span>
-                            <span>${ownerUsername}</span>
-                        </div>
+    return `
+        <div class="monster-card" data-id="${monster.id}">
+            <div class="monster-info">
+                <div class="monster-name">${monster.monsterName}</div>
+                <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                
+                <div class="monster-stats">
+                    <div class="stat-item">
+                        <span>Level</span>
+                        <span>${monster.level}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>HP</span>
+                        <span>${monster.HP}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>AP</span>
+                        <span>${monster.AP}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Speed</span>
+                        <span>${monster.Speed}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Owner</span>
+                        <span>${ownerUsername}</span>
                     </div>
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
 
     function updateCollectionStats(monsters) {
         document.getElementById('totalMonsters').textContent = monsters.length;
@@ -489,40 +503,44 @@
     }
 
     async function filterAndSortMonsters() {
-        let filtered = [...currentMonsters];
-        
-        const typeFilter = document.getElementById('typeFilter').value;
-        const levelFilter = document.getElementById('levelFilter').value;
-        const sortBy = document.getElementById('sortBy').value;
+    let filtered = [...currentMonsters];
+    
+    // Apply filters
+    const typeFilter = document.getElementById('typeFilter').value;
+    const levelFilter = document.getElementById('levelFilter').value;
+    const sortBy = document.getElementById('sortBy').value;
 
-        if (typeFilter) {
-            filtered = filtered.filter(m => m.type === typeFilter);
-        }
-        
-        if (levelFilter) {
-            filtered = filtered.filter(m => m.level === parseInt(levelFilter));
-        }
-
-        filtered.sort((a, b) => {
-            switch(sortBy) {
-                case 'dateCreated':
-                    return new Date(b.dateCreated) - new Date(a.dateCreated);
-                case 'level':
-                    return b.level - a.level;
-                case 'HP':
-                    return b.HP - a.HP;
-                case 'AP':
-                    return b.AP - a.AP;
-                case 'Speed':
-                    return b.Speed - a.Speed;
-                default:
-                    return 0;
-            }
-        });
-
-        const monstersGrid = document.getElementById('monstersGrid');
-        monstersGrid.innerHTML = await Promise.all(filtered.map(createMonsterCard)).then(cards => cards.join(''));
+    if (typeFilter) {
+        filtered = filtered.filter(m => m.type === typeFilter);
     }
+    
+    if (levelFilter) {
+        filtered = filtered.filter(m => m.level === parseInt(levelFilter));
+    }
+
+    // Sort monsters
+    filtered.sort((a, b) => {
+        switch(sortBy) {
+            case 'dateCreated':
+                return new Date(b.dateCreated) - new Date(a.dateCreated);
+            case 'level':
+                return b.level - a.level;
+            case 'HP':
+                return b.HP - a.HP;
+            case 'AP':
+                return b.AP - a.AP;
+            case 'Speed':
+                return b.Speed - a.Speed;
+            default:
+                return 0;
+        }
+    });
+
+    const monstersGrid = document.getElementById('monstersGrid');
+    // Wait for all monster cards to be created
+    const cards = await Promise.all(filtered.map(monster => createMonsterCard(monster)));
+    monstersGrid.innerHTML = cards.join('');
+}
 
     async function fetchMonsters() {
         try {
