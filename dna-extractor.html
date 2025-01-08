@@ -32,19 +32,27 @@
 
         .scan-button {
             padding: 1rem 2rem;
-            background: #4CAF50;
-            color: white;
-            border: none;
             border-radius: 8px;
-            cursor: pointer;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
             font-size: 1rem;
-            margin: 1rem 0;
+            cursor: pointer;
             transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+            border: none;
+        }
+
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
         }
 
         .scan-button:active {
-            background: #3d8b40;
-            transform: scale(0.98);
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         #statusMessages {
@@ -83,13 +91,36 @@
         }
 
         .nav-button {
-            padding: 0.5rem 1rem;
-            margin: 0.5rem;
-            background: #2196F3;
+            padding: 1rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
             color: white;
-            border: none;
-            border-radius: 4px;
+            font-size: 1rem;
             cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 0.5rem;
+            border: none;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .nav-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        #logoutButton:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
         }
 
         body.dark-mode {
@@ -98,11 +129,15 @@
         }
 
         body.dark-mode .scan-button {
-            background: #3b8d3b;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+
+        body.dark-mode .scan-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
         }
     </style>
 </head>
-<body>
+<body></body>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
     <div class="dna-extractor-container">
