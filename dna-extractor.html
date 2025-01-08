@@ -115,10 +115,7 @@
             <p id="errorMessage" style="color: red; display: none;"></p>
             <p id="debugMessage">Ready to scan...</p>
         </div>
-       
-        <div id="debugMessage" style="background: rgba(0,0,0,0.1); padding: 10px; margin: 10px 0; border-radius: 8px; max-height: 200px; overflow-y: auto; font-family: monospace; white-space: pre-wrap;">
-        </div>
-        
+                      
         <div id="interactive" class="viewport" style="display: none;">
             <video id="video" autoplay playsinline muted></video>
         </div>
@@ -172,7 +169,13 @@
             AP: { min: 1, max: 30 },
             Speed: { min: 1, max: 20 }
         };
-
+       
+        function addDebugMessage(message) {
+         const debugDiv = document.getElementById('debugMessage');
+         const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `<br>[${timestamp}] ${message}`;
+         debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
         let codeReader = null;
         let selectedDeviceId = null;
         function updateDebugMessage(message) {
