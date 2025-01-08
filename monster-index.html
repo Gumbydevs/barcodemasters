@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Masters - Monster Index</title>
+    <title>Barcode Masters - Global Monster Index</title>
     <link rel="stylesheet" href="assets/styles.css">
     <style>
         /* Add/update these styles */
@@ -104,7 +104,7 @@
             <div class="logo-container">
                 <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
             </div>
-            <h1>Monster Collection</h1>
+            <h1>Global Monster Index</h1>
         </div>
 
         <div class="collection-stats">
@@ -392,7 +392,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, orderBy, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -512,13 +512,9 @@
 
     async function fetchMonsters() {
         try {
-            const user = auth.currentUser;
-            if (!user) return;
-
             const monstersRef = collection(db, 'monsters');
             const q = query(
                 monstersRef,
-                where('ownerId', '==', user.uid),
                 orderBy('dateCreated', 'desc')
             );
             
