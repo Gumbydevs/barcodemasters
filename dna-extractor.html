@@ -115,7 +115,10 @@
             <p id="errorMessage" style="color: red; display: none;"></p>
             <p id="debugMessage">Ready to scan...</p>
         </div>
-
+       
+        <div id="debugMessage" style="background: rgba(0,0,0,0.1); padding: 10px; margin: 10px 0; border-radius: 8px; max-height: 200px; overflow-y: auto; font-family: monospace; white-space: pre-wrap;">
+        </div>
+        
         <div id="interactive" class="viewport" style="display: none;">
             <video id="video" autoplay playsinline muted></video>
         </div>
@@ -296,25 +299,37 @@
 
         async function generateMonster(qrData) {
     try {
-        updateDebugMessage('Generating monster...');
+        // Clear previous debug messages
+        document.getElementById('debugMessage').innerHTML = '';
+        
+        addDebugMessage('Starting monster generation...');
         const user = auth.currentUser;
         if (!user) {
             throw new Error('Must be logged in to generate monsters');
         }
+        addDebugMessage(`User ID: ${user.uid}`);
 
         const hash = generateHash(qrData);
-        console.log('Generated hash:', hash);
+        addDebugMessage(`Generated hash: ${hash}`);
 
         const userRef = doc(db, 'users', user.uid);
+        addDebugMessage('Fetching user document...');
         const userDoc = await getDoc(userRef);
 
+        if (!userDoc.exists()) {
+            addDebugMessage('ERROR: User document not found!');
+            throw new Error('User profile not found');
+        }
+        addDebugMessage('User document found');
+
         // Check if this user has already used this hash
-        if (userDoc.exists() && userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
-            showError('You have already generated a monster from this barcode!');
-            return;
+        if (userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
+            addDebugMessage('Hash already used by this user');
+            throw new Error('You have already generated a monster from this barcode!');
         }
 
-        // Generate the monster data
+        // Generate monster data
+        addDebugMessage('Generating monster data...');
         const seed = parseInt(hash, 16);
         const level = seededRandom(seed) < 0.2 ? 2 : 1;
         const typeIndex = Math.floor(seededRandom(seed + 2) * MONSTER_TYPES.length);
@@ -331,25 +346,42 @@
             ownerId: user.uid,
             dateCreated: new Date().toISOString()
         };
+        addDebugMessage(`Monster generated: ${monster.monsterName}`);
 
-        // Create a unique ID for this monster instance
+        // Create monster document with unique ID
         const monsterInstanceId = `${hash}-${user.uid}`;
+        addDebugMessage(`Saving monster with ID: ${monsterInstanceId}`);
         const monsterRef = doc(db, 'monsters', monsterInstanceId);
-
-        // Save monster data
-        await setDoc(monsterRef, monster);
         
+        try {
+            await setDoc(monsterRef, monster);
+            addDebugMessage('Monster saved to database');
+        } catch (saveError) {
+            addDebugMessage(`ERROR saving monster: ${saveError.message}`);
+            throw saveError;
+        }
+
         // Update user's usedHash array
-        await updateDoc(userRef, {
-            usedHash: arrayUnion(hash)
-        });
+        addDebugMessage('Updating usedHash array...');
+        try {
+            await updateDoc(userRef, {
+                usedHash: arrayUnion(hash)
+            });
+            addDebugMessage('UsedHash updated successfully');
+        } catch (updateError) {
+            addDebugMessage(`ERROR updating usedHash: ${updateError.message}`);
+            throw updateError;
+        }
 
         // Display the monster
         displayMonster(monster);
         updateDebugMessage('Monster generated successfully!');
 
     } catch (error) {
-        console.error('Error in generateMonster:', error);
+        addDebugMessage(`FINAL ERROR: ${error.message}`);
+        if (error.code) {
+            addDebugMessage(`Error code: ${error.code}`);
+        }
         showError(error.message || 'Failed to generate monster');
     }
 }
