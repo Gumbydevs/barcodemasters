@@ -103,17 +103,26 @@
             margin-bottom: 0.5rem;
         }
 
+      /* Navigation Grid */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
         .nav-button {
             padding: 1rem;
+            border: none;
             border-radius: 8px;
             background: linear-gradient(135deg, #2c3e50, #3498db);
             color: white;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: none;
+            width: 100%; /* This was missing */
         }
 
         .nav-button:hover {
@@ -127,25 +136,21 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        #logoutButton {
-            background: linear-gradient(135deg, #c0392b, #e74c3c);
-        }
-
-        #logoutButton:hover {
-            background: linear-gradient(135deg, #d35400, #e67e22);
-        }
-
-        body.dark-mode {
-            background: #121212;
-            color: white;
-        }
-
+        /* Dark mode button styles */
         body.dark-mode .nav-button {
             background: linear-gradient(135deg, #2c3e50, #3498db);
         }
 
         body.dark-mode .nav-button:hover {
             background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        #logoutButton:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
         }
     </style>
 </head>
@@ -165,6 +170,18 @@
                 <option value="">Select a Monster</option>
                 <!-- Monster options will be dynamically added here -->
             </select>
+        </div>
+
+        <div id="trainingSection" style="display: none;">
+            <h3>Choose a Stat to Train:</h3>
+            <select id="statSelect" class="filter-select">
+                <option value="">Select a Stat</option>
+                <option value="HP">HP</option>
+                <option value="AP">AP</option>
+                <option value="Speed">Speed</option>
+            </select>
+            <button class="nav-button" onclick="startTraining()">Start Training</button>
+            <p id="trainingStatus" style="display: none;">Training in progress...</p>
         </div>
 
         <div id="selectedMonster" style="display: none;">
@@ -192,7 +209,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -393,7 +410,11 @@
         }
 
         // Event Listeners
-        document.getElementById('monsterSelect').addEventListener('change', filterAndSortMonsters);
+        document.getElementById('monsterSelect').addEventListener('change', () => {
+            filterAndSortMonsters();
+            const selectedMonsterId = document.getElementById('monsterSelect').value;
+            document.getElementById('trainingSection').style.display = selectedMonsterId ? 'block' : 'none';
+        });
 
         document.getElementById('logoutButton').addEventListener('click', () => {
             auth.signOut().then(() => {
@@ -424,6 +445,43 @@
                 window.location.href = 'index.html';
             }
         });
+
+        // Start training function
+        async function startTraining() {
+            const selectedMonsterId = document.getElementById('monsterSelect').value;
+            const selectedStat = document.getElementById('statSelect').value;
+
+            if (!selectedMonsterId || !selectedStat) {
+                showError('Please select both a monster and a stat to train.');
+                return;
+            }
+
+            document.getElementById('trainingStatus').style.display = 'block';
+
+            // Simulate training with a 5-second timer
+            setTimeout(async () => {
+                const statIncrease = Math.floor(Math.random() * 5) + 1; // Random increase between 1 and 5
+
+                // Update the monster's stat in Firestore
+                try {
+                    const monsterRef = doc(db, 'monsters', selectedMonsterId);
+                    const monsterDoc = await getDoc(monsterRef);
+                    if (monsterDoc.exists()) {
+                        const updatedStatValue = monsterDoc.data()[selectedStat] + statIncrease;
+                        await updateDoc(monsterRef, {
+                            [selectedStat]: updatedStatValue
+                        });
+                        showToast(`Training completed! ${selectedStat} increased by ${statIncrease}.`);
+                        fetchMonsters(); // Refresh the monster list
+                    }
+                } catch (error) {
+                    console.error('Error updating monster:', error);
+                    showError('Training failed. Please try again.');
+                }
+
+                document.getElementById('trainingStatus').style.display = 'none';
+            }, 5000); // 5 seconds for demonstration
+        }
     </script>
 </body>
 </html>
