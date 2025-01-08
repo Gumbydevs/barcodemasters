@@ -557,9 +557,12 @@
     async function fetchMonsters() {
     try {
         const user = auth.currentUser;
-        if (!user) return;
+        if (!user) {
+            console.log("No user logged in");
+            return;
+        }
 
-        console.log("Fetching monsters for user:", user.uid); // Debug log 1
+        console.log("Fetching monsters for user:", user.uid);
 
         const monstersRef = collection(db, 'monsters');
         const q = query(
@@ -569,11 +572,15 @@
         );
         
         const querySnapshot = await getDocs(q);
-        console.log("Query results:", querySnapshot.size); // Debug log 2
+        console.log("Number of monsters found:", querySnapshot.size);
         
         currentMonsters = querySnapshot.docs.map(doc => {
             const data = doc.data();
-            console.log("Monster owner:", data.ownerId); // Debug log 3
+            console.log("Monster data:", {
+                id: doc.id,
+                ownerId: data.ownerId,
+                name: data.monsterName
+            });
             return {
                 id: doc.id,
                 ...data
@@ -587,20 +594,6 @@
         showError('Failed to load monsters. Please try again.');
     }
 }
-            
-            const querySnapshot = await getDocs(q);
-            currentMonsters = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
-            updateCollectionStats(currentMonsters);
-            filterAndSortMonsters();
-        } catch (error) {
-            console.error('Error fetching monsters:', error);
-            showError('Failed to load monsters. Please try again.');
-        }
-    }
 
     function showError(message) {
         const errorElement = document.getElementById('errorMessage');
