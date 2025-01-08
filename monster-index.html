@@ -498,11 +498,8 @@ async function createMonsterCard(monster) {
         document.getElementById('totalMonsters').textContent = monsters.length;
         const highestLevel = Math.max(...monsters.map(m => m.level), 0);
         document.getElementById('highestLevel').textContent = highestLevel;
-        const uniqueTypes = new Set(monsters.map(m => m.type)).size;
-        document.getElementById('uniqueTypes').textContent = uniqueTypes;
     }
-
-    async function filterAndSortMonsters() {
+       async function filterAndSortMonsters() {
     let filtered = [...currentMonsters];
     
     // Apply filters
