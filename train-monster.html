@@ -7,7 +7,7 @@
     <title>Barcode Masters - Train Monster</title>
     <link rel="stylesheet" href="assets/styles.css">
     <style>
-        /* Add/update these styles */
+        /* Styles */
         .collection-container {
             width: 100%;
             max-width: 1200px;
@@ -152,6 +152,36 @@
         #logoutButton:hover {
             background: linear-gradient(135deg, #d35400, #e67e22);
         }
+        .training-timer-container {
+        margin-top: 1rem;
+        display: none;
+    }
+
+        .training-progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .training-progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        .training-time-remaining {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+
+        body.dark-mode .training-progress-bar {
+            background-color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -174,17 +204,25 @@
 
         <div id="trainingSection" style="display: none;">
             <h3>Choose a Stat to Train:</h3>
-            <select id="statSelect" class="filter-select">
-                <option value="">Select a Stat</option>
-                <option value="HP">HP</option>
-                <option value="AP">AP</option>
-                <option value="Speed">Speed</option>
-            </select>
-            <button class="nav-button" id="startTrainingButton">Start Training</button>
-            <p id="trainingStatus" style="display: none;">Training in progress...</p>
-        </div>
+    <select id="statSelect" class="filter-select">
+        <option value="">Select a Stat</option>
+        <option value="HP">HP</option>
+        <option value="AP">AP</option>
+        <option value="Speed">Speed</option>
+    </select>
+    <button class="nav-button" id="startTrainingButton">Start Training</button>
+    
+        <div id="trainingTimerContainer" class="training-timer-container">
+        <div class="training-progress-bar">
+        <div id="trainingProgressFill" class="training-progress-fill"></div>
+    </div>
+    
+        <div id="trainingTimeRemaining" class="training-time-remaining">Time remaining: 5s</div>
+    </div>
+        <p id="trainingStatus" style="display: none;">Training in progress...</p>
+    </div>
 
-        <div id="selectedMonster" style="display: none;">
+        <div id="selectedMonster">
             <!-- Selected monster details will be displayed here -->
         </div>
 
@@ -203,7 +241,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.02</span></p>
+        <p>Version: <span id="versionNumber">1.0.03</span></p>
     </footer>
 
     <script type="module">
@@ -228,262 +266,320 @@
         let currentMonsters = [];
 
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+async function getUsernameById(userId) {
+    try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+            return userDoc.data().username;
+        } else {
+            return 'Unknown User';
         }
+    } catch (error) {
+        console.error('Error fetching username:', error);
+        return 'Unknown User';
+    }
+}
 
-        async function getUsernameById(userId) {
-            try {
-                const userDoc = await getDoc(doc(db, 'users', userId));
-                if (userDoc.exists()) {
-                    return userDoc.data().username;
-                } else {
-                    return 'Unknown User';
-                }
-            } catch (error) {
-                console.error('Error fetching username:', error);
-                return 'Unknown User';
-            }
-        }
+async function createMonsterCard(monster) {
+    const xpToNextLevel = monster.level * 100;
+    const xpProgress = (monster.experience / xpToNextLevel) * 100;
+    const ownerUsername = await getUsernameById(monster.ownerId);
 
-        async function createMonsterCard(monster) {
-            const xpToNextLevel = monster.level * 100;
-            const xpProgress = (monster.experience / xpToNextLevel) * 100;
-            const ownerUsername = await getUsernameById(monster.ownerId);
-
-            return `
-                <div class="monster-card" data-id="${monster.id}">
-                    <div class="monster-info">
-                        <div class="monster-name">${monster.monsterName}</div>
-                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                        
-                        <div class="monster-stats">
-                            <div class="stat-item">
-                                <span>Level</span>
-                                <span>${monster.level}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>HP</span>
-                                <span>${monster.HP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>AP</span>
-                                <span>${monster.AP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Speed</span>
-                                <span>${monster.Speed}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>XP</span>
-                                <span>${monster.experience}/${xpToNextLevel}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Created</span>
-                                <span>${formatDate(monster.dateCreated)}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Owner</span>
-                                <span>${ownerUsername}</span>
-                            </div>
-                        </div>
-                        <div class="xp-progress">
-                            <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
-                        </div>
+    return `
+        <div class="monster-card" data-id="${monster.id}">
+            <div class="monster-info">
+                <div class="monster-name">${monster.monsterName}</div>
+                <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                
+                <div class="monster-stats">
+                    <div class="stat-item">
+                        <span>Level</span>
+                        <span>${monster.level}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>HP</span>
+                        <span>${monster.HP}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>AP</span>
+                        <span>${monster.AP}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Speed</span>
+                        <span>${monster.Speed}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>XP</span>
+                        <span>${monster.experience}/${xpToNextLevel}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Created</span>
+                        <span>${formatDate(monster.dateCreated)}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Owner</span>
+                        <span>${ownerUsername}</span>
                     </div>
                 </div>
-            `;
+                <div class="xp-progress">
+                    <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function fetchMonsters() {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            console.log("No user logged in");
+            return;
         }
 
-        async function fetchMonsters() {
-            try {
-                const user = auth.currentUser;
-                if (!user) {
-                    console.log("No user logged in");
-                    return;
-                }
+        console.log("Fetching monsters for user:", user.uid);
 
-                console.log("Fetching monsters for user:", user.uid);
-
-                const monstersRef = collection(db, 'monsters');
-                const q = query(
-                    monstersRef,
-                    where('ownerId', '==', user.uid), // Filter by ownerId
-                    orderBy('dateCreated', 'desc')
-                );
-                
-                const querySnapshot = await getDocs(q);
-                console.log("Number of monsters found:", querySnapshot.size);
-                
-                currentMonsters = querySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    console.log("Monster data:", {
-                        id: doc.id,
-                        ownerId: data.ownerId,
-                        name: data.monsterName
-                    });
-                    return {
-                        id: doc.id,
-                        ...data
-                    };
-                });
-
-                const monsterSelect = document.getElementById('monsterSelect');
-                monsterSelect.innerHTML = '<option value="">Select a Monster</option>';
-                currentMonsters.forEach(monster => {
-                    const option = document.createElement('option');
-                    option.value = monster.id;
-                    option.textContent = monster.monsterName;
-                    monsterSelect.appendChild(option);
-                });
-
-                filterAndSortMonsters();
-            } catch (error) {
-                console.error('Error fetching monsters:', error);
-                showError('Failed to load monsters. Please try again.');
-            }
-        }
-
-        async function filterAndSortMonsters() {
-            const selectedMonsterId = document.getElementById('monsterSelect').value;
-            const filtered = selectedMonsterId ? currentMonsters.filter(m => m.id === selectedMonsterId) : currentMonsters;
-
-            // Display the selected monster details
-            if (selectedMonsterId) {
-                const selectedMonster = filtered[0];
-                const selectedMonsterDiv = document.getElementById('selectedMonster');
-                selectedMonsterDiv.innerHTML = await createMonsterCard(selectedMonster);
-                selectedMonsterDiv.style.display = 'block';
-            } else {
-                document.getElementById('selectedMonster').style.display = 'none';
-            }
-        }
-
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            setTimeout(() => {
-                errorElement.style.display = 'none';
-            }, 5000);
-        }
-
-        function showToast(message) {
-            // Create toast element if it doesn't exist
-            let toast = document.getElementById('toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'toast';
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    background: rgba(46, 204, 113, 0.9);
-                    color: white;
-                    padding: 1rem 2rem;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    transform: translateY(100px);
-                    opacity: 0;
-                    transition: all 0.3s ease;
-                    z-index: 1000;
-                `;
-                document.body.appendChild(toast);
-            }
-            
-            toast.textContent = message;
-            requestAnimationFrame(() => {
-                toast.style.transform = 'translateY(0)';
-                toast.style.opacity = '1';
-            });
-
-            setTimeout(() => {
-                toast.style.transform = 'translateY(100px)';
-                toast.style.opacity = '0';
-            }, 3000);
-        }
-
-        // Event Listeners
-        document.getElementById('monsterSelect').addEventListener('change', () => {
-            filterAndSortMonsters();
-            const selectedMonsterId = document.getElementById('monsterSelect').value;
-            document.getElementById('trainingSection').style.display = selectedMonsterId ? 'block' : 'none';
-        });
-            // Start training button event listener
-            document.getElementById('startTrainingButton').addEventListener('click', startTraining);
-
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            }).catch((error) => {
-                showError('Logout failed: ' + error.message);
-            });
-        });
-
-        // Dark mode toggle
-        const darkModeToggle = document.getElementById("darkModeToggle");
-        const savedTheme = localStorage.getItem("theme");
+        const monstersRef = collection(db, 'monsters');
+        const q = query(
+            monstersRef,
+            where('ownerId', '==', user.uid),
+            orderBy('dateCreated', 'desc')
+        );
         
-        if (savedTheme === "dark") {
-            document.body.classList.add("dark-mode");
+        const querySnapshot = await getDocs(q);
+        console.log("Number of monsters found:", querySnapshot.size);
+        
+        currentMonsters = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            console.log("Monster data:", {
+                id: doc.id,
+                ownerId: data.ownerId,
+                name: data.monsterName
+            });
+            return {
+                id: doc.id,
+                ...data
+            };
+        });
+
+        const monsterSelect = document.getElementById('monsterSelect');
+        monsterSelect.innerHTML = '<option value="">Select a Monster</option>';
+        currentMonsters.forEach(monster => {
+            const option = document.createElement('option');
+            option.value = monster.id;
+            option.textContent = monster.monsterName;
+            monsterSelect.appendChild(option);
+        });
+
+        filterAndSortMonsters();
+    } catch (error) {
+        console.error('Error fetching monsters:', error);
+        showError('Failed to load monsters. Please try again.');
+    }
+}
+
+async function filterAndSortMonsters() {
+    const selectedMonsterId = document.getElementById('monsterSelect').value;
+    const filtered = selectedMonsterId ? currentMonsters.filter(m => m.id === selectedMonsterId) : currentMonsters;
+
+    if (selectedMonsterId) {
+        const selectedMonster = filtered[0];
+        const selectedMonsterDiv = document.getElementById('selectedMonster');
+        selectedMonsterDiv.innerHTML = await createMonsterCard(selectedMonster);
+        selectedMonsterDiv.style.display = 'block';
+    } else {
+        document.getElementById('selectedMonster').style.display = 'none';
+    }
+}
+
+function showError(message) {
+    const errorElement = document.getElementById('errorMessage');
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+    }, 5000);
+}
+
+function showToast(message) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+        toast.style.transform = 'translateY(100px)';
+        toast.style.opacity = '0';
+    }, 3000);
+}
+
+// Modified startTraining function
+async function startTraining() {
+    const selectedMonsterId = document.getElementById('monsterSelect').value;
+    const selectedStat = document.getElementById('statSelect').value;
+    const startButton = document.getElementById('startTrainingButton');
+    
+    if (!selectedMonsterId || !selectedStat) {
+        showError('Please select both a monster and a stat to train.');
+        return;
+    }
+
+    // Disable the start button and stat select during training
+    startButton.disabled = true;
+    document.getElementById('statSelect').disabled = true;
+    document.getElementById('monsterSelect').disabled = true;
+
+    // Show and reset the timer container
+    const timerContainer = document.getElementById('trainingTimerContainer');
+    const progressFill = document.getElementById('trainingProgressFill');
+    const timeRemaining = document.getElementById('trainingTimeRemaining');
+    timerContainer.style.display = 'block';
+    progressFill.style.width = '0%';
+
+    const trainingDuration = 5000; // 5 seconds
+    const startTime = Date.now();
+    
+    // Update the timer every 100ms
+    const timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, trainingDuration - elapsed);
+        const progress = (elapsed / trainingDuration) * 100;
+        
+        progressFill.style.width = `${Math.min(100, progress)}%`;
+        timeRemaining.textContent = `Time remaining: ${Math.ceil(remaining / 1000)}s`;
+        
+        if (remaining <= 0) {
+            clearInterval(timerInterval);
         }
+    }, 100);
 
-        darkModeToggle.addEventListener("click", function() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-        });
+    // Simulate training with a 5-second timer
+    setTimeout(async () => {
+        const statIncrease = Math.floor(Math.random() * 5) + 1;
+        const xpIncrease = Math.floor(Math.random() * 6) + 5;
 
-        // Check authentication state and initialize
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                fetchMonsters();
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
+        try {
+            const monsterRef = doc(db, 'monsters', selectedMonsterId);
+            const monsterDoc = await getDoc(monsterRef);
+            
+            if (monsterDoc.exists()) {
+                const updatedStatValue = monsterDoc.data()[selectedStat] + statIncrease;
+                const updatedXPValue = monsterDoc.data().experience + xpIncrease;
+                
+                await updateDoc(monsterRef, {
+                    [selectedStat]: updatedStatValue,
+                    experience: updatedXPValue
+                });
 
-        // Start training function
-        async function startTraining() {
-            const selectedMonsterId = document.getElementById('monsterSelect').value;
-            const selectedStat = document.getElementById('statSelect').value;
-
-            if (!selectedMonsterId || !selectedStat) {
-                showError('Please select both a monster and a stat to train.');
-                return;
-            }
-
-            document.getElementById('trainingStatus').style.display = 'block';
-
-            // Simulate training with a 5-second timer
-            setTimeout(async () => {
-                const statIncrease = Math.floor(Math.random() * 5) + 1; // Random increase between 1 and 5
-
-                // Update the monster's stat in Firestore
-                try {
-                    const monsterRef = doc(db, 'monsters', selectedMonsterId);
-                    const monsterDoc = await getDoc(monsterRef);
-                    if (monsterDoc.exists()) {
-                        const updatedStatValue = monsterDoc.data()[selectedStat] + statIncrease;
-                        await updateDoc(monsterRef, {
-                            [selectedStat]: updatedStatValue
-                        });
-                        showToast(`Training completed! ${selectedStat} increased by ${statIncrease}.`);
-                        fetchMonsters(); // Refresh the monster list
-                    }
-                } catch (error) {
-                    console.error('Error updating monster:', error);
-                    showError('Training failed. Please try again.');
+                // Update the monster card directly
+                const updatedMonsterData = {
+                    ...monsterDoc.data(),
+                    id: selectedMonsterId,
+                    [selectedStat]: updatedStatValue,
+                    experience: updatedXPValue
+                };
+                
+                const selectedMonsterDiv = document.getElementById('selectedMonster');
+                selectedMonsterDiv.innerHTML = await createMonsterCard(updatedMonsterData);
+                
+                // Show training results
+                showToast(`Training completed! ${selectedStat} increased by ${statIncrease}. Gained ${xpIncrease} XP.`);
+                
+                // Update the monster in currentMonsters array
+                const monsterIndex = currentMonsters.findIndex(m => m.id === selectedMonsterId);
+                if (monsterIndex !== -1) {
+                    currentMonsters[monsterIndex] = updatedMonsterData;
                 }
-
-                document.getElementById('trainingStatus').style.display = 'none';
-            }, 5000); // 5 seconds for demonstration
+            }
+        } catch (error) {
+            console.error('Error updating monster:', error);
+            showError('Training failed. Please try again.');
         }
+
+        // Reset the UI
+        timerContainer.style.display = 'none';
+        startButton.disabled = false;
+        document.getElementById('statSelect').disabled = false;
+        document.getElementById('monsterSelect').disabled = false;
+        clearInterval(timerInterval);
+        
+        // Reset stat selection but keep monster selected
+        document.getElementById('statSelect').value = '';
+    }, trainingDuration);
+}
+
+// Event Listeners
+document.getElementById('monsterSelect').addEventListener('change', () => {
+    filterAndSortMonsters();
+    const selectedMonsterId = document.getElementById('monsterSelect').value;
+    document.getElementById('trainingSection').style.display = selectedMonsterId ? 'block' : 'none';
+});
+
+document.getElementById('startTrainingButton').addEventListener('click', startTraining);
+
+document.getElementById('logoutButton').addEventListener('click', () => {
+    auth.signOut().then(() => {
+        window.location.href = 'index.html';
+    }).catch((error) => {
+        showError('Logout failed: ' + error.message);
+    });
+});
+
+// Dark mode toggle
+const darkModeToggle = document.getElementById("darkModeToggle");
+const savedTheme = localStorage.getItem("theme");
+
+if (savedTheme === "dark") {
+    document.body.classList.add("dark-mode");
+}
+
+darkModeToggle.addEventListener("click", function() {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+});
+
+// Check authentication state and initialize
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        fetchMonsters();
+    } else {
+        window.location.href = 'index.html';
+    }
+});
+
+        
     </script>
 </body>
 </html>
