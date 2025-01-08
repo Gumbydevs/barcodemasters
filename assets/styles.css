@@ -205,4 +205,24 @@ footer {
   .btn-login {
     font-size: 14px;
   }
+ 
+  @media (max-width: 768px) {
+    /* Adjust buttons for mobile screens */
+    .btn-login {
+      font-size: 14px;
+      padding: 8px;  /* Smaller padding on mobile */
+    }
+  
+    /* Adjust the footer text size */
+    footer {
+      font-size: 12px;
+    }
+  
+    /* Ensure dropdowns are mobile-friendly */
+    .dropdown {
+      width: 90%;  /* Ensure dropdowns fit the screen */
+      max-width: none;  /* Remove max-width constraint */
+    }
+  }
+  
 }
