@@ -180,7 +180,7 @@
                 <option value="AP">AP</option>
                 <option value="Speed">Speed</option>
             </select>
-            <button class="nav-button" onclick="startTraining()">Start Training</button>
+            <button class="nav-button" id="startTrainingButton">Start Training</button>
             <p id="trainingStatus" style="display: none;">Training in progress...</p>
         </div>
 
@@ -415,6 +415,8 @@
             const selectedMonsterId = document.getElementById('monsterSelect').value;
             document.getElementById('trainingSection').style.display = selectedMonsterId ? 'block' : 'none';
         });
+            // Start training button event listener
+            document.getElementById('startTrainingButton').addEventListener('click', startTraining);
 
         document.getElementById('logoutButton').addEventListener('click', () => {
             auth.signOut().then(() => {
