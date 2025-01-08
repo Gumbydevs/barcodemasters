@@ -370,7 +370,7 @@
         // Check if this user has already used this hash
         if (userDoc.data().usedHash && userDoc.data().usedHash.includes(hash)) {
             addDebugMessage('Hash already used by this user');
-            throw new Error('You have already generated a monster from this barcode!');
+            throw new Error('You have already generated a monster from this code!');
         }
 
         // Generate monster data
