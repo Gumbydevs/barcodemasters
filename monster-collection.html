@@ -174,7 +174,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.02</span></p>
+        <p>Version: <span id="versionNumber">1.0.03</span></p>
     </footer>
     <style>
         /* Container and Layout */
@@ -499,20 +499,35 @@
     }
 
     async function deleteMonster(monsterId, monsterName) {
-        if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        // First verify the monster belongs to the current user
+        const monsterRef = doc(db, 'monsters', monsterId);
+        const monsterDoc = await getDoc(monsterRef);
+        
+        if (!monsterDoc.exists()) {
+            showError("Monster not found.");
+            return;
+        }
+        
+        const monsterData = monsterDoc.data();
+        if (monsterData.ownerId !== auth.currentUser.uid) {
+            showError("You don't have permission to delete this monster.");
             return;
         }
 
-        try {
-            const monsterRef = doc(db, 'monsters', monsterId);
-            await deleteDoc(monsterRef);
-            showToast('Monster deleted successfully!');
-            await fetchMonsters();
-        } catch (error) {
-            console.error("Error deleting monster:", error);
-            showError("Failed to delete monster. Please try again.");
-        }
-    } 
+        // Proceed with delete if verification passed
+        await deleteDoc(monsterRef);
+        showToast('Monster deleted successfully!');
+        await fetchMonsters();
+    } catch (error) {
+        console.error("Error deleting monster:", error);
+        showError("Failed to delete monster. Please try again.");
+    }
+}
 
     async function createMonsterCard(monster) {
         const xpToNextLevel = monster.level * 100;
