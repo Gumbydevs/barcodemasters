@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Monster Types Manager</title>
+    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="assets/styles.css">
     <style>
         /* Your existing styles remain the same */
@@ -122,6 +123,17 @@
                 showStatus('Error loading types: ' + error.message, 'error');
                 console.error('Error loading types:', error);
             }
+        }
+
+        // Show status function
+        function showStatus(message, type = 'info') {
+            const statusElement = document.createElement('div');
+            statusElement.className = `status-message ${type}`;
+            statusElement.textContent = message;
+            document.body.appendChild(statusElement);
+            setTimeout(() => {
+                statusElement.remove();
+            }, 3000);
         }
 
         // Make functions globally available
