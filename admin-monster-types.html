@@ -58,6 +58,31 @@
         .admin-button.danger:hover {
             background: #c0392b;
         }
+
+        .form-section {
+            margin-top: 2rem;
+        }
+
+        .form-section input,
+        .form-section textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .form-section label {
+            font-weight: bold;
+        }
+
+        .bulk-upload-section {
+            margin-top: 2rem;
+        }
+
+        .bulk-upload-section input {
+            margin-right: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -66,6 +91,36 @@
     </div>
 
     <div class="admin-container" id="adminContainer">
+        <div class="form-section">
+            <h2>Add New Monster Type</h2>
+            <form id="monsterForm">
+                <label for="typeName">Type Name</label>
+                <input type="text" id="typeName" required>
+                
+                <label for="description">Description</label>
+                <textarea id="description" required></textarea>
+                
+                <label for="hpModifier">HP Modifier</label>
+                <input type="number" id="hpModifier" step="any" required>
+                
+                <label for="apModifier">AP Modifier</label>
+                <input type="number" id="apModifier" step="any" required>
+                
+                <label for="speedModifier">Speed Modifier</label>
+                <input type="number" id="speedModifier" step="any" required>
+                
+                <button type="submit" class="admin-button">Add Monster Type</button>
+            </form>
+        </div>
+
+        <div class="bulk-upload-section">
+            <h2>Bulk Upload</h2>
+            <input type="file" id="fileUpload" accept=".json">
+            <button class="admin-button" id="pasteButton">Paste JSON</button>
+            <textarea id="pasteJSON" placeholder="Paste JSON here" style="display: none;"></textarea>
+            <button class="admin-button" id="uploadBulkButton" style="display: none;">Upload Bulk</button>
+        </div>
+
         <div id="typeGrid" class="type-grid">
             <!-- Monster types will be dynamically added here -->
         </div>
@@ -74,7 +129,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         // Firebase configuration
         const firebaseConfig = {
@@ -160,6 +215,37 @@
             }
         }
 
+        // Add new monster type
+        document.getElementById('monsterForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const typeName = document.getElementById('typeName').value;
+            const description = document.getElementById('description').value;
+            const hpModifier = parseFloat(document.getElementById('hpModifier').value);
+            const apModifier = parseFloat(document.getElementById('apModifier').value);
+            const speedModifier = parseFloat(document.getElementById('speedModifier').value);
+
+            if (isNaN(hpModifier) || isNaN(apModifier) || isNaN(speedModifier)) {
+                showStatus('Please enter valid numbers for the stat modifiers', 'error');
+                return;
+            }
+
+            try {
+                const newMonsterType = {
+                    typeName,
+                    description,
+                    statModifiers: { HP: hpModifier, AP: apModifier, Speed: speedModifier }
+                };
+                
+                await addDoc(collection(db, 'monsterTypes'), newMonsterType);
+                loadTypes(); // Reload the types after adding a new one
+                showStatus('Monster Type added successfully!', 'success');
+            } catch (error) {
+                showStatus('Error adding Monster Type: ' + error.message, 'error');
+                console.error('Error adding Monster Type:', error);
+            }
+        });
+
         // Show status function
         function showStatus(message, type = 'info') {
             const statusElement = document.createElement('div');
@@ -185,9 +271,35 @@
             }
         };
 
-        // Other global functions...
-        // (Place additional functions here if needed)
-        
+        // Bulk upload functions
+        document.getElementById('pasteButton').addEventListener('click', () => {
+            document.getElementById('pasteJSON').style.display = 'block';
+            document.getElementById('uploadBulkButton').style.display = 'block';
+        });
+
+        document.getElementById('uploadBulkButton').addEventListener('click', () => {
+            const jsonData = JSON.parse(document.getElementById('pasteJSON').value);
+            bulkUploadMonsterTypes(jsonData);
+        });
+
+        // Bulk upload logic for JSON
+        async function bulkUploadMonsterTypes(monsterTypes) {
+            const batch = writeBatch(db);
+
+            monsterTypes.forEach(type => {
+                const docRef = doc(collection(db, 'monsterTypes'), type.typeName);
+                batch.set(docRef, type);
+            });
+
+            try {
+                await batch.commit();
+                showStatus('Bulk upload successful!', 'success');
+                loadTypes(); // Reload types after bulk upload
+            } catch (error) {
+                showStatus('Error during bulk upload: ' + error.message, 'error');
+                console.error('Error during bulk upload:', error);
+            }
+        }
     </script>
 </body>
 </html>
