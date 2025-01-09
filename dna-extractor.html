@@ -215,10 +215,10 @@
         };
        
         function addDebugMessage(message) {
-         const debugDiv = document.getElementById('debugMessage');
-         const timestamp = new Date().toLocaleTimeString();
+            const debugDiv = document.getElementById('debugMessage');
+            const timestamp = new Date().toLocaleTimeString();
             debugDiv.innerHTML += `<br>[${timestamp}] ${message}`;
-         debugDiv.scrollTop = debugDiv.scrollHeight;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
         }
         let codeReader = null;
         let selectedDeviceId = null;
@@ -329,38 +329,38 @@
         }
         // Function to fetch monster types from Firestore
         async function getMonsterTypes() {
-    try {
-        const monsterTypesCollection = collection(db, 'monsterTypes');
-        const snapshot = await getDocs(monsterTypesCollection);
-        
-        const types = [];
-        snapshot.forEach(doc => {
-            // Get the data from each document
-            const data = doc.data();
-            types.push({
-                typeName: data.typeName,
-                description: data.description,
-                statModifiers: {
-                    HP: data.statModifiers.HP || 1,
-                    AP: data.statModifiers.AP || 1,
-                    Speed: data.statModifiers.Speed || 1
+            try {
+                const monsterTypesCollection = collection(db, 'monsterTypes');
+                const snapshot = await getDocs(monsterTypesCollection);
+                
+                const types = [];
+                snapshot.forEach(doc => {
+                    // Get the data from each document
+                    const data = doc.data();
+                    types.push({
+                        typeName: data.typeName,
+                        description: data.description,
+                        statModifiers: {
+                            HP: data.statModifiers.HP || 1,
+                            AP: data.statModifiers.AP || 1,
+                            Speed: data.statModifiers.Speed || 1
+                        }
+                    });
+                });
+
+                // Add error checking
+                if (types.length === 0) {
+                    console.error('No monster types found in database');
+                    throw new Error('No monster types found in database');
                 }
-            });
-        });
 
-        // Add error checking
-        if (types.length === 0) {
-            console.error('No monster types found in database');
-            throw new Error('No monster types found in database');
+                console.log('Fetched monster types:', types); // Debug log
+                return types;
+            } catch (error) {
+                console.error('Error fetching monster types:', error);
+                throw error;
+            }
         }
-
-        console.log('Fetched monster types:', types); // Debug log
-        return types;
-    } catch (error) {
-        console.error('Error fetching monster types:', error);
-        throw error;
-    }
-}
 
         function generateName(seed) {
             const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon', 'Astro', 'Hyper', 'Ultra', 'Mega', 'Omega', 'Alpha', 'Proto', 'Neo', 'Retro', 'Wild', 'Savage', 'Primal', 'Ancient', 'Dark', 'Light', 'Divine', 'Infernal', 'Celestial', 'Spectral', 'Phantom', 'Ghost', 'Spirit', 'Core', 'Vector', 'Binary', 'Mecha', 'Robo', 'Nano', 'Byte', 'Data', 'Digital', 'Virtual', 'Crypto', 'Steam', 'Spark', 'Surge', 'Pulse', 'Wave', 'Sonic', 'Echo', 'Bass', 'Flux', 'Flow', 'Stream', 'Ocean', 'Sky', 'Nova', 'Nebula', 'Comet', 'Meteor', 'Planet', 'World', 'Realm', 'Zone', 'Matrix', 'Cube', 'Prism', 'Metal', 'Leaf', 'Forest', 'Desert', 'Mountain', 'Cave', 'Castle', 'Tower', 'Temple', 'Nexus', 'Gate', 'Dawn', 'Dusk', 'Twilight', 'Rune', 'Glyph', 'Sigil', 'Mythic', 'Legend', 'Lunar', 'Solar', 'Astral', 'Ethereal', 'Arcane', 'Mystic', 'Ember', 'Blaze', 'Infinity', 'Zero', 'Apex', 'Prime', 'Elite', 'Royal', 'Feral', 'Rapid', 'Swift', 'Mighty', 'Supreme', 'Ultimate'];
@@ -371,20 +371,14 @@
             
             return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
         }
-
-        // Updated calculateStat function that incorporates statModifiers and user randomization
+  
         function calculateStat(statType, seed, statModifiers) {
-            const range = BASE_STAT_RANGES[statType];  // Get base stat range from predefined ranges
-             const modifier = statModifiers[statType] || 1; // Get the stat modifier from the monster type, default to 1 if not found
-
-        // Calculate the base stat value using the base range and user seed
-             const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
-             const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
-
-         // Apply the stat modifier from the database and slightly randomize based on the user seed
-            const modifiedStat = Math.floor(baseStat * modifier * (1 + (Math.random() * 0.1 - 0.05)));  // Adds slight random variation
-
-         return modifiedStat;
+            const range = BASE_STAT_RANGES[statType];
+            const modifier = statModifiers[statType] || 1;
+            const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
+            const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
+            const modifiedStat = Math.floor(baseStat * modifier * (1 + (Math.random() * 0.1 - 0.05)));
+            return modifiedStat;
         }
 
         async function generateMonster(hash) {
@@ -425,7 +419,7 @@
                 const monster = {
                     hash,
                     monsterName: generateName(seed),
-                    type: selectedType.typeName, // Use fetched monster type
+                    type: selectedType.typeName,
                     level,
                     HP: Math.round(calculateStat('HP', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
                     AP: Math.round(calculateStat('AP', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),

@@ -153,11 +153,11 @@
         const db = getFirestore(app);
 
         // Authorized user check
-        const AUTHORIZED_EMAIL = 'matt@mattrsherman.com';
-        const AUTHORIZED_UID = 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2';
+        const AUTHORIZED_EMAILS = ['matt@mattrsherman.com', 'errolsherman@icloud.com'];
+        const AUTHORIZED_UIDS = ['Ngi2V2EdcFUeALSJjmY6XxfyxqL2', 'v0qgCJGbjVVV7gj4nwTkVF1FZf73'];
 
         function checkAuthorization(user) {
-            return user && (user.email === AUTHORIZED_EMAIL || user.uid === AUTHORIZED_UID);
+            return user && (AUTHORIZED_EMAILS.includes(user.email) || AUTHORIZED_UIDS.includes(user.uid));
         }
 
         // Auth state observer
