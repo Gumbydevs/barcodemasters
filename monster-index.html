@@ -544,7 +544,7 @@ async function createMonsterCard(monster) {
         }
     });
 
-    const monstersGrid = document.getElementById('monstersGrid');
+   // duplicate / possibly redundant: const monstersGrid = document.getElementById('monstersGrid');
     const cards = await Promise.all(filtered.map(monster => createMonsterCard(monster)));
     monstersGrid.innerHTML = cards.join('');
 }
