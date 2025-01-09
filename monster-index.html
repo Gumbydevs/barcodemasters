@@ -118,24 +118,27 @@
 
         <div class="collection-stats">
             <div class="stat-box">
-                <h3>Total Monsters (Global)</h3>
+                <h3>Monsters</h3>
                 <p id="totalMonsters">0</p>
             </div>
             <div class="stat-box">
-                <h3>Highest Level (Global)</h3>
+                <h3>Highest Level</h3>
                 <p id="highestLevel">0</p>
             </div>
+            <div class="stat-box">
+                <h3>Unique Types</h3>
+                <p id="uniqueTypes">0</p>
+            </div>
         </div>
-
         <div class="filters">
-            <select id="typeFilter" class="filter-select">
+        <!-- <select id="typeFilter" class="filter-select"> 
                 <option value="">All Types</option>
                 <option value="Feral">Feral</option>
                 <option value="Fighter">Fighter</option>
                 <option value="Mage">Mage</option>
                 <option value="Ranged">Ranged</option>
                 <option value="Tank">Tank</option>
-            </select>
+        </select> -->
             <select id="levelFilter" class="filter-select">
                 <option value="">All Levels</option>
                 <option value="1">Level 1</option>
@@ -256,7 +259,7 @@
         /* Filters */
         .filters {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(2, 1fr);  /* Change to 2 columns */
             gap: 1rem;
             margin-bottom: 2rem;
             width: 100%;
@@ -511,24 +514,19 @@ async function createMonsterCard(monster) {
         document.getElementById('totalMonsters').textContent = monsters.length;
         const highestLevel = Math.max(...monsters.map(m => m.level), 0);
         document.getElementById('highestLevel').textContent = highestLevel;
+        const uniqueTypes = new Set(monsters.map(m => m.type)).size;
+        document.getElementById('uniqueTypes').textContent = uniqueTypes;
     }
-       async function filterAndSortMonsters() {
+    async function filterAndSortMonsters() {
     let filtered = [...currentMonsters];
     
-    // Apply filters
-    const typeFilter = document.getElementById('typeFilter').value;
     const levelFilter = document.getElementById('levelFilter').value;
     const sortBy = document.getElementById('sortBy').value;
-
-    if (typeFilter) {
-        filtered = filtered.filter(m => m.type === typeFilter);
-    }
     
     if (levelFilter) {
         filtered = filtered.filter(m => m.level === parseInt(levelFilter));
     }
 
-    // Sort monsters
     filtered.sort((a, b) => {
         switch(sortBy) {
             case 'dateCreated':
@@ -547,7 +545,6 @@ async function createMonsterCard(monster) {
     });
 
     const monstersGrid = document.getElementById('monstersGrid');
-    // Wait for all monster cards to be created
     const cards = await Promise.all(filtered.map(monster => createMonsterCard(monster)));
     monstersGrid.innerHTML = cards.join('');
 }
@@ -622,7 +619,7 @@ async function createMonsterCard(monster) {
     document.addEventListener('renameMonster', (e) => renameMonster(e.detail.id, e.detail.name));
     document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
     
-    document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
+   // document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
     document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
     document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
 
