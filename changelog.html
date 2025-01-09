@@ -51,49 +51,55 @@
 
     <h2>Version Updates & Bug Fixes</h2>
     <ul>
-        <li><strong>V6</strong> of the DNA Extractor/Monster Generator released.</li>
-        <li><strong>Version Number Updates</strong> for consistency across pages.</li>
-        <li>Fixed multiple <strong>debugging issues</strong> (login, Firebase connections, and database interactions).</li>
-        <li><strong>Favicon updates</strong>: Added and fixed the favicon across multiple pages.</li>
-        <li><strong>Layout fixes</strong>: Adjustments for responsiveness and consistency, including fixes for dark mode and login alignment.</li>
-        <li><strong>Spelling and text content corrections</strong> in various sections, including tooltips and help pages.</li>
+        <li><strong>V6</strong> of the DNA Extractor/Monster Generator released, incorporating improvements in dynamic monster generation from the database.</li>
+        <li><strong>Version Number Updates</strong> across multiple pages for consistency and better version tracking.</li>
+        <li><strong>Debugging Issues Resolved</strong>: Fixes applied for Firebase connections, user login, and database interactions. Debug logs improved for tracking errors.</li>
+        <li><strong>Favicon and Branding Updates</strong>: Fixed favicon across all pages and updated branding elements for consistency.</li>
+        <li><strong>Mobile & Desktop Adjustments</strong>: Implemented responsive design fixes to ensure seamless user experience across both mobile and desktop devices.</li>
     </ul>
 
     <h2>Monster Management & Admin Tools</h2>
     <ul>
-        <li><strong>Monster Generation</strong>: New version added to pull data from the database for dynamic monster types.</li>
-        <li><strong>Admin Tool for Monster Types</strong>: Tool created for managing monster types, with bug fixes and interface improvements.</li>
-        <li><strong>DNA Extractor</strong>: Attempted fixes for better monster type generation and saving changes.</li>
-        <li><strong>Monster Collection</strong>: Added buttons for renaming and deleting monsters. Updates to the collection page to improve clarity and presentation.</li>
-        <li><strong>Monster Stats & Experience</strong>: Monsters are now added to the player's collection with improved stat tracking.</li>
-        <li>Fixed <strong>issues with monster collection updates</strong>, including proper naming and display of monster stats.</li>
+        <li><strong>Dynamic Monster Generation</strong>: Enhanced with the ability to pull data from the database, allowing for dynamic creation of monsters based on barcode input and seeds.</li>
+        <li><strong>Admin Tool for Managing Monster Types</strong>: Admin interface created for managing monster types, including bug fixes and UI improvements for easier navigation and updates.</li>
+        <li><strong>Unique Monster Stats & Barcode Seeds</strong>: Integrated barcode seed functionality, allowing each monster to have stats and traits based on unique barcode hashes.</li>
+        <li><strong>Monster Collection Page</strong>: Improved UI for managing monsters, including options for renaming, deleting, and updating monster stats. Enhanced sorting and filtering functionalities.</li>
+        <li><strong>Database Setup for Monster Data</strong>: Refined database structure to handle monster data more efficiently, including creating unique IDs for each monster and associating them with player accounts.</li>
     </ul>
 
     <h2>Training & Battle System</h2>
     <ul>
-        <li><strong>Training Page</strong>: Layout and functionality improvements, including clearer dropdowns and better alignment for training selections.</li>
-        <li><strong>Training Fixes</strong>: Functionality for selecting training actions and results fixed.</li>
-        <li><strong>Monster Stat Increases</strong>: Stats now adjust properly based on training progress.</li>
+        <li><strong>Training Page Layout & Functionality</strong>: Further refinement of the training system, with clearer dropdowns and better alignment for stat selection.</li>
+        <li><strong>Stat Increase Mechanism</strong>: Integrated logic to adjust monster stats based on training results, factoring in monster types and training duration.</li>
+        <li><strong>Battle System Development</strong>: Progress on turn-based battle mechanics, with initial implementation of randomized events to keep battles engaging and unpredictable.</li>
     </ul>
 
-    <h2>Login & Profile</h2>
+    <h2>Login & User Authentication</h2>
     <ul>
-        <li><strong>Login System</strong>: Firebase integration for user registration and login system improvements. New features to handle user IDs and database connections.</li>
-        <li><strong>Profile Page</strong>: New styles and updates to the profile page layout and display. Dark mode fixes and better button alignment.</li>
-        <li><strong>Login Debug</strong>: Various attempts and fixes to resolve login and user registration issues.</li>
+        <li><strong>Firebase User Authentication</strong>: Integrated Firebase for user registration and login, including handling user IDs and ensuring secure database connections for user-specific data.</li>
+        <li><strong>Unique User IDs</strong>: Each player now receives a unique user ID upon registration, enabling personalized gameplay and monster collection.</li>
+        <li><strong>QR Code Generation</strong>: QR code feature added to allow players to share monster details or collections with others via unique barcode QR codes.</li>
+    </ul>
+
+    <h2>Permissions & Security</h2>
+    <ul>
+        <li><strong>Camera Permissions</strong>: Fixed issues related to camera permissions for barcode scanning, ensuring the camera works consistently across different devices and browsers.</li>
+        <li><strong>Permissions Management</strong>: Improved permission handling for accessing device hardware, including adding error messages for users who deny camera access.</li>
     </ul>
 
     <h2>User Interface & Style</h2>
     <ul>
-        <li><strong>Dark Mode</strong>: Styling fixes and adjustments to dark mode support across pages.</li>
-        <li><strong>Buttons & Links</strong>: Multiple updates to button styles, including alignment and functionality for the DNA Extractor tool and profile page.</li>
-        <li><strong>Help Pages</strong>: New help text and disclaimer updates for clearer user guidance. A new help button added to the login page.</li>
+        <li><strong>Dark Mode Enhancements</strong>: Refinement of dark mode styling, ensuring consistent user interface behavior across various pages.</li>
+        <li><strong>Button & Link Styling</strong>: Update of button styles, including alignment and enhanced functionality for the DNA Extractor tool and player profile page.</li>
+        <li><strong>Help Pages & Tooltips</strong>: Updated help texts and tooltips across the site, adding clearer instructions for new users. A new help button was added to the login page for improved guidance.</li>
     </ul>
 
-    <h2>Miscellaneous</h2>
+    <h2>Miscellaneous Enhancements</h2>
     <ul>
-        <li><strong>Content Updates</strong>: Several updates to content across various pages, including tooltips, help text, and instructions.</li>
-        <li><strong>Debugging Tools</strong>: Debug toggles and version updates added to help with troubleshooting.</li>
+        <li><strong>Monster Type Modifiers</strong>: Additional logic added for modifying monster stats based on type, with different effects based on the monster’s unique barcode hash.</li>
+        <li><strong>Database Cleanup</strong>: Overhaul of database setup, including cleaning up redundant data and optimizing for faster query execution related to player and monster data.</li>
+        <li><strong>Debugging Tools</strong>: Added more detailed debugging toggles to help troubleshoot issues with player data, monster generation, and database syncing.</li>
+        <li><strong>New Barcode Libraries</strong>: Added new barcode scanning libraries to improve the accuracy and speed of barcode recognition, supporting more formats.</li>
     </ul>
 </div>
 
