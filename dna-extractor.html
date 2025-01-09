@@ -144,7 +144,7 @@
         }
     </style>
 </head>
-<body></body>
+<body>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
     <div class="dna-extractor-container">
@@ -188,7 +188,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -329,17 +329,38 @@
         }
         // Function to fetch monster types from Firestore
         async function getMonsterTypes() {
-        const monsterTypesCollection = db.collection('monsterTypes'); // Adjust collection name if needed
-        const snapshot = await monsterTypesCollection.get();
+    try {
+        const monsterTypesCollection = collection(db, 'monsterTypes');
+        const snapshot = await getDocs(monsterTypesCollection);
         
-        const types = snapshot.docs.map(doc => ({
-            typeName: doc.data().typeName,  // Type name like "Fighter"
-            description: doc.data().description,  // Description like "Balanced warriors with good attack power"
-            statModifiers: doc.data().statModifiers  // Stat modifiers for AP, HP, etc.
-        }));
+        const types = [];
+        snapshot.forEach(doc => {
+            // Get the data from each document
+            const data = doc.data();
+            types.push({
+                typeName: data.typeName,
+                description: data.description,
+                statModifiers: {
+                    HP: data.statModifiers.HP || 1,
+                    AP: data.statModifiers.AP || 1,
+                    Speed: data.statModifiers.Speed || 1
+                }
+            });
+        });
 
-        return types;
+        // Add error checking
+        if (types.length === 0) {
+            console.error('No monster types found in database');
+            throw new Error('No monster types found in database');
         }
+
+        console.log('Fetched monster types:', types); // Debug log
+        return types;
+    } catch (error) {
+        console.error('Error fetching monster types:', error);
+        throw error;
+    }
+}
 
         function generateName(seed) {
             const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon', 'Astro', 'Hyper', 'Ultra', 'Mega', 'Omega', 'Alpha', 'Proto', 'Neo', 'Retro', 'Wild', 'Savage', 'Primal', 'Ancient', 'Dark', 'Light', 'Divine', 'Infernal', 'Celestial', 'Spectral', 'Phantom', 'Ghost', 'Spirit', 'Core', 'Vector', 'Binary', 'Mecha', 'Robo', 'Nano', 'Byte', 'Data', 'Digital', 'Virtual', 'Crypto', 'Steam', 'Spark', 'Surge', 'Pulse', 'Wave', 'Sonic', 'Echo', 'Bass', 'Flux', 'Flow', 'Stream', 'Ocean', 'Sky', 'Nova', 'Nebula', 'Comet', 'Meteor', 'Planet', 'World', 'Realm', 'Zone', 'Matrix', 'Cube', 'Prism', 'Metal', 'Leaf', 'Forest', 'Desert', 'Mountain', 'Cave', 'Castle', 'Tower', 'Temple', 'Nexus', 'Gate', 'Dawn', 'Dusk', 'Twilight', 'Rune', 'Glyph', 'Sigil', 'Mythic', 'Legend', 'Lunar', 'Solar', 'Astral', 'Ethereal', 'Arcane', 'Mystic', 'Ember', 'Blaze', 'Infinity', 'Zero', 'Apex', 'Prime', 'Elite', 'Royal', 'Feral', 'Rapid', 'Swift', 'Mighty', 'Supreme', 'Ultimate'];
@@ -366,79 +387,69 @@
          return modifiedStat;
         }
 
+        async function generateMonster(hash) {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    throw new Error('User not authenticated');
+                }
 
-        // Generate monster data
-addDebugMessage('Generating monster data...');
-const seed = parseInt(hash, 16);
-const level = seededRandom(seed) < 0.2 ? 2 : 1;
+                const userId = user.uid;
+                const userRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userRef);
 
-// Fetch the monster types from Firestore
-const monstersQuery = await db.collection("users").doc(userId).collection("monsters").get();
-const monsters = monstersQuery.docs.map(doc => doc.data());
+                if (!userDoc.exists()) {
+                    throw new Error('User document not found');
+                }
 
-if (snapshot.empty) {
-    addDebugMessage('ERROR: No monster types found in database');
-    throw new Error('No monster types found in database');
-}
+                const userData = userDoc.data();
+                const usedHash = userData.usedHash || [];
 
-// Store the fetched monster types
-const monsterTypes = snapshot.docs.map(doc => doc.data().type);
-addDebugMessage(`Fetched monster types: ${monsterTypes.join(', ')}`);
+                if (usedHash.includes(hash)) {
+                    throw new Error('This code has already been used');
+                }
 
-// Select a random monster type from the fetched types
-const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
+                const seed = parseInt(hash, 16);
+                const level = seededRandom(seed) < 0.2 ? 2 : 1;
 
-const monster = {
-    hash,
-    monsterName: generateName(seed),
-    type: monsterTypes[typeIndex], // Use fetched monster type
-    level,
-    HP: Math.round(calculateStat('HP', seed) * (1 + (level - 1) * 0.3)),
-    AP: Math.round(calculateStat('AP', seed) * (1 + (level - 1) * 0.3)),
-    Speed: Math.round(calculateStat('Speed', seed) * (1 + (level - 1) * 0.3)),
-    experience: 0,
-    ownerId: user.uid,
-    dateCreated: new Date().toISOString()
-};
-addDebugMessage(`Monster generated: ${monster.monsterName}`);
+                // Fetch the monster types from Firestore
+                const monsterTypes = await getMonsterTypes();
+                if (monsterTypes.length === 0) {
+                    throw new Error('No monster types found in database');
+                }
 
-// Create monster document with unique ID
-const monsterInstanceId = `${hash}-${user.uid}`;
-addDebugMessage(`Saving monster with ID: ${monsterInstanceId}`);
-const monsterRef = doc(db, 'monsters', monsterInstanceId);
+                // Select a random monster type from the fetched types
+                const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
+                const selectedType = monsterTypes[typeIndex];
 
-try {
-    await setDoc(monsterRef, monster);
-    addDebugMessage('Monster saved to database');
-} catch (saveError) {
-    addDebugMessage(`ERROR saving monster: ${saveError.message}`);
-    throw saveError;
-}
+                const monster = {
+                    hash,
+                    monsterName: generateName(seed),
+                    type: selectedType.typeName, // Use fetched monster type
+                    level,
+                    HP: Math.round(calculateStat('HP', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
+                    AP: Math.round(calculateStat('AP', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
+                    Speed: Math.round(calculateStat('Speed', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
+                    experience: 0,
+                    ownerId: user.uid,
+                    dateCreated: new Date().toISOString()
+                };
 
-// Update user's usedHash array
-addDebugMessage('Updating usedHash array...');
-try {
-    await updateDoc(userRef, {
-        usedHash: arrayUnion(hash)
-    });
-    addDebugMessage('UsedHash updated successfully');
-} catch (updateError) {
-    addDebugMessage(`ERROR updating usedHash: ${updateError.message}`);
-    throw updateError;
-}
+                const monsterInstanceId = `${hash}-${user.uid}`;
+                const monsterRef = doc(db, 'monsters', monsterInstanceId);
 
-// Display the monster
-displayMonster(monster);
-updateDebugMessage('Monster generated successfully!');
+                await setDoc(monsterRef, monster);
 
-} catch (error) {
-    addDebugMessage(`FINAL ERROR: ${error.message}`);
-    if (error.code) {
-        addDebugMessage(`Error code: ${error.code}`);
-    }
-    showError(error.message || 'Failed to generate monster');
-}
+                await updateDoc(userRef, {
+                    usedHash: arrayUnion(hash)
+                });
 
+                displayMonster(monster);
+                updateDebugMessage('Monster generated successfully!');
+            } catch (error) {
+                showError(error.message || 'Failed to generate monster');
+            }
+        }
 
         function displayMonster(monster) {
             console.log('Displaying monster:', monster);
