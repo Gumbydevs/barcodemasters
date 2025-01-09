@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Monster Types Manager</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="assets/styles.css">
     <style>
         /* Your existing styles remain the same */
@@ -25,6 +25,42 @@
             background: rgba(231, 76, 60, 0.2);
             border-radius: 8px;
         }
+
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .type-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .admin-button.danger {
+            background: #e74c3c;
+        }
+
+        .admin-button:hover {
+            background: #2980b9;
+        }
+
+        .admin-button.danger:hover {
+            background: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +70,9 @@
 
     <div class="admin-container" id="adminContainer">
         <!-- Your existing admin container content -->
+        <div id="typeGrid" class="type-grid">
+            <!-- Monster types will be dynamically added here -->
+        </div>
     </div>
 
     <script type="module">
