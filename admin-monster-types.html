@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Monster Types Manager</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        /* Your existing styles remain the same */
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: none; /* Hide by default until auth check */
+        }
+        
+        /* Rest of your existing styles... */
+
+        .auth-message {
+            text-align: center;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 600px;
+            background: rgba(231, 76, 60, 0.2);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="authMessage" class="auth-message" style="display: none;">
+        You don't have permission to access this page.
+    </div>
+
+    <div class="admin-container" id="adminContainer">
+        <!-- Your existing admin container content -->
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Authorized user check
+        const AUTHORIZED_EMAIL = 'matt@mattrsherman.com';
+        const AUTHORIZED_UID = 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2';
+
+        function checkAuthorization(user) {
+            return user && (user.email === AUTHORIZED_EMAIL || user.uid === AUTHORIZED_UID);
+        }
+
+        // Auth state observer
+        onAuthStateChanged(auth, (user) => {
+            const adminContainer = document.getElementById('adminContainer');
+            const authMessage = document.getElementById('authMessage');
+            
+            if (checkAuthorization(user)) {
+                console.log('Authorized user logged in:', user.email);
+                adminContainer.style.display = 'block';
+                authMessage.style.display = 'none';
+                loadTypes(); // Load types once we confirm authorized user
+            } else {
+                console.log('Unauthorized access attempt');
+                adminContainer.style.display = 'none';
+                authMessage.style.display = 'block';
+            }
+        });
+
+        // Load types function
+        async function loadTypes() {
+            try {
+                const typeGrid = document.getElementById('typeGrid');
+                typeGrid.innerHTML = '';
+
+                const snapshot = await getDocs(collection(db, 'monsterTypes'));
+                
+                if (snapshot.empty) {
+                    console.log('No monster types found');
+                    typeGrid.innerHTML = '<p>No monster types found in the database.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'type-card';
+                    card.innerHTML = `
+                        <h3>${data.typeName}</h3>
+                        <p>${data.description}</p>
+                        <div class="stat-input">
+                            <span>HP Modifier:</span>
+                            <span>${data.statModifiers.HP}</span>
+                        </div>
+                        <div class="stat-input">
+                            <span>AP Modifier:</span>
+                            <span>${data.statModifiers.AP}</span>
+                        </div>
+                        <div class="stat-input">
+                            <span>Speed Modifier:</span>
+                            <span>${data.statModifiers.Speed}</span>
+                        </div>
+                        <button class="admin-button danger" onclick="deleteType('${data.typeName}')">Delete</button>
+                    `;
+                    typeGrid.appendChild(card);
+                });
+            } catch (error) {
+                showStatus('Error loading types: ' + error.message, 'error');
+                console.error('Error loading types:', error);
+            }
+        }
+
+        // Make functions globally available
+        window.addNewType = async function() {
+            if (!checkAuthorization(auth.currentUser)) return;
+            // Rest of your addNewType function...
+        };
+
+        window.deleteType = async function(typeName) {
+            if (!checkAuthorization(auth.currentUser)) return;
+            // Rest of your deleteType function...
+        };
+
+        window.bulkUpload = async function() {
+            if (!checkAuthorization(auth.currentUser)) return;
+            // Rest of your bulkUpload function...
+        };
+
+        // Your other existing functions...
+        
+        // Initial load - will only work if authorized
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auth state change will handle the initial load
+            console.log('DOM Content Loaded - waiting for auth state');
+        });
+    </script>
+</body>
+</html>
