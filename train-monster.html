@@ -399,7 +399,7 @@ async function fetchMonsters() {
         });
 
         const monsterSelect = document.getElementById('monsterSelect');
-        monsterSelect.innerHTML = '<option value="">Select a Monster</option>';
+        monsterSelect.innerHTML = '<option value="">Click here to select a Monster</option>';
         currentMonsters.forEach(monster => {
             const option = document.createElement('option');
             option.value = monster.id;
