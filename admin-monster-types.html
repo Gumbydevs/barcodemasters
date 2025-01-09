@@ -7,15 +7,12 @@
     <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="assets/styles.css">
     <style>
-        /* Your existing styles remain the same */
         .admin-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
             display: none; /* Hide by default until auth check */
         }
-        
-        /* Rest of your existing styles... */
 
         .auth-message {
             text-align: center;
@@ -69,7 +66,6 @@
     </div>
 
     <div class="admin-container" id="adminContainer">
-        <!-- Your existing admin container content -->
         <div id="typeGrid" class="type-grid">
             <!-- Monster types will be dynamically added here -->
         </div>
@@ -78,7 +74,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         // Firebase configuration
         const firebaseConfig = {
@@ -128,9 +124,8 @@
                 typeGrid.innerHTML = '';
 
                 const snapshot = await getDocs(collection(db, 'monsterTypes'));
-                
+
                 if (snapshot.empty) {
-                    console.log('No monster types found');
                     typeGrid.innerHTML = '<p>No monster types found in the database.</p>';
                     return;
                 }
@@ -158,6 +153,7 @@
                     `;
                     typeGrid.appendChild(card);
                 });
+
             } catch (error) {
                 showStatus('Error loading types: ' + error.message, 'error');
                 console.error('Error loading types:', error);
@@ -175,29 +171,23 @@
             }, 3000);
         }
 
-        // Make functions globally available
-        window.addNewType = async function() {
-            if (!checkAuthorization(auth.currentUser)) return;
-            // Rest of your addNewType function...
-        };
-
+        // Delete type function
         window.deleteType = async function(typeName) {
             if (!checkAuthorization(auth.currentUser)) return;
-            // Rest of your deleteType function...
+
+            try {
+                await deleteDoc(doc(db, 'monsterTypes', typeName));
+                showStatus(`${typeName} deleted successfully`, 'success');
+                loadTypes(); // Reload the types after deletion
+            } catch (error) {
+                showStatus('Error deleting type: ' + error.message, 'error');
+                console.error('Error deleting type:', error);
+            }
         };
 
-        window.bulkUpload = async function() {
-            if (!checkAuthorization(auth.currentUser)) return;
-            // Rest of your bulkUpload function...
-        };
-
-        // Your other existing functions...
+        // Other global functions...
+        // (Place additional functions here if needed)
         
-        // Initial load - will only work if authorized
-        document.addEventListener('DOMContentLoaded', () => {
-            // Auth state change will handle the initial load
-            console.log('DOM Content Loaded - waiting for auth state');
-        });
     </script>
 </body>
 </html>
