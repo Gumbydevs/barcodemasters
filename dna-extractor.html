@@ -286,12 +286,57 @@
     }
 }
 
+// Function to sanitize and extract numeric hash from barcode/QR code
+function sanitizeCodeInput(rawInput) {
+    try {
+        let numbers = '';
+        
+        // First, check if the input is a URL
+        try {
+            const url = new URL(rawInput);
+            // Extract numbers from the pathname or search params
+            numbers = url.pathname.replace(/[^0-9]/g, '') || 
+                     url.search.replace(/[^0-9]/g, '') ||
+                     url.host.replace(/[^0-9]/g, '');
+        } catch (e) {
+            // Not a URL, extract numbers directly
+            numbers = rawInput.replace(/[^0-9]/g, '');
+        }
+
+        // Generate a more random-looking hash
+        let hash = '';
+        const input = numbers || rawInput;
+        let total = 1;
+
+        // Use a better hashing algorithm
+        for (let i = 0; i < input.length; i++) {
+            total = (total * 31 + input.charCodeAt(i)) >>> 0;
+        }
+
+        // Ensure first digit isn't 0
+        const firstDigit = (total % 9) + 1;
+        hash = firstDigit.toString();
+
+        // Generate remaining 8 digits using the hash
+        while (hash.length < 9) {
+            total = (total * 31) >>> 0;
+            hash += (total % 10).toString();
+        }
+
+        return hash;
+    } catch (error) {
+        console.error('Error sanitizing code input:', error);
+        // Fallback: create a non-zero 9-digit hash
+        const timestamp = Date.now().toString();
+        return ('1' + timestamp).slice(-9);
+    }
+}
+
 async function startScanning() {
     const videoElement = document.getElementById('interactive');
     
     try {
         hideError();
-        // Update UI state
         document.getElementById('startButton').style.display = 'none';
         videoElement.style.display = 'block';
 
@@ -304,7 +349,9 @@ async function startScanning() {
                 if (result) {
                     updateDebugMessage('Code found!');
                     stopScanning();
-                    await generateMonster(result.text);
+                    // Sanitize the code before generating monster
+                    const sanitizedHash = sanitizeCodeInput(result.text);
+                    await generateMonster(sanitizedHash);
                 }
                 if (err && !(err instanceof ZXing.NotFoundException)) {
                     console.error('Scanning error:', err);
