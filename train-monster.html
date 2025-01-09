@@ -59,16 +59,19 @@
 
         /* Adjust filters for mobile */
         .filters {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 0.5rem;
             margin-bottom: 2rem;
             width: 100%;
         }
 
         .filter-select, .sort-select {
-            width: 100%;
+            width: 80%;
+            max-width: 300px;
             min-width: 0;
+            font-size: 1.1rem;
         }
 
         /* Make monster cards more responsive */
@@ -182,6 +185,30 @@
         body.dark-mode .training-progress-bar {
             background-color: #2c3e50;
         }
+
+        /* Center the stat selection section */
+        #trainingSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #trainingSection h3, #trainingSection .filter-select {
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+        }
+        #trainingSection h3 {
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+            margin: 0 auto; /* Center horizontally */
+        }
+        #startTrainingButton {
+        margin-top: 1rem; /* Add upper margin */
+    }
     </style>
 </head>
 <body>
@@ -201,8 +228,7 @@
                 <!-- Monster options will be dynamically added here -->
             </select>
         </div>
-
-        <div id="trainingSection" style="display: none;">
+        <div id="trainingSection" style="text-align: center; display: none;">
             <h3>Choose a Stat to Train:</h3>
     <select id="statSelect" class="filter-select">
         <option value="">Select a Stat</option>
