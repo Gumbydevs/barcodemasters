@@ -239,79 +239,103 @@
         }
 
         async function initializeScanner() {
-            try {
-                updateDebugMessage('Initializing scanner...');
-                hideError();
+    try {
+        updateDebugMessage('Initializing scanner...');
+        hideError();
+        document.getElementById('interactive').style.display = 'none';  // Ensure video is hidden initially
+        document.getElementById('startButton').style.display = 'block'; // Ensure button is visible
 
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error('Camera access not supported');
+        // First explicitly request camera permission
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } 
+            });
+            stream.getTracks().forEach(track => track.stop()); // Stop the stream after getting permission
+        } catch (permissionError) {
+            throw new Error('Camera permission denied. Please allow camera access and try again.');
+        }
+
+        // Then get the devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+        if (videoDevices.length === 0) {
+            throw new Error('No camera found');
+        }
+
+        // Prefer back camera
+        const backCamera = videoDevices.find(device => 
+            device.label.toLowerCase().includes('back') ||
+            device.label.toLowerCase().includes('rear')
+        );
+        
+        selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
+        
+        // Initialize code reader
+        if (codeReader) {
+            codeReader.reset();
+        }
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        
+        updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
+    } catch (err) {
+        console.error('Scanner initialization error:', err);
+        showError(err.message);
+        resetUI(); // Ensure UI is reset on error
+    }
+}
+
+async function startScanning() {
+    const videoElement = document.getElementById('interactive');
+    
+    try {
+        hideError();
+        // Update UI state
+        document.getElementById('startButton').style.display = 'none';
+        videoElement.style.display = 'block';
+
+        updateDebugMessage('Starting scanner...');
+
+        await codeReader.decodeFromVideoDevice(
+            selectedDeviceId,
+            'video',
+            async (result, err) => {
+                if (result) {
+                    updateDebugMessage('Code found!');
+                    stopScanning();
+                    await generateMonster(result.text);
                 }
-
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-
-                if (videoDevices.length === 0) {
-                    throw new Error('No camera found');
+                if (err && !(err instanceof ZXing.NotFoundException)) {
+                    console.error('Scanning error:', err);
                 }
-
-                const backCamera = videoDevices.find(device => 
-                    device.label.toLowerCase().includes('back') ||
-                    device.label.toLowerCase().includes('rear')
-                );
-                
-                selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
-                
-                codeReader = new ZXing.BrowserMultiFormatReader();
-                updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
-            } catch (err) {
-                showError(err.message);
             }
+        );
+
+        updateDebugMessage('Scanner active - point at a barcode or QR code');
+    } catch (err) {
+        console.error('Error starting scanner:', err);
+        showError('Scanning failed: ' + err.message);
+        resetUI();
+    }
+}
+
+function stopScanning() {
+    try {
+        if (codeReader) {
+            codeReader.reset();
         }
+        resetUI(); // This calls your existing resetUI function
+    } catch (error) {
+        console.error('Error stopping scanner:', error);
+        resetUI(); // Ensure UI is reset even if there's an error
+    }
+}
 
-        async function startScanning() {
-            const videoElement = document.getElementById('interactive');
-            
-            try {
-                hideError();
-                document.getElementById('startButton').style.display = 'none';
-                videoElement.style.display = 'block';
-
-                if (codeReader) {
-                    codeReader.reset();
-                }
-
-                codeReader = new ZXing.BrowserMultiFormatReader();
-                
-                await codeReader.decodeFromVideoDevice(
-                    selectedDeviceId,
-                    'video',
-                    async (result, err) => {
-                        if (result) {
-                            updateDebugMessage('Code found!');
-                            stopScanning();
-                            await generateMonster(result.text);
-                        }
-                    }
-                );
-
-                updateDebugMessage('Scanner active - point at a barcode or QR code');
-            } catch (err) {
-                showError('Scanning failed: ' + err.message);
-                resetUI();
-            }
-        }
-
-        function stopScanning() {
-            if (codeReader) {
-                codeReader.reset();
-                resetUI();
-            }
-        }
-
-        function resetUI() {
-            document.getElementById('startButton').style.display = 'block';
-            document.getElementById('interactive').style.display = 'none';
-        }
+// Your existing resetUI function remains unchanged
+function resetUI() {
+    document.getElementById('startButton').style.display = 'block';
+    document.getElementById('interactive').style.display = 'none';
+}
 
         function generateHash(str) {
             let hash = 0;
