@@ -1,0 +1,38 @@
+[
+    {
+        "typeName": "Fire Monster",
+        "description": "A type that excels in offensive attacks, using flames and heat.",
+        "statModifiers": {
+            "HP": 1.1,
+            "AP": 1.5,
+            "Speed": 1.2
+        }
+    },
+    {
+        "typeName": "Water Monster",
+        "description": "A versatile type with strong defensive capabilities, harnessing water.",
+        "statModifiers": {
+            "HP": 1.3,
+            "AP": 1.2,
+            "Speed": 1.1
+        }
+    },
+    {
+        "typeName": "Earth Monster",
+        "description": "A sturdy type that specializes in defense and endurance.",
+        "statModifiers": {
+            "HP": 1.5,
+            "AP": 1.0,
+            "Speed": 0.8
+        }
+    },
+    {
+        "typeName": "Electric Monster",
+        "description": "A fast and agile type with high attack power, using electricity.",
+        "statModifiers": {
+            "HP": 1.0,
+            "AP": 1.4,
+            "Speed": 1.5
+        }
+    }
+]
