@@ -44,14 +44,23 @@
 <div class="container">
     <h1>Barcode Masters Change Log</h1>
     
-    <h2>Version 1.0.03 - Initial Release</h2>
+    <h2>Version 1.0.03 - Alpha Development Release</h2>
     <ul>
-        <li>First commit: Basic project setup with main page structure and initial files.</li>
+        <li><strong>First commit</strong>: Basic project setup with main page structure and initial files.</li>
     </ul>
 
     <h2>Version Updates & Bug Fixes</h2>
     <ul>
-        <li><strong>V6</strong> of the DNA Extractor/Monster Generator released, incorporating improvements in dynamic monster generation from the database.</li>
+        <li><strong>V6</strong> of the DNA Extractor/Monster Generator released, incorporating improvements in dynamic monster generation for name generation, stats, monster types.</li>
+        <ul>
+            <li>Generates unique monsters based on barcode hash seeds.</li>
+            <li>Moved monster types definitions to the database for scalability.</li>
+            <li>Generator now pulls monster type from the database which are randomized by code seed.</li>
+            <li>Stats are generated within speciified clamped ranges and influenced by code seed + unique monster type stat modifiers.</li>
+            <li>Duplicate code scans detection, codes can be scanned once per user if the monster exists in their collection.</li>
+            <li>Monsters now correctly saving to user's collection.</li>
+        </ul>
+        <p></p>
         <li><strong>Version Number Updates</strong> across multiple pages for consistency and better version tracking.</li>
         <li><strong>Debugging Issues Resolved</strong>: Fixes applied for Firebase connections, user login, and database interactions. Debug logs improved for tracking errors.</li>
         <li><strong>Favicon and Branding Updates</strong>: Fixed favicon across all pages and updated branding elements for consistency.</li>
@@ -64,6 +73,7 @@
         <li><strong>Admin Tool for Managing Monster Types</strong>: Admin interface created for managing monster types, including bug fixes and UI improvements for easier navigation and updates.</li>
         <li><strong>Unique Monster Stats & Barcode Seeds</strong>: Integrated barcode seed functionality, allowing each monster to have stats and traits based on unique barcode hashes.</li>
         <li><strong>Monster Collection Page</strong>: Improved UI for managing monsters, including options for renaming, deleting, and updating monster stats. Enhanced sorting and filtering functionalities.</li>
+        <li><strong>Global Monster Index Page</strong>: Improved UI for viewing all monsters in the game, displaying their info and owner with search and filter options for exploring the full monster collection.</li>
         <li><strong>Database Setup for Monster Data</strong>: Refined database structure to handle monster data more efficiently, including creating unique IDs for each monster and associating them with player accounts.</li>
     </ul>
 
