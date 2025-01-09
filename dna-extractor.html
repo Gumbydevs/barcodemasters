@@ -372,78 +372,128 @@
             return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
         }
   
-        function calculateStat(statType, seed, statModifiers) {
-            const range = BASE_STAT_RANGES[statType];
-            const modifier = statModifiers[statType] || 1;
-            const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
-            const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
-            const modifiedStat = Math.floor(baseStat * modifier * (1 + (Math.random() * 0.1 - 0.05)));
-            return modifiedStat;
+        // Updated calculateStat function
+function calculateStat(statType, seed, statModifiers) {
+    try {
+        // Ensure we have valid inputs
+        if (!BASE_STAT_RANGES[statType]) {
+            console.error('Invalid stat type:', statType);
+            return 0;
+        }
+        
+        const range = BASE_STAT_RANGES[statType];
+        
+        // Ensure modifier exists and is a number, default to 1 if not
+        const modifier = typeof statModifiers[statType] === 'number' ? statModifiers[statType] : 1;
+        
+        // Generate consistent random value based on seed
+        const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
+        
+        // Calculate base stat
+        const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
+        
+        // Apply modifier and small random variation
+        const modifiedStat = Math.round(baseStat * modifier);
+        
+        console.log(`Calculating ${statType}:`, {
+            baseStat,
+            modifier,
+            modifiedStat
+        });
+        
+        return modifiedStat;
+    } catch (error) {
+        console.error('Error in calculateStat:', error);
+        return BASE_STAT_RANGES[statType].min; // Return minimum as fallback
+    }
+}
+
+// Updated monster generation section
+async function generateMonster(hash) {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('User not authenticated');
         }
 
-        async function generateMonster(hash) {
-            try {
-                const user = auth.currentUser;
-                if (!user) {
-                    throw new Error('User not authenticated');
-                }
+        // Fetch monster types first
+        const monsterTypes = await getMonsterTypes();
+        console.log('Fetched monster types:', monsterTypes);
 
-                const userId = user.uid;
-                const userRef = doc(db, 'users', userId);
-                const userDoc = await getDoc(userRef);
+        if (!monsterTypes || monsterTypes.length === 0) {
+            throw new Error('No monster types available');
+        }
 
-                if (!userDoc.exists()) {
-                    throw new Error('User document not found');
-                }
-
-                const userData = userDoc.data();
-                const usedHash = userData.usedHash || [];
-
-                if (usedHash.includes(hash)) {
-                    throw new Error('This code has already been used');
-                }
-
-                const seed = parseInt(hash, 16);
-                const level = seededRandom(seed) < 0.2 ? 2 : 1;
-
-                // Fetch the monster types from Firestore
-                const monsterTypes = await getMonsterTypes();
-                if (monsterTypes.length === 0) {
-                    throw new Error('No monster types found in database');
-                }
-
-                // Select a random monster type from the fetched types
-                const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
-                const selectedType = monsterTypes[typeIndex];
-
-                const monster = {
-                    hash,
-                    monsterName: generateName(seed),
-                    type: selectedType.typeName,
-                    level,
-                    HP: Math.round(calculateStat('HP', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
-                    AP: Math.round(calculateStat('AP', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
-                    Speed: Math.round(calculateStat('Speed', seed, selectedType.statModifiers) * (1 + (level - 1) * 0.3)),
-                    experience: 0,
-                    ownerId: user.uid,
-                    dateCreated: new Date().toISOString()
-                };
-
-                const monsterInstanceId = `${hash}-${user.uid}`;
-                const monsterRef = doc(db, 'monsters', monsterInstanceId);
-
-                await setDoc(monsterRef, monster);
-
-                await updateDoc(userRef, {
-                    usedHash: arrayUnion(hash)
-                });
-
-                displayMonster(monster);
-                updateDebugMessage('Monster generated successfully!');
-            } catch (error) {
-                showError(error.message || 'Failed to generate monster');
+        let seed;
+        try {
+            // First generate a hash string
+            const hashStr = generateHash(hash);
+            // Convert to number, but use a fallback if parsing fails
+            seed = parseInt(hashStr, 16);
+            if (isNaN(seed)) {
+                console.warn('Hash parsing failed, using fallback seed generation');
+                seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
             }
+            console.log('Generated seed:', seed);
+        } catch (error) {
+            console.error('Error generating seed:', error);
+            // Fallback to a simple hash
+            seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
         }
+
+        const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
+        const selectedType = monsterTypes[typeIndex];
+
+        console.log('Selected monster type:', selectedType);
+
+        if (!selectedType.statModifiers) {
+            throw new Error('Invalid monster type: missing stat modifiers');
+        }
+
+        // Generate monster with modifiers
+        const level = seededRandom(seed) < 0.2 ? 2 : 1;
+        const monster = {
+            hash,
+            monsterName: generateName(seed),
+            type: selectedType.typeName,
+            level,
+            HP: calculateStat('HP', seed, selectedType.statModifiers),
+            AP: calculateStat('AP', seed, selectedType.statModifiers),
+            Speed: calculateStat('Speed', seed, selectedType.statModifiers),
+            experience: 0,
+            ownerId: user.uid,
+            dateCreated: new Date().toISOString()
+        };
+
+        // Apply level multiplier after base stats are calculated
+        if (level > 1) {
+            monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.3));
+            monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.3));
+            monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.3));
+        }
+
+        console.log('Generated monster:', monster);
+
+        // Save to database
+        const monsterInstanceId = `${hash}-${user.uid}`;
+        const monsterRef = doc(db, 'monsters', monsterInstanceId);
+        await setDoc(monsterRef, monster);
+
+        // Update used hashes
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+            usedHash: arrayUnion(hash)
+        });
+
+        displayMonster(monster);
+        updateDebugMessage('Monster generated successfully!');
+        return monster;
+    } catch (error) {
+        console.error('Error generating monster:', error);
+        showError(error.message || 'Failed to generate monster');
+        return null;
+    }
+}
 
         function displayMonster(monster) {
             console.log('Displaying monster:', monster);
