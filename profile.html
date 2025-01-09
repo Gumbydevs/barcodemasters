@@ -13,6 +13,20 @@
             min-height: 100vh;
             width: 100%;
             overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        footer {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            box-sizing: border-box;
         }
 
         .profile-container {
@@ -24,6 +38,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            flex: 1;
+            margin-bottom: 80px; /* Gives space for footer */   
         }
 
         .profile-layout {
@@ -206,6 +222,7 @@
                 text-align: center;
                 padding: 0.5rem;
                 gap: 1rem;
+                margin-bottom: 100px; /* More space on mobile */
             }
 
             .logo-container {
