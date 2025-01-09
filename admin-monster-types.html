@@ -127,9 +127,10 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDocs, addDoc, deleteDoc, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
         
         // Firebase configuration
         const firebaseConfig = {
@@ -216,35 +217,33 @@
         }
 
         // Add new monster type
-        document.getElementById('monsterForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
+       // Add new monster type
+document.getElementById('monsterForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-            const typeName = document.getElementById('typeName').value;
-            const description = document.getElementById('description').value;
-            const hpModifier = parseFloat(document.getElementById('hpModifier').value);
-            const apModifier = parseFloat(document.getElementById('apModifier').value);
-            const speedModifier = parseFloat(document.getElementById('speedModifier').value);
+    const typeName = document.getElementById('typeName').value;
+    const description = document.getElementById('description').value;
+    const hpModifier = parseFloat(document.getElementById('hpModifier').value);
+    const apModifier = parseFloat(document.getElementById('apModifier').value);
+    const speedModifier = parseFloat(document.getElementById('speedModifier').value);
 
-            if (isNaN(hpModifier) || isNaN(apModifier) || isNaN(speedModifier)) {
-                showStatus('Please enter valid numbers for the stat modifiers', 'error');
-                return;
-            }
+    try {
+        const newMonsterType = {
+            typeName,
+            description,
+            statModifiers: { HP: hpModifier, AP: apModifier, Speed: speedModifier }
+        };
 
-            try {
-                const newMonsterType = {
-                    typeName,
-                    description,
-                    statModifiers: { HP: hpModifier, AP: apModifier, Speed: speedModifier }
-                };
-                
-                await addDoc(collection(db, 'monsterTypes'), newMonsterType);
-                loadTypes(); // Reload the types after adding a new one
-                showStatus('Monster Type added successfully!', 'success');
-            } catch (error) {
-                showStatus('Error adding Monster Type: ' + error.message, 'error');
-                console.error('Error adding Monster Type:', error);
-            }
-        });
+        // Use typeName as the document ID
+        await setDoc(doc(db, 'monsterTypes', typeName), newMonsterType);
+        loadTypes(); // Reload the types after adding a new one
+        showStatus('Monster Type added successfully!', 'success');
+    } catch (error) {
+        showStatus('Error adding Monster Type: ' + error.message, 'error');
+        console.error('Error adding Monster Type:', error);
+    }
+});
+
 
         // Show status function
         function showStatus(message, type = 'info') {
