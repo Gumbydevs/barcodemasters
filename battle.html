@@ -50,6 +50,16 @@
             const [timeRemaining, setTimeRemaining] = React.useState(6 * 60 * 60); // 6 hours in seconds
             const [opponentTimeRemaining, setOpponentTimeRemaining] = React.useState(5 * 60 * 60 + 59 * 60 + 59); // 5 hours + 59 minutes + 59 seconds
 
+            // Fetch player monster from URL
+            React.useEffect(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const monsterData = Object.fromEntries(urlParams.entries());
+                if (monsterData) {
+                    setPlayerMonster(monsterData);
+                    setPlayerHealth(monsterData.HP);
+                }
+            }, []);
+
             // Format the timer
             const formatTime = (seconds) => {
                 const hours = Math.floor(seconds / 3600);
