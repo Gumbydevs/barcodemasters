@@ -33,6 +33,32 @@
             padding-top: 6rem;
             box-sizing: border-box;
             color: inherit; /* Inherit text color from body */
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        body.dark-mode .battle-container {
+            background: rgba(30, 41, 59, 0.7); /* Darker background for dark mode */
+        }
+
+        @media (max-width: 768px) {
+            .battle-container {
+                background: rgba(255, 255, 255, 0.9); /* Lighter background for light mode on mobile */
+                padding: 1rem;
+                padding-top: 4rem;
+            }
+
+            body.dark-mode .battle-container {
+                background: rgba(30, 41, 59, 0.95); /* Darker and more opaque for dark mode on mobile */
+            }
+
+            .battle-log {
+                background: rgba(0, 0, 0, 0.15); /* Slightly darker for better contrast on mobile */
+            }
+
+            body.dark-mode .battle-log {
+                background: rgba(0, 0, 0, 0.3); /* Even darker in dark mode for better contrast */
+            }
         }
 
         /* Monster card styling */
