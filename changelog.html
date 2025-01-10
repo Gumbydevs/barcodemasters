@@ -44,7 +44,54 @@
 <div class="container">
     <h1>Barcode Masters Change Log</h1>
     
-    <h2>Changelog for February 13, 2024</h2>
+    <h2>Changelog for January 10, 2024</h2>
+    <h3>Added</h3>
+    <ul>
+        <li><strong>Battle System Enhancements:</strong>
+            <ul>
+                <li>Added critical hit system with visual effects and multiplier damage</li>
+                <li>Implemented emoji-based visual response system for battle actions</li>
+                <li>Created battle matchup preview card system before battle initiation</li>
+                <li>Enhanced battle balance with adjusted damage calculations</li>
+            </ul>
+        </li>
+        <li><strong>Monster Stat Training Duration System:</strong> A new function was introduced to calculate stat training duration based on the monster's current stat value. This function uses exponential growth for the training time (1.15^(stat/5)) and includes random variation. For example:
+            <ul>
+                <li>Monster Stats 0-5: 15-30 seconds stat training time (± random variation)</li>
+                <li>Monster Stats 5-10: 1-2 minutes stat training time (± random variation)</li>
+                <li>Monster Stats 10-30: Linear stat training progression (with maximum cap at 4 hours for stats 100+)</li>
+                <li>Monster Stats 30-60+: Stat training time grows up to 8 hours, with increasing times for higher stats</li>
+            </ul>
+        </li>
+        <li><strong>Monster Stat Training Progress Persistence:</strong> Stat training state is stored in localStorage, allowing monster training progress to persist across sessions. The stat training resumes automatically after page reloads, navigation, or even after logging out.</li>
+        <li><strong>Improved Monster Training UI Flow:</strong> The stat training progress bar and timer now display the dynamically calculated training duration. Stat training time is updated in real-time, and the UI is properly restored when returning to the page during ongoing monster training.</li>
+    </ul>
+
+    <h3>Updated</h3>
+    <ul>
+        <li><strong>Monster Stat Training Time Display:</strong> The training time display now includes seconds, with updates every 100ms for smoother countdowns. The format is as follows:
+            <ul>
+                <li>"Xs" for stat training times under a minute</li>
+                <li>"Xm Ys" for stat training times under an hour</li>
+                <li>"Xh Ym Zs" for stat training durations of hours or more</li>
+            </ul>
+        </li>
+        <li><strong>Improved Formatting for Longer Training Durations:</strong> Added better time formatting for longer stat training durations (more than 1 hour). This includes training time for monster stats 50 and above, with the expected stat training times now shown more accurately.</li>
+    </ul>
+
+    <h3>Fixed</h3>
+    <ul>
+        <li><strong>Monster Training Section Visibility:</strong> Ensured that the stat training section is visible when resuming monster training, even after a page reload.</li>
+        <li><strong>Training UI Restoration:</strong> Fixed issues related to restoring the monster stat training UI state properly when returning to the page.</li>
+        <li><strong>Handling User Actions During Monster Training:</strong> Improved handling of page refreshes, navigation, and even logging out, so the monster stat training state persists and resumes correctly.</li>
+    </ul>
+
+    <h3>Known Issues</h3>
+    <ul>
+        <li><strong>Monster Stat Training Time Randomization:</strong> The ±15% random variation applied to stat training times for monster stats 0-5 and 5-10 may lead to slightly inconsistent training times, though this variation helps simulate more realistic training scenarios.</li>
+    </ul>
+
+    <h2>Changelog for January 9, 2024</h2>
     <h3>Added</h3>
     <ul>
         <li>Basic Battle System.</li>
