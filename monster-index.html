@@ -142,6 +142,77 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* Update stat box styles */
+        .stat-box {
+            min-width: 0;
+            word-wrap: break-word;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-box p {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .stat-box .monster-details,
+        .stat-box .owner-details {
+            font-size: 0.75rem;
+            color: #a8b3cf;
+            margin-top: 0.5rem;
+            line-height: 1.4;
+            width: 100%;
+            text-align: center;
+        }
+
+        .stat-box .monster-details span,
+        .stat-box .owner-details span {
+            display: block;
+            padding: 0.25rem 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .collection-stats {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .stat-box {
+                padding: 1.25rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-box h3 {
+                font-size: 1rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .stat-box p {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-box .monster-details,
+            .stat-box .owner-details {
+                font-size: 0.8rem;
+                padding: 0.25rem;
+                margin-top: 0.25rem;
+            }
+
+            .stat-box .monster-details span,
+            .stat-box .owner-details span {
+                margin: 0.25rem 0;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+        }
     </style>
 </head>
 <body>
@@ -157,7 +228,7 @@
 
         <div class="collection-stats">
             <div class="stat-box">
-                <h3>Monsters</h3>
+                <h3>Total Monsters</h3>
                 <p id="totalMonsters">0</p>
             </div>
             <div class="stat-box">
@@ -165,7 +236,7 @@
                 <p id="highestLevel">0</p>
             </div>
             <div class="stat-box">
-                <h3>Unique Types</h3>
+                <h3>Total Unique Types</h3>
                 <p id="uniqueTypes">0</p>
             </div>
         </div>
