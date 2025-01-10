@@ -36,14 +36,14 @@
             const [opponentMonster, setOpponentMonster] = React.useState({
                 monsterName: "Ai Monster",
                 type: "Fighter",
-                level: 1,
-                HP: 100,
+                level: 2,
+                HP: 50,
                 AP: 10,
                 Speed: 10
             });
 
             const [playerHealth, setPlayerHealth] = React.useState(100);
-            const [opponentHealth, setOpponentHealth] = React.useState(100);
+            const [opponentHealth, setOpponentHealth] = React.useState(50);
             const [battleLog, setBattleLog] = React.useState([]);
             const [isBattleOver, setIsBattleOver] = React.useState(false);
             const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
