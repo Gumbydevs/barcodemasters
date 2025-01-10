@@ -364,7 +364,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -458,8 +458,52 @@
             "Eventually we will add more game tips... but for now, just scan barcodes and have fun!",
         ];
 
+        // Function to find highest level monster
+        async function findMVPMonster(userId) {
+            const db = getFirestore();
+            const monstersRef = collection(db, "monsters");
+            const q = query(monstersRef, where("ownerId", "==", userId)); // Changed from userId to ownerId
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                let highestLevelMonster = null;
+                console.log("Number of monsters found:", querySnapshot.size); // Debug log
+                
+                querySnapshot.forEach((doc) => {
+                    const monster = doc.data();
+                    console.log("Monster data:", monster); // Debug log
+                    if (!highestLevelMonster || (monster.level || 0) > (highestLevelMonster.level || 0)) {
+                        highestLevelMonster = {
+                            ...monster,
+                            id: doc.id
+                        };
+                    }
+                });
+                
+                console.log("Highest level monster:", highestLevelMonster); // Debug log
+                return highestLevelMonster;
+            } catch (error) {
+                console.error("Error fetching MVP monster:", error);
+                return null;
+            }
+        }
+
+        // Function to update MVP monster display
+        function updateMVPMonster(monster) {
+            console.log("Updating MVP monster display with:", monster); // Debug log
+            if (monster && monster.monsterName) {  // Changed from name to monsterName
+                document.getElementById('mvpMonsterName').textContent = monster.monsterName;  // Changed from name to monsterName
+                document.getElementById('mvpMonsterWins').textContent = monster.wins || 0;
+                document.getElementById('mvpMonsterXP').textContent = monster.experience || 0;
+            } else {
+                document.getElementById('mvpMonsterName').textContent = "No monsters yet";
+                document.getElementById('mvpMonsterWins').textContent = "0";
+                document.getElementById('mvpMonsterXP').textContent = "0";
+            }
+        }
+
         // Placeholder function to get MVP monster (to be connected to Firebase later)
-        function updateMVPMonster() {
+        function updateMVPMonsterPlaceholder() {
             // This will be replaced with actual Firebase data later
             document.getElementById('mvpMonsterName').textContent = "Loading MVP data...";
             document.getElementById('mvpMonsterWins').textContent = "0";
@@ -501,25 +545,24 @@
 
         // Firebase Auth state check
         onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const db = getFirestore(app);  // Initialize Firestore
-        const userRef = doc(db, "users", user.uid);  // Access the user's document in Firestore
-        const docSnap = await getDoc(userRef);  // Fetch the document
+            if (user) {
+                const db = getFirestore(app);
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
 
-        if (docSnap.exists()) {
-            // Assuming the username is stored in the 'username' field
-            document.getElementById("userName").textContent = docSnap.data().username;
-        } else {
-            // Handle case where the username is not found
-            console.log("No such document!");
-        }
-
-        updateMVPMonster(); // Update MVP monster data when user is logged in
-    } else {
-        window.location.href = 'index.html';
-    }
-});
-
+                if (docSnap.exists()) {
+                    document.getElementById("userName").textContent = docSnap.data().username;
+                    
+                    // Find and display MVP monster
+                    const mvpMonster = await findMVPMonster(user.uid);
+                    updateMVPMonster(mvpMonster);
+                } else {
+                    console.log("No such document!");
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
 
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
