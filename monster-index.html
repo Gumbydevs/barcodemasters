@@ -103,6 +103,28 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
             margin-bottom: 0.5rem;
         }
+
+        /* Add this to your existing styles */
+        .stat-box .owner-name {
+            font-size: 0.8rem;
+            color: #a8b3cf;
+            margin-top: 0.25rem;
+            opacity: 0.8;
+        }
+
+        .stat-box .monster-details {
+            font-size: 0.8rem;
+            color: #a8b3cf;
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .stat-box .monster-details span {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 <body>
@@ -122,7 +144,7 @@
                 <p id="totalMonsters">0</p>
             </div>
             <div class="stat-box">
-                <h3>Highest Level</h3>
+                <h3>Highest Level Monster</h3>
                 <p id="highestLevel">0</p>
             </div>
             <div class="stat-box">
@@ -505,13 +527,33 @@ async function createMonsterCard(monster) {
     `;
 }
 
-    function updateCollectionStats(monsters) {
+    async function updateCollectionStats(monsters) {
         document.getElementById('totalMonsters').textContent = monsters.length;
-        const highestLevel = Math.max(...monsters.map(m => m.level), 0);
-        document.getElementById('highestLevel').textContent = highestLevel;
+        
+        // Find highest level monster and its owner
+        const highestLevelMonster = monsters.reduce((prev, current) => 
+            (prev.level > current.level) ? prev : current
+        );
+        
+        const highestLevelElement = document.getElementById('highestLevel');
+        highestLevelElement.textContent = highestLevelMonster.level;
+        
+        // Add monster name and owner details
+        if (highestLevelMonster.ownerId) {
+            const ownerName = await getUsernameById(highestLevelMonster.ownerId);
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'monster-details';
+            detailsDiv.innerHTML = `
+                <span>Monster: ${highestLevelMonster.monsterName}</span>
+                <span>Owned by: ${ownerName}</span>
+            `;
+            highestLevelElement.appendChild(detailsDiv);
+        }
+
         const uniqueTypes = new Set(monsters.map(m => m.type)).size;
         document.getElementById('uniqueTypes').textContent = uniqueTypes;
     }
+
     async function filterAndSortMonsters() {
     let filtered = [...currentMonsters];
     
