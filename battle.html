@@ -256,6 +256,27 @@
                 font-size: 0.8rem;
             }
         }
+
+        .xp-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .xp-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        .xp-text {
+            font-size: 0.9rem;
+            color: #a8b3cf;
+            margin: 0.25rem 0;
+        }
     </style>
 </head>
 <body>
@@ -584,7 +605,14 @@
                                 <li>Type: {activeMonster.type}</li>
                                 <li>Level: {activeMonster.level}</li>
                                 <li>HP: {playerHealth}/{activeMonster.HP}</li>
+                                <li className="xp-text">XP: {activeMonster.experience || 0}/{activeMonster.level * 100}</li>
                             </ul>
+                            <div className="xp-progress">
+                                <div 
+                                    className="xp-progress-bar" 
+                                    style={{ width: `${((activeMonster.experience || 0) / (activeMonster.level * 100)) * 100}%` }}
+                                ></div>
+                            </div>
                         </div>
                     </div>
                     <div className="health-bar">
