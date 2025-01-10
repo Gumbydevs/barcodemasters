@@ -327,7 +327,7 @@
             });
 
             const [playerHealth, setPlayerHealth] = React.useState(100);
-            const [opponentHealth, setOpponentHealth] = React.useState(50);
+            const [opponentHealth, setOpponentHealth] = React.useState(22); // Also update initial health to match max HP
             const [battleLog, setBattleLog] = React.useState([]);
             const [isBattleOver, setIsBattleOver] = React.useState(false);
             const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
@@ -413,8 +413,32 @@
             };
 
             // Player action handlers
+            // Update the damage calculation functions
+            const calculateDamage = (attacker, isPlayer = true) => {
+                // Base damage is the attacker's AP
+                const baseAP = parseInt(attacker.AP) || 5;
+                
+                // Add a small random variance (±20% of AP)
+                const variance = Math.floor(Math.random() * (baseAP * 0.4)) - (baseAP * 0.2);
+                
+                // Calculate final damage
+                let damage = baseAP + variance;
+                
+                // Ensure minimum damage is 1
+                damage = Math.max(1, Math.floor(damage));
+                
+                // Add a small critical hit chance (10%) for players only
+                if (isPlayer && Math.random() < 0.1) {
+                    damage = Math.floor(damage * 1.5);
+                    return { damage, isCritical: true };
+                }
+                
+                return { damage, isCritical: false };
+            };
+
+            // Update handleAttack function
             const handleAttack = () => {
-                const damage = Math.floor(Math.random() * 20) + 10;
+                const { damage, isCritical } = calculateDamage(activeMonster, true);
                 setOpponentHealth(prev => {
                     const newHealth = Math.max(0, prev - damage);
                     if (newHealth <= 0) {
@@ -423,7 +447,7 @@
                     }
                     return newHealth;
                 });
-                addToLog(`You dealt ${damage} damage!`);
+                addToLog(`You dealt ${damage} damage!${isCritical ? ' (Critical Hit!)' : ''}`);
                 setIsPlayerTurn(false);
             };
 
@@ -471,7 +495,7 @@
 
                 switch(finalAction) {
                     case 'attack':
-                        const damage = Math.floor(Math.random() * 20) + 10;
+                        const { damage } = calculateDamage(opponentMonster, false);
                         const reducedDamage = isDefending ? Math.floor(damage / 2) : damage; // Reduce damage if defending
                         setPlayerHealth(prev => {
                             const newHealth = Math.max(0, prev - reducedDamage);
