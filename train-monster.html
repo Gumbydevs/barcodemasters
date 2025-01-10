@@ -514,107 +514,203 @@ function formatTrainingTime(milliseconds) {
     }
 }
 
-// Modified startTraining function
+// Add these functions after Firebase initialization
+function saveTrainingState(data) {
+    localStorage.setItem('activeTraining', JSON.stringify({
+        ...data,
+        timestamp: Date.now()
+    }));
+}
+
+function clearTrainingState() {
+    localStorage.removeItem('activeTraining');
+}
+
+function getTrainingState() {
+    const state = localStorage.getItem('activeTraining');
+    return state ? JSON.parse(state) : null;
+}
+
+// Modify startTraining function
 async function startTraining() {
     const selectedMonsterId = document.getElementById('monsterSelect').value;
     const selectedStat = document.getElementById('statSelect').value;
-    const startButton = document.getElementById('startTrainingButton');
     
     if (!selectedMonsterId || !selectedStat) {
         showError('Please select both a monster and a stat to train.');
         return;
     }
 
-    // Get current stat value
     const monsterRef = doc(db, 'monsters', selectedMonsterId);
     const monsterDoc = await getDoc(monsterRef);
     const currentStatValue = monsterDoc.data()[selectedStat];
     
-    // Calculate training duration based on current stat value
     const trainingDuration = calculateTrainingDuration(currentStatValue);
+    const endTime = Date.now() + trainingDuration;
 
-    // Disable UI elements
-    startButton.disabled = true;
+    // Save training state
+    saveTrainingState({
+        monsterId: selectedMonsterId,
+        stat: selectedStat,
+        startTime: Date.now(),
+        endTime: endTime,
+        duration: trainingDuration,
+        currentStatValue: currentStatValue
+    });
+
+    startTrainingProgress();
+}
+
+// Modify startTrainingProgress function
+function startTrainingProgress() {
+    const state = getTrainingState();
+    if (!state) return;
+
+    const {monsterId, stat, endTime, duration} = state;
+    
+    // Show training section first
+    document.getElementById('trainingSection').style.display = 'block';
+    
+    // Set UI state
+    document.getElementById('monsterSelect').value = monsterId;
+    document.getElementById('statSelect').value = stat;
+    document.getElementById('startTrainingButton').disabled = true;
     document.getElementById('statSelect').disabled = true;
     document.getElementById('monsterSelect').disabled = true;
-
-    // Show and reset the timer container
+    
     const timerContainer = document.getElementById('trainingTimerContainer');
     const progressFill = document.getElementById('trainingProgressFill');
     const timeRemaining = document.getElementById('trainingTimeRemaining');
-    timerContainer.style.display = 'block';
-    progressFill.style.width = '0%';
-
-    const startTime = Date.now();
     
-    // Update the timer every 100ms
-    const timerInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, trainingDuration - elapsed);
-        const progress = (elapsed / trainingDuration) * 100;
+    // Show timer container
+    timerContainer.style.display = 'block';
+    
+    const updateProgress = () => {
+        const now = Date.now();
+        const remaining = Math.max(0, endTime - now);
+        const elapsed = duration - remaining;
+        const progress = (elapsed / duration) * 100;
         
         progressFill.style.width = `${Math.min(100, progress)}%`;
         timeRemaining.textContent = `Time remaining: ${formatTrainingTime(remaining)}`;
         
         if (remaining <= 0) {
-            clearInterval(timerInterval);
+            clearInterval(progressInterval);
+            completeTraining();
         }
-    }, 100);
+    };
 
-    // Simulate training with a timer
-    setTimeout(async () => {
-        const statIncrease = Math.floor(Math.random() * 5) + 1;
-        const xpIncrease = Math.floor(Math.random() * 6) + 5;
-
-        try {
-            const monsterRef = doc(db, 'monsters', selectedMonsterId);
-            const monsterDoc = await getDoc(monsterRef);
-            
-            if (monsterDoc.exists()) {
-                const updatedStatValue = monsterDoc.data()[selectedStat] + statIncrease;
-                const updatedXPValue = monsterDoc.data().experience + xpIncrease;
-                
-                await updateDoc(monsterRef, {
-                    [selectedStat]: updatedStatValue,
-                    experience: updatedXPValue
-                });
-
-                // Update the monster card directly
-                const updatedMonsterData = {
-                    ...monsterDoc.data(),
-                    id: selectedMonsterId,
-                    [selectedStat]: updatedStatValue,
-                    experience: updatedXPValue
-                };
-                
-                const selectedMonsterDiv = document.getElementById('selectedMonster');
-                selectedMonsterDiv.innerHTML = await createMonsterCard(updatedMonsterData);
-                
-                // Show training results
-                showToast(`Training completed! ${selectedStat} increased by ${statIncrease}. Gained ${xpIncrease} XP.`);
-                
-                // Update the monster in currentMonsters array
-                const monsterIndex = currentMonsters.findIndex(m => m.id === selectedMonsterId);
-                if (monsterIndex !== -1) {
-                    currentMonsters[monsterIndex] = updatedMonsterData;
-                }
-            }
-        } catch (error) {
-            console.error('Error updating monster:', error);
-            showError('Training failed. Please try again.');
-        }
-
-        // Reset the UI
-        timerContainer.style.display = 'none';
-        startButton.disabled = false;
-        document.getElementById('statSelect').disabled = false;
-        document.getElementById('monsterSelect').disabled = false;
-        clearInterval(timerInterval);
-        
-        // Reset stat selection but keep monster selected
-        document.getElementById('statSelect').value = '';
-    }, trainingDuration);
+    const progressInterval = setInterval(updateProgress, 100);
+    updateProgress(); // Initial update
 }
+
+// Add new function to complete training
+async function completeTraining() {
+    const state = getTrainingState();
+    if (!state) return;
+
+    const {monsterId, stat, currentStatValue} = state;
+    const statIncrease = Math.floor(Math.random() * 5) + 1;
+    const xpIncrease = Math.floor(Math.random() * 6) + 5;
+
+    try {
+        const monsterRef = doc(db, 'monsters', monsterId);
+        const monsterDoc = await getDoc(monsterRef);
+        
+        if (monsterDoc.exists()) {
+            const updatedStatValue = monsterDoc.data()[stat] + statIncrease;
+            const updatedXPValue = monsterDoc.data().experience + xpIncrease;
+            
+            await updateDoc(monsterRef, {
+                [stat]: updatedStatValue,
+                experience: updatedXPValue
+            });
+
+            const updatedMonsterData = {
+                ...monsterDoc.data(),
+                id: monsterId,
+                [stat]: updatedStatValue,
+                experience: updatedXPValue
+            };
+            
+            // Update UI
+            const selectedMonsterDiv = document.getElementById('selectedMonster');
+            selectedMonsterDiv.innerHTML = await createMonsterCard(updatedMonsterData);
+            
+            showToast(`Training completed! ${stat} increased by ${statIncrease}. Gained ${xpIncrease} XP.`);
+            
+            // Update monster in currentMonsters array
+            const monsterIndex = currentMonsters.findIndex(m => m.id === monsterId);
+            if (monsterIndex !== -1) {
+                currentMonsters[monsterIndex] = updatedMonsterData;
+            }
+        }
+    } catch (error) {
+        console.error('Error updating monster:', error);
+        showError('Training failed. Please try again.');
+    }
+
+    // Reset UI and clear training state
+    resetTrainingUI();
+    clearTrainingState();
+}
+
+// Add function to reset UI
+function resetTrainingUI() {
+    const timerContainer = document.getElementById('trainingTimerContainer');
+    timerContainer.style.display = 'none';
+    document.getElementById('startTrainingButton').disabled = false;
+    document.getElementById('statSelect').disabled = false;
+    document.getElementById('monsterSelect').disabled = false;
+    document.getElementById('statSelect').value = '';
+}
+
+// Modify initialization code
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        await fetchMonsters();
+        
+        // Check for ongoing training
+        const state = getTrainingState();
+        if (state) {
+            const now = Date.now();
+            // Show monster details first
+            const selectedMonsterId = state.monsterId;
+            document.getElementById('monsterSelect').value = selectedMonsterId;
+            await filterAndSortMonsters(); // This will show the monster card
+            
+            if (now >= state.endTime) {
+                // Training completed while away
+                await completeTraining();
+            } else {
+                // Resume training
+                startTrainingProgress();
+            }
+        }
+    } else {
+        window.location.href = 'index.html';
+    }
+});
+
+// Add this helper function to check training state
+function checkAndUpdateTrainingDisplay() {
+    const state = getTrainingState();
+    if (state) {
+        const now = Date.now();
+        if (now < state.endTime) {
+            // Training is still in progress
+            document.getElementById('trainingSection').style.display = 'block';
+            startTrainingProgress();
+        }
+    }
+}
+
+// Add event listener for visibility change
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        checkAndUpdateTrainingDisplay();
+    }
+});
 
 // Event Listeners
 document.getElementById('monsterSelect').addEventListener('change', () => {
@@ -644,15 +740,6 @@ if (savedTheme === "dark") {
 darkModeToggle.addEventListener("click", function() {
     document.body.classList.toggle("dark-mode");
     localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-});
-
-// Check authentication state and initialize
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        fetchMonsters();
-    } else {
-        window.location.href = 'index.html';
-    }
 });
 
         
