@@ -106,10 +106,28 @@
                 setBattleLog(prevLog => [...prevLog, message].slice(-5));
             };
 
+            // Check for win/loss conditions
+            const checkBattleOutcome = () => {
+                if (opponentHealth <= 0) {
+                    setIsBattleOver(true);
+                    addToLog("You won!");
+                } else if (playerHealth <= 0) {
+                    setIsBattleOver(true);
+                    addToLog("You lost!");
+                }
+            };
+
             // Player action handlers
             const handleAttack = () => {
                 const damage = Math.floor(Math.random() * 20) + 10;
-                setOpponentHealth(prev => Math.max(0, prev - damage));
+                setOpponentHealth(prev => {
+                    const newHealth = Math.max(0, prev - damage);
+                    if (newHealth <= 0) {
+                        setIsBattleOver(true);
+                        addToLog("You won!");
+                    }
+                    return newHealth;
+                });
                 addToLog(`You dealt ${damage} damage!`);
                 setIsPlayerTurn(false);
             };
@@ -129,13 +147,24 @@
 
             // Opponent AI behavior
             const opponentTurn = () => {
+                if (opponentHealth <= 0 || playerHealth <= 0) {
+                    checkBattleOutcome();
+                    return;
+                }
                 const actions = ['attack', 'defend', 'heal'];
                 const randomAction = actions[Math.floor(Math.random() * 3)];
 
                 switch (randomAction) {
                     case 'attack':
                         const damage = Math.floor(Math.random() * 20) + 10;
-                        setPlayerHealth(prev => Math.max(0, prev - damage));
+                        setPlayerHealth(prev => {
+                            const newHealth = Math.max(0, prev - damage);
+                            if (newHealth <= 0) {
+                                setIsBattleOver(true);
+                                addToLog("You lost!");
+                            }
+                            return newHealth;
+                        });
                         addToLog(`Opponent dealt ${damage} damage!`);
                         break;
                     case 'heal':
