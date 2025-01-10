@@ -73,12 +73,7 @@
         }
 
         /* Make monster cards more responsive */
-        .monsters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-            width: 100%;
-        }
+        /* Removed duplicate .monsters-grid rule */
 
         @media (max-width: 480px) {
             .collection-container {
@@ -142,7 +137,7 @@
         }
 
         .monster-image-placeholder::before {
-            content: '🎮';
+            content: '👹';
             font-size: 3rem;
             opacity: 0.5;
         }
@@ -165,13 +160,11 @@
 
         @media (max-width: 480px) {
             .monster-image-placeholder {
-            .monster-image-placeholder {
                 height: 160px;
             }
 
             .monster-card {
                 padding: 1rem;
-                font-size: 0.9rem;
             }
 
             .monster-stats {
@@ -219,7 +212,7 @@
 
     <div class="collection-container">
         <div class="collection-header">
-            <div class="logo-container"></div>
+            <div class="logo-container">
                 <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
             </div>
             <h1>Your Monster Collection</h1>
@@ -849,7 +842,7 @@
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'toast';
-            toast.style.cssText = `
+            style.cssText = `
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
