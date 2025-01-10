@@ -125,6 +125,93 @@
             margin-top: 0.5rem;
             text-align: right;
         }
+
+        /* Add these new styles */
+        .monster-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: rgba(128, 128, 128, 0.1);
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-image-placeholder::before {
+            content: '🎮';
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+
+        .monster-image-placeholder::after {
+            content: 'Monster appearance placeholder';
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(0, 0, 0, 0.6);
+            padding: 4px;
+        }
+
+        body.dark-mode .monster-image-placeholder::after {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 480px) {
+            .monster-image-placeholder {
+            .monster-image-placeholder {
+                height: 160px;
+            }
+
+            .monster-card {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .monster-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+
+            .monster-name {
+                font-size: 1.2rem;
+            }
+
+            .type-description {
+                font-size: 0.85rem;
+            }
+
+            .monster-actions {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .action-button {
+                flex: 1;
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .monster-card {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            height: fit-content;
+        }
     </style>
 </head>
 <body>
@@ -132,7 +219,7 @@
 
     <div class="collection-container">
         <div class="collection-header">
-            <div class="logo-container">
+            <div class="logo-container"></div>
                 <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
             </div>
             <h1>Your Monster Collection</h1>
@@ -471,6 +558,26 @@
             font-size: 0.9rem;
             color: #a8b3cf;
         }
+
+        /* Add these new styles */
+        .monster-type-container {
+            margin: 0.5rem 0;
+        }
+
+        .type-description {
+            font-size: 0.9rem;
+            color: #a8b3cf;
+            margin-top: 0.5rem;
+            line-height: 1.4;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .monster-card {
+            /* Update existing monster-card styles if needed */
+            padding: 1.5rem;
+        }
     </style>
 
 <script type="module">
@@ -571,16 +678,36 @@
     }
 }
 
+    // Add this new function to fetch monster type description
+    async function getMonsterTypeDescription(type) {
+        try {
+            const typeDoc = await getDoc(doc(db, 'monsterTypes', type));
+            if (typeDoc.exists()) {
+                return typeDoc.data().description;
+            }
+            return 'Description not available';
+        } catch (error) {
+            console.error('Error fetching type description:', error);
+            return 'Description not available';
+        }
+    }
+
+    // Modify the createMonsterCard function
     async function createMonsterCard(monster) {
         const xpToNextLevel = monster.level * 100;
         const xpProgress = (monster.experience / xpToNextLevel) * 100;
         const ownerUsername = await getUsernameById(monster.ownerId);
+        const typeDescription = await getMonsterTypeDescription(monster.type);
 
         return `
             <div class="monster-card" data-id="${monster.id}">
                 <div class="monster-info">
                     <div class="monster-name">${monster.monsterName}</div>
-                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                    <div class="monster-image-placeholder"></div>
+                    <div class="monster-type-container">
+                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                        <div class="type-description">${typeDescription}</div>
+                    </div>
                     
                     <div class="monster-stats">
                         <div class="stat-item">
