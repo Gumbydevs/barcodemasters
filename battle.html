@@ -239,7 +239,7 @@
                 <div class="monster-preview">
                     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3C/svg%3E" alt="AI Monster">
                     <h3>AI Monster</h3>
-                    <p>Level 2 Fighter</p>
+                    <p>Level 2 Robot</p>
                 </div>
             </div>
             <button class="nav-button start-battle-button" onclick="startBattle()">Start Battle</button>
@@ -280,10 +280,10 @@
             const [playerMonster, setPlayerMonster] = React.useState(null);
             const [opponentMonster, setOpponentMonster] = React.useState({
                 monsterName: "Ai Monster",
-                type: "Fighter",
+                type: "Robot",
                 level: 2,
                 HP: 50,
-                AP: 10,
+                AP: 5,
                 Speed: 10
             });
 
