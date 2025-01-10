@@ -44,7 +44,47 @@
 <div class="container">
     <h1>Barcode Masters Change Log</h1>
     
-    <h2>Version 1.0.03 - Alpha Development Release</h2>
+    <h2>Changelog for February 13, 2024</h2>
+    <h3>Added</h3>
+    <ul>
+        <li>Basic Battle System.</li>
+        <li>Created a mock up battle page and system with basic battle feedback, functions, attack, defend, heal.</li>
+        <li>Initialized and configured backend database to support battle functionality.</li>
+        <li>Implemented basic Ai opponent with random actions.</li>
+        <li>Created updateMonsterExperience function to manage XP changes during battles.</li>
+        <li>Added a weighted action system for AI opponents (70% attack, 20% heal, 10% defend) on the battle page.</li>
+        <li>Implemented experience feedback in the battle log for clearer progress tracking.</li>
+    </ul>
+
+    <h3>Fixed</h3>
+    <ul>
+        <li>Resolved issues with defending functionality, ensuring damage is properly halved during battles.</li>
+        <li>Corrected win/lose logic by ensuring health updates are accurately checked after each turn.</li>
+        <li>Tweaked opponent health management to improve battle outcomes and ensure smoother gameplay.</li>
+    </ul>
+
+    <h3>Updated</h3>
+    <ul>
+        <li>Modified healing logic on the battle page to heal 20% of max HP, improving both AI and player healing mechanisms.</li>
+        <li>Enhanced battle log messages to display actual healing amounts, making feedback more informative.</li>
+        <li>Improved dark mode styling for the battle container, including mobile-specific adjustments for better visibility.</li>
+        <li>Refined the user experience on mobile with adjustments to padding, opacity, and contrast for the battle log.</li>
+    </ul>
+
+    <h3>Moved</h3>
+    <ul>
+        <li>Repositioned the "Back to Profile" button for better user navigation during battles.</li>
+    </ul>
+
+    <h3>Changed</h3>
+    <ul>
+        <li>Major formatting updates for the monster selection and battle initiation screens, addressing some defending action issues.</li>
+        <li>Improved consistency in background colors between mobile and desktop versions for a cohesive visual experience.</li>
+    </ul>
+
+    <hr style="margin: 2rem 0;">
+
+    <h2>First Live Version 1.0.03 - Alpha Development Release</h2>
     <ul>
         <li><strong>First commit</strong>: Basic project setup with main page structure and initial files.</li>
     </ul>
