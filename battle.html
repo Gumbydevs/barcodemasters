@@ -302,10 +302,15 @@
                 setIsPlayerTurn(false);
             };
 
+            // Update handleHeal function with percentage-based healing
             const handleHeal = () => {
-                const heal = Math.floor(Math.random() * 15) + 5;
-                setPlayerHealth(prev => Math.min(100, prev + heal));
-                addToLog(`You healed for ${heal} HP!`);
+                const healPercentage = 0.2; // Heal 20% of max HP
+                const healAmount = Math.floor(activeMonster.HP * healPercentage);
+                setPlayerHealth(prev => {
+                    const newHealth = Math.min(parseInt(activeMonster.HP), prev + healAmount);
+                    addToLog(`You healed for ${newHealth - prev} HP!`);
+                    return newHealth;
+                });
                 setIsPlayerTurn(false);
             };
 
@@ -335,9 +340,13 @@
                         setIsDefending(false); // Reset defense after attack
                         break;
                     case 'heal':
-                        const heal = Math.floor(Math.random() * 15) + 5;
-                        setOpponentHealth(prev => Math.min(100, prev + heal));
-                        addToLog(`Opponent healed for ${heal} HP!`);
+                        const healPercentage = 0.2; // Heal 20% of max HP
+                        const healAmount = Math.floor(opponentMonster.HP * healPercentage);
+                        setOpponentHealth(prev => {
+                            const newHealth = Math.min(opponentMonster.HP, prev + healAmount);
+                            addToLog(`Opponent healed for ${newHealth - prev} HP!`);
+                            return newHealth;
+                        });
                         break;
                     case 'defend':
                         addToLog("Opponent is defending!");
