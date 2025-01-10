@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Masters - Battle System</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Light/Dark Mode */
+        body[data-theme="dark"] {
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+
+        .battle-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        body[data-theme="dark"] .battle-container {
+            background-color: #374151;
+            color: #e5e7eb;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .health-bar {
+            height: 20px;
+            border-radius: 5px;
+            margin: 10px 0;
+            background-color: #e5e7eb;
+            position: relative;
+        }
+
+        body[data-theme="dark"] .health-bar {
+            background-color: #4b5563;
+        }
+
+        .health-fill {
+            height: 100%;
+            border-radius: 5px;
+            position: absolute;
+        }
+
+        .player-health { background-color: #34d399; }
+        .opponent-health { background-color: #f87171; }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3b82f6;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+
+        body[data-theme="dark"] button {
+            background-color: #1d4ed8;
+        }
+
+        body[data-theme="dark"] button:hover {
+            background-color: #1e40af;
+        }
+
+        .battle-log {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        body[data-theme="dark"] .battle-log {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+
+        .battle-log div {
+            margin-bottom: 5px;
+        }
+
+        img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        .monster-info {
+            text-align: left;
+            font-size: 14px;
+            margin-left: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .monster-info h4 { /* the h4 element controls the mosnter type display*/
+            margin: 0;
+            font-size: 16px;
+            font-weight: normal; /* Change font-weight to normal */
+            
+        }
+
+        .timer {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .battle-container .monster {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .battle-container .monster img {
+            margin-right: 20px;
+        }
+
+        /* Styling for the player and opponent containers */
+        .player-monster .monster-info, .opponent-monster .monster-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center; /* Center the text horizontally */
+            vertical-align: bottom; /* Aligns text vertically */
+        }
+
+        .monster-info ul {
+            list-style-type: none; /* Remove bullets */
+            padding: 0; /* Remove padding */
+            margin: 0; /* Remove margin */
+        }
+
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const BattleSystem = () => {
+            const [playerHealth, setPlayerHealth] = React.useState(100);
+            const [opponentHealth, setOpponentHealth] = React.useState(100);
+            const [battleLog, setBattleLog] = React.useState([]);
+            const [playerXP, setPlayerXP] = React.useState(0);
+            const [playerLevel, setPlayerLevel] = React.useState(1);
+            const [isBattleOver, setIsBattleOver] = React.useState(false);
+            const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
+            const [turnTimer, setTurnTimer] = React.useState(21600); // 6 hours in seconds
+            const [damageReduction, setDamageReduction] = React.useState(0); // Default to 0, will increase with Defend
+
+            const player = {
+                name: "Player1",
+                monster: {
+                    name: "Dragon",
+                    type: "Fire",
+                    level: 5,
+                    image: "https://via.placeholder.com/100"
+                }
+            };
+
+            const opponents = [
+                { name: "Opponent 1", health: 100, image: "https://via.placeholder.com/100", monster: { name: "Griffin", type: "Wind", level: 3 } },
+                { name: "Opponent 2", health: 100, image: "https://via.placeholder.com/100", monster: { name: "Troll", type: "Earth", level: 4 } },
+                { name: "Opponent 3", health: 100, image: "https://via.placeholder.com/100", monster: { name: "Hydra", type: "Water", level: 2 } }
+            ];
+            const [selectedOpponent, setSelectedOpponent] = React.useState(opponents[0]);
+
+            const handleAttack = () => {
+                const damage = Math.floor(Math.random() * 15) + 5;
+                const effectiveDamage = Math.max(damage - damageReduction, 0); // Apply damage reduction from defend
+                setOpponentHealth((prevHealth) => Math.max(prevHealth - effectiveDamage, 0));
+                addToLog(`You dealt ${effectiveDamage} damage to ${selectedOpponent.monster.name}!`);
+                setIsPlayerTurn(false);
+                opponentTurn();
+                startTurnTimer();
+            };
+
+            const handleDefend = () => {
+                const reduction = Math.floor(Math.random() * 10) + 5; // Random reduction based on monster stats
+                setDamageReduction(reduction);
+                addToLog(`You defended! Next attack damage from opponent reduced by ${reduction}`);
+                setIsPlayerTurn(false);
+                opponentTurn();
+                startTurnTimer();
+            };
+
+            const handleHeal = () => {
+                const healingAmount = Math.floor(Math.random() * 20) + 10; // Heal based on monster health
+                const maxHealing = Math.min(healingAmount, 100 - playerHealth); // Clamp to max health
+                setPlayerHealth((prevHealth) => prevHealth + maxHealing);
+                addToLog(`You healed ${maxHealing} HP!`);
+                setIsPlayerTurn(false);
+                opponentTurn();
+                startTurnTimer();
+            };
+
+            const opponentTurn = () => {
+                const move = Math.random() > 0.5 ? 'attack' : 'defend';
+                setTimeout(() => {
+                    if (move === 'attack') {
+                        const damage = Math.floor(Math.random() * 15) + 5;
+                        setPlayerHealth((prevHealth) => Math.max(prevHealth - damage, 0));
+                        addToLog(`${selectedOpponent.monster.name} dealt ${damage} damage!`);
+                    } else {
+                        const defense = Math.floor(Math.random() * 10) + 5;
+                        setOpponentHealth((prevHealth) => Math.min(prevHealth + defense, 100));
+                        addToLog(`${selectedOpponent.monster.name} defended and recovered ${defense} HP!`);
+                    }
+                    setIsPlayerTurn(true); // Allow player to move after opponent finishes
+                    checkBattleStatus();
+                }, 2000); // Opponent takes 2 seconds to finish their move
+            };
+
+            const checkBattleStatus = () => {
+                if (playerHealth <= 0 || opponentHealth <= 0) {
+                    setIsBattleOver(true);
+                    if (playerHealth <= 0) {
+                        addToLog("You lost the battle!");
+                        setPlayerXP(prevXP => prevXP - 10); // Minor penalty for losing
+                    } else {
+                        addToLog("You won the battle!");
+                        setPlayerXP(prevXP => prevXP + 20); // More XP for winning
+                    }
+                    handleLevelUp();
+                }
+            };
+
+            const handleLevelUp = () => {
+                if (playerXP >= 100) {
+                    setPlayerLevel(prevLevel => prevLevel + 1);
+                    setPlayerXP(0); // Reset XP after level-up
+                    addToLog(`Congratulations! You leveled up! Current level: ${playerLevel + 1}`);
+                }
+            };
+
+            const addToLog = (message) => {
+                setBattleLog((prevLog) => [...prevLog, message].slice(-5));
+            };
+
+            const startTurnTimer = () => {
+                if (turnTimer > 0) {
+                    const timerInterval = setInterval(() => {
+                        setTurnTimer(prevTime => {
+                            if (prevTime <= 1) {
+                                clearInterval(timerInterval);
+                                return 0;
+                            }
+                            return prevTime - 1;
+                        });
+                    }, 1000);
+                }
+            };
+
+            const formatTime = (secs) => {
+                const hrs = Math.floor(secs / 3600);
+                const mins = Math.floor((secs % 3600) / 60);
+                const seconds = secs % 60;
+                return `${hrs ? `${hrs}:` : ''}${mins < 10 ? '0' : ''}${mins}:${seconds < 10 ? '0' : ''}${seconds}`;
+            };
+
+            return (
+                <div className="battle-container">
+                    <h2>Battle with {selectedOpponent.name}</h2>
+                    
+                    {/* Player Monster */}
+                    <div className="player-monster monster">
+                        <div>
+                            <h3>{player.monster.name}</h3>
+                            <img src={player.monster.image} alt="Player Monster" />
+                        </div>
+                        <div className="monster-info">
+                            <ul>
+                                <li><h4>Type: {player.monster.type}</h4></li>
+                                <li>Level: {player.monster.level}</li>
+                                <li>Owned by: {player.name}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div className="health-bar">
+                        <div className="health-fill player-health" style={{ width: `${(playerHealth / 100) * 100}%` }}></div>
+                    </div>
+                    
+                    {/* Opponent Monster */}
+                    <div className="opponent-monster monster">
+                        <div>
+                            <h3>{selectedOpponent.monster.name}</h3>
+                            <img src={selectedOpponent.image} alt="Opponent Monster" />
+                        </div>
+                        <div className="monster-info">
+                            <ul>
+                                <li><h4>Type: {selectedOpponent.monster.type}</h4></li>
+                                <li>Level: {selectedOpponent.monster.level}</li>
+                                <li>Owned by: {selectedOpponent.name}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div className="health-bar">
+                        <div className="health-fill opponent-health" style={{ width: `${(opponentHealth / 100) * 100}%` }}></div>
+                    </div>
+                    
+                    <button onClick={handleAttack} disabled={!isPlayerTurn || isBattleOver}>Attack</button>
+                    <button onClick={handleDefend} disabled={!isPlayerTurn || isBattleOver}>Defend</button>
+                    <button onClick={handleHeal} disabled={!isPlayerTurn || isBattleOver}>Heal</button>
+
+                    {turnTimer > 0 && !isBattleOver && (
+                        <div className="timer">
+                            Time remaining: {formatTime(turnTimer)}
+                        </div>
+                    )}
+
+                    <div className="battle-log">
+                        {battleLog.map((log, index) => (
+                            <div key={index}>{log}</div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<BattleSystem />, document.getElementById("root"));
+    </script>
+</body>
+</html>
