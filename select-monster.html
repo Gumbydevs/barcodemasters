@@ -311,10 +311,6 @@
                                 <span>${monster.experience}/${xpToNextLevel}</span>
                             </div>
                             <div class="stat-item">
-                                <span>Created</span>
-                                <span>${formatDate(monster.dateCreated)}</span>
-                            </div>
-                            <div class="stat-item">
                                 <span>Owner</span>
                                 <span>${ownerUsername}</span>
                             </div>
@@ -322,6 +318,8 @@
                         <div class="xp-progress">
                             <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
                         </div>
+                        <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
+                        <div class="created-date">Creator: ${ownerUsername}</div>
                     </div>
                 `;
                 

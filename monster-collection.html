@@ -118,6 +118,13 @@
             background: linear-gradient(90deg, #3498db, #2ecc71);
             transition: width 0.3s ease;
         }
+
+        .created-date {
+            font-size: 0.85rem;
+            color: #a8b3cf;
+            margin-top: 0.5rem;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
@@ -593,10 +600,6 @@
                             <span>${monster.experience}/${xpToNextLevel}</span>
                         </div>
                         <div class="stat-item">
-                            <span>Created</span>
-                            <span>${formatDate(monster.dateCreated)}</span>
-                        </div>
-                        <div class="stat-item">
                             <span>Owner</span>
                             <span>${ownerUsername}</span>
                         </div>
@@ -604,6 +607,8 @@
                     <div class="xp-progress">
                         <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
                     </div>
+                    <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
+                    <div class="created-date">Created by: ${ownerUsername}</div>
                     <div class="monster-actions">
                         <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
                         <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>

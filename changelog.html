@@ -92,6 +92,31 @@
         <li><strong>Cross-Device Training Persistence:</strong> Currently, monster training progress is stored in localStorage, which means training sessions cannot persist across multiple devices. This will be addressed in a future update by moving to database storage for full cross-device persistence.</li>
     </ul>
 
+    <h3>UI Improvements</h3>
+    <ul>
+        <li><strong>Select Monster Page Updates:</strong>
+            <ul>
+                <li>Centered "Select Your Monster for Battle" text for better visual alignment</li>
+                <li>Added getUsernameById function to fetch and display owner usernames</li>
+                <li>Added formatDate function for consistent date formatting across cards</li>
+                <li>Updated monster card creation to include XP progress bar, experience points, creation date, and owner info</li>
+                <li>Added new CSS styles for XP progress bar and type badge</li>
+                <li>Modified loadMonsters to handle async owner username fetching</li>
+                <li>Added getDoc import from Firebase for enhanced data fetching</li>
+            </ul>
+        </li>
+        <li><strong>Monster Collection Page Enhancements:</strong>
+            <ul>
+                <li>Added XP progress bar styles matching the collection page style</li>
+                <li>Updated createMonsterCard function with XP progress bar visualization</li>
+                <li>Added XP text style for clear experience number display</li>
+                <li>Implemented level-based XP calculation (level * 100 for next level)</li>
+                <li>Added fallback handling for undefined experience values</li>
+                <li>Enhanced visual consistency across monster cards</li>
+            </ul>
+        </li>
+    </ul>
+
     <h2>Changelog for January 9, 2024</h2>
     <h3>Added</h3>
     <ul>
