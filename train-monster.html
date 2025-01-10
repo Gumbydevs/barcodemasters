@@ -8,6 +8,18 @@
     <link rel="stylesheet" href="assets/styles.css">
     <style>
         /* Styles */
+        footer {
+            width: 100%;
+            padding: 1rem;
+            background: inherit;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            position: static;
+            bottom: 0;
+            box-sizing: border-box;
+            
+        }
         .collection-container {
             width: 100%;
             max-width: 1200px;
@@ -267,7 +279,8 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.03</span></p>
+        <p>Version: <span id="versionNumber">1.0.032</span></p>
+        <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
     </footer>
 
     <script type="module">
@@ -279,7 +292,7 @@
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
             projectId: "barcodemasters-b4b9b",
-            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            storageBucket: "barcodemasters-b4b9b",
             messagingSenderId: "827677074735",
             appId: "1:827677074735:web:3bace3d02034348bc82dda",
             measurementId: "G-14YTBBLTPZ"
@@ -506,11 +519,14 @@ function formatTrainingTime(milliseconds) {
     if (milliseconds < 60000) { // Less than 1 minute
         return `${Math.ceil(milliseconds / 1000)}s`;
     } else if (milliseconds < 3600000) { // Less than 1 hour
-        return `${Math.ceil(milliseconds / 60000)}m`;
-    } else { // Hours and minutes
+        const minutes = Math.floor(milliseconds / 60000);
+        const seconds = Math.floor((milliseconds % 60000) / 1000);
+        return `${minutes}m ${seconds}s`;
+    } else { // Hours, minutes, and seconds
         const hours = Math.floor(milliseconds / 3600000);
-        const minutes = Math.ceil((milliseconds % 3600000) / 60000);
-        return `${hours}h ${minutes}m`;
+        const minutes = Math.floor((milliseconds % 3600000) / 60000);
+        const seconds = Math.floor((milliseconds % 60000) / 1000);
+        return `${hours}h ${minutes}m ${seconds}s`;
     }
 }
 
@@ -600,6 +616,7 @@ function startTrainingProgress() {
         }
     };
 
+    // Update more frequently (every 100ms) to show smooth seconds countdown
     const progressInterval = setInterval(updateProgress, 100);
     updateProgress(); // Initial update
 }
