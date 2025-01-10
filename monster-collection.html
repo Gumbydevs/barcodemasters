@@ -279,7 +279,7 @@
             font-size: clamp(1.5rem, 4vw, 2rem);
             margin: 0;
             font-weight: bold;
-            color: #ffffff;
+            color: #2c3e50; /* Changed from #ffffff to a dark color */
         }
 
         /* Filters */
@@ -435,6 +435,10 @@
         body.dark-mode .stat-box,
         body.dark-mode .monster-card {
             background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.dark-mode .stat-box p {
+            color: #ffffff; /* Explicitly set color for dark mode */
         }
 
         /* Responsive Adjustments */
