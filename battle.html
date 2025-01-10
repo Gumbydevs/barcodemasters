@@ -192,6 +192,9 @@
 
     <script type="text/babel">
         function BattleSystem() {
+            // Add isDefending state
+            const [isDefending, setIsDefending] = React.useState(false);
+            
             const [playerMonster, setPlayerMonster] = React.useState(null);
             const [opponentMonster, setOpponentMonster] = React.useState({
                 monsterName: "Ai Monster",
@@ -292,9 +295,10 @@
                 setIsPlayerTurn(false);
             };
 
+            // Update handleDefend function
             const handleDefend = () => {
                 setIsDefending(true);
-                addToLog("You're defending against the next attack!");
+                addToLog("You're defending against the next attack! (Damage will be halved)");
                 setIsPlayerTurn(false);
             };
 
@@ -306,6 +310,7 @@
             };
 
             // Opponent AI behavior
+            // Update opponent turn to handle defense
             const opponentTurn = () => {
                 if (opponentHealth <= 0 || playerHealth <= 0) {
                     checkBattleOutcome();
@@ -317,15 +322,17 @@
                 switch (randomAction) {
                     case 'attack':
                         const damage = Math.floor(Math.random() * 20) + 10;
+                        const reducedDamage = isDefending ? Math.floor(damage / 2) : damage; // Reduce damage if defending
                         setPlayerHealth(prev => {
-                            const newHealth = Math.max(0, prev - damage);
+                            const newHealth = Math.max(0, prev - reducedDamage);
                             if (newHealth <= 0) {
                                 setIsBattleOver(true);
                                 addToLog("You lost!");
                             }
                             return newHealth;
                         });
-                        addToLog(`Opponent dealt ${damage} damage!`);
+                        addToLog(`Opponent dealt ${reducedDamage}${isDefending ? ' (reduced by defense)' : ''} damage!`);
+                        setIsDefending(false); // Reset defense after attack
                         break;
                     case 'heal':
                         const heal = Math.floor(Math.random() * 15) + 5;
