@@ -21,7 +21,7 @@
         .monster-info ul { list-style: none; padding: 0; margin: 0; }
         button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; cursor: pointer; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .battle-log { background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 10px; margin-top: 20px; max-height: 150px; overflow-y: auto; }
+        .battle-log { background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 10px; margin: 20px 0; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -54,12 +54,39 @@
             const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
             const [isDefending, setIsDefending] = React.useState(false);
             const [isOpponentDefending, setIsOpponentDefending] = React.useState(false);
+            const [timeRemaining, setTimeRemaining] = React.useState(6 * 60 * 60);
+            const [opponentTimeRemaining, setOpponentTimeRemaining] = React.useState(5 * 60 * 60 + 59 * 60 + 59);
 
             React.useEffect(() => {
-                if (!isPlayerTurn && !isBattleOver && opponentHealth > 0) {
-                    const timer = setTimeout(opponentTurn, 1000);
-                    return () => clearTimeout(timer);
-                }
+                if (isPlayerTurn && !isBattleOver) {
+                    const timer = setInterval(() => {
+                        setTimeRemaining(prev => {
+                            if (prev <= 1) {
+                                clearInterval(timer);
+                                setIsPlayerTurn(false);
+                                return 6 * 60 * 60;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                    return () => clearInterval(timer);
+                } else if (!isPlayerTurn && !isBattleOver && opponentHealth > 0) {
+    const opponentTimer = setInterval(() => {
+        setOpponentTimeRemaining(prev => prev - 1);
+    }, 1000);
+    
+    const randomDelay = Math.floor(Math.random() * 9000) + 1000;
+    const actionTimer = setTimeout(() => {
+        clearInterval(opponentTimer);
+        setOpponentTimeRemaining(5 * 60 * 60 + 59 * 60);
+        opponentTurn();
+    }, randomDelay);
+    
+    return () => {
+        clearTimeout(actionTimer);
+        clearInterval(opponentTimer);
+    };
+}
             }, [isPlayerTurn, isBattleOver, opponentHealth]);
 
             React.useEffect(() => {
@@ -84,12 +111,14 @@
                 setIsPlayerTurn(false);
                 setIsDefending(false);
                 setIsOpponentDefending(false);
+                setTimeRemaining(6 * 60 * 60);
             };
 
             const handleDefend = () => {
                 setIsDefending(true);
                 addToLog("You're defending against the next attack!");
                 setIsPlayerTurn(false);
+                setTimeRemaining(6 * 60 * 60);
             };
 
             const handleHeal = () => {
@@ -98,6 +127,7 @@
                 addToLog(`You healed for ${heal} HP!`);
                 setIsPlayerTurn(false);
                 setIsDefending(false);
+                setTimeRemaining(6 * 60 * 60);
             };
 
             const opponentTurn = () => {
@@ -132,7 +162,7 @@
                     <h2>{playerMonster.monsterName} vs {opponentMonster.monsterName}</h2>
                     
                     <div className="monster">
-                        <img src="/api/placeholder/100/100" alt="Player Monster" />
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Player Monster" />
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {playerMonster.type}</li>
@@ -148,14 +178,8 @@
                         ></div>
                     </div>
 
-                    <div>
-                        <button onClick={handleAttack} disabled={!isPlayerTurn || isBattleOver}>Attack</button>
-                        <button onClick={handleDefend} disabled={!isPlayerTurn || isBattleOver}>Defend</button>
-                        <button onClick={handleHeal} disabled={!isPlayerTurn || isBattleOver}>Heal</button>
-                    </div>
-
                     <div className="monster">
-                        <img src="/api/placeholder/100/100" alt="Opponent Monster" />
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Opponent Monster" />
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {opponentMonster.type}</li>
@@ -176,6 +200,23 @@
                             <div key={index}>{log}</div>
                         ))}
                     </div>
+
+                    <div>
+                        <button onClick={handleAttack} disabled={!isPlayerTurn || isBattleOver}>Attack</button>
+                        <button onClick={handleDefend} disabled={!isPlayerTurn || isBattleOver}>Defend</button>
+                        <button onClick={handleHeal} disabled={!isPlayerTurn || isBattleOver}>Heal</button>
+                    </div>
+
+                    {isPlayerTurn && !isBattleOver && (
+                        <div style={{ marginTop: '10px' }}>
+                            Time remaining: {Math.floor(timeRemaining / 3600)}h {Math.floor((timeRemaining % 3600) / 60)}m {timeRemaining % 60}s
+                        </div>
+                    )}
+                    {!isPlayerTurn && !isBattleOver && (
+                        <div style={{ marginTop: '10px' }}>
+                            Opponent's turn: {Math.floor(opponentTimeRemaining / 3600)}h {Math.floor((opponentTimeRemaining % 3600) / 60)}m {opponentTimeRemaining % 60}s
+                        </div>
+                    )}
                 </div>
             );
         }
