@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Monster for Battle</title>
+    <style>
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .monster-card {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .monster-card:hover {
+            background: #f0f0f0;
+        }
+
+        .selected {
+            border: 2px solid #3498db;
+            background: #ebf5fb;
+        }
+    </style>
+</head>
+<body>
+    <div id="monsterSelect">
+        <h2>Select Your Monster</h2>
+        <div class="monster-grid" id="monsterGrid"></div>
+        <button id="startBattle" disabled>Start Battle</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let selectedMonsterId = null;
+
+        async function loadMonsters() {
+            const user = auth.currentUser;
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const monstersRef = collection(db, 'monsters');
+            const q = query(monstersRef, where('ownerId', '==', user.uid));
+            const querySnapshot = await getDocs(q);
+
+            const grid = document.getElementById('monsterGrid');
+            querySnapshot.forEach(doc => {
+                const monster = doc.data();
+                const card = document.createElement('div');
+                card.className = 'monster-card';
+                card.innerHTML = `
+                    <h3>${monster.monsterName}</h3>
+                    <p>Level: ${monster.level}</p>
+                    <p>Type: ${monster.type}</p>
+                    <p>HP: ${monster.HP}</p>
+                    <p>AP: ${monster.AP}</p>
+                    <p>Speed: ${monster.Speed}</p>
+                `;
+                
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.monster-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedMonsterId = doc.id;
+                    document.getElementById('startBattle').disabled = false;
+                });
+
+                grid.appendChild(card);
+            });
+        }
+
+        document.getElementById('startBattle').addEventListener('click', () => {
+            if (selectedMonsterId) {
+                window.location.href = `battle.html?monsterId=${selectedMonsterId}`;
+            }
+        });
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadMonsters();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
