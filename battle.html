@@ -321,13 +321,13 @@
                 monsterName: "Ai Monster",
                 type: "Robot",
                 level: 2,
-                HP: 50,
+                HP: 17,
                 AP: 5,
                 Speed: 10
             });
 
             const [playerHealth, setPlayerHealth] = React.useState(100);
-            const [opponentHealth, setOpponentHealth] = React.useState(22); // Also update initial health to match max HP
+            const [opponentHealth, setOpponentHealth] = React.useState(17); // Also update initial health to match max HP
             const [battleLog, setBattleLog] = React.useState([]);
             const [isBattleOver, setIsBattleOver] = React.useState(false);
             const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
@@ -415,19 +415,19 @@
             // Player action handlers
             // Update the damage calculation functions
             const calculateDamage = (attacker, isPlayer = true) => {
-                // Base damage is the attacker's AP
-                const baseAP = parseInt(attacker.AP) || 5;
+                // Parse AP as integer and ensure minimum of 1
+                const baseAP = Math.max(1, parseInt(attacker.AP) || 1);
                 
-                // Add a small random variance (±20% of AP)
-                const variance = Math.floor(Math.random() * (baseAP * 0.4)) - (baseAP * 0.2);
+                // Add variance between -10% and +10% of base AP
+                const variance = Math.floor((Math.random() * 0.2 - 0.1) * baseAP);
                 
-                // Calculate final damage
-                let damage = baseAP + variance;
+                // Calculate final damage and add a fixed value to increase the range
+                let damage = baseAP + variance + 3; // Adding 3 to increase the overall damage range
                 
                 // Ensure minimum damage is 1
                 damage = Math.max(1, Math.floor(damage));
                 
-                // Add a small critical hit chance (10%) for players only
+                // 10% chance for critical hit (players only)
                 if (isPlayer && Math.random() < 0.1) {
                     damage = Math.floor(damage * 1.5);
                     return { damage, isCritical: true };
