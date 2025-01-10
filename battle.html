@@ -10,9 +10,103 @@
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        /* Collection-style layout */
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f3f4f6; 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh; 
+        }
+        
+        body.dark-mode {
+            background: #121212;
+            color: white;
+        }
+
+        .battle-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            padding-top: 6rem;
+            box-sizing: border-box;
+        }
+
+        /* Monster card styling */
+        .monster-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .monster-card {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        /* Navigation grid */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .nav-button {
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Footer */
+        footer {
+            width: 100%;
+            padding: 1rem;
+            background: inherit;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        /* Dark mode toggle */
+        #darkModeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        /* ...existing styles... */
         body[data-theme="dark"] { background-color: #1f2937; color: #e5e7eb; }
-        .battle-container { background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); width: 100%; max-width: 600px; text-align: center; }
+        .battle-container { background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); width: 100%; max-width: 1200px; text-align: center; }
         .health-bar { height: 20px; border-radius: 5px; margin: 10px 0; background-color: #e5e7eb; position: relative; }
         .health-fill { height: 100%; border-radius: 5px; position: absolute; transition: width 0.3s ease; }
         .player-health { background-color: #34d399; }
@@ -25,10 +119,33 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .battle-log { background: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 10px; margin: 20px 0; max-height: 150px; overflow-y: auto; }
         .timer { font-size: 16px; font-weight: bold; margin-top: 10px; color: #000000; } body[data-theme="dark"] .timer {color: #fff; /* Light color for dark mode */}
+        .start-battle-button { padding: 1rem 2rem; margin-bottom: 2rem; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; cursor: pointer; font-size: 1.2rem; }
+        .start-battle-button:hover { background: linear-gradient(135deg, #34495e, #2980b9); }
+        .nav-button { padding: 1rem; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease; text-align: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .nav-button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); background: linear-gradient(135deg, #34495e, #2980b9); }
+        .nav-button:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="battle-container">
+        <div class="logo-container">
+            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+        </div>
+
+        <div class="navigation-grid">
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Back to Collection</button>
+            <button class="nav-button start-battle-button" onclick="startBattle()">Start Battle</button>
+        </div>
+
+        <div id="root"></div>
+
+        <footer>
+            <p>Version: <span id="versionNumber">1.0.03</span></p>
+            <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
+        </footer>
+    </div>
 
     <script type="text/babel">
         function BattleSystem() {
@@ -256,7 +373,22 @@
             );
         }
 
-        ReactDOM.render(<BattleSystem />, document.getElementById('root'));
+        function startBattle() {
+            ReactDOM.render(<BattleSystem />, document.getElementById('root'));
+        }
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        });
     </script>
 </body>
 </html>
