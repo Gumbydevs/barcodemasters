@@ -263,13 +263,26 @@
             });
         }
 
-        // Update event listeners for both buttons
+        // Update the battle button click handler
         ['startBattleTop', 'startBattleBottom'].forEach(buttonId => {
             document.getElementById(buttonId).addEventListener('click', () => {
-                if (selectedMonsterId) {
-                    const monsterParams = new URLSearchParams(selectedMonsterData).toString();
-                    console.log('Redirecting to battle with monster data:', selectedMonsterData); // Debugging line to track the data before redirect
-                    window.location.href = `battle.html?${monsterParams}`;
+                if (selectedMonsterId && selectedMonsterData) {
+                    // Create URLSearchParams with all monster data
+                    const params = new URLSearchParams({
+                        id: selectedMonsterId,
+                        monsterName: selectedMonsterData.monsterName,
+                        type: selectedMonsterData.type,
+                        level: selectedMonsterData.level,
+                        HP: selectedMonsterData.HP,
+                        AP: selectedMonsterData.AP,
+                        Speed: selectedMonsterData.Speed
+                    });
+                    
+                    // Debug log
+                    console.log('Redirecting with monster data:', Object.fromEntries(params.entries()));
+                    
+                    // Redirect to battle page with all monster data
+                    window.location.href = `battle.html?${params.toString()}`;
                 }
             });
         });
