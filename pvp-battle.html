@@ -26,21 +26,31 @@
         }
 
         .battle-container {
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 600px;
             text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         body[data-theme="dark"] .battle-container {
-            background-color: #374151;
-            color: #e5e7eb;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .battle-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         h2 {
             margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #3498db;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .health-bar {
@@ -68,11 +78,12 @@
             padding: 10px 20px;
             margin: 5px;
             border: none;
-            border-radius: 5px;
-            background-color: #3b82f6;
-            color: #ffffff;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         button:disabled {
@@ -81,15 +92,17 @@
         }
 
         button:hover:not(:disabled) {
-            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
         }
 
         body[data-theme="dark"] button {
-            background-color: #1d4ed8;
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
         }
 
         body[data-theme="dark"] button:hover {
-            background-color: #1e40af;
+            background: linear-gradient(135deg, #1e40af, #1d4ed8);
         }
 
         .battle-log {
@@ -100,6 +113,7 @@
             max-height: 150px;
             overflow-y: auto;
             margin-top: 10px;
+            backdrop-filter: blur(5px);
         }
 
         body[data-theme="dark"] .battle-log {
@@ -164,9 +178,31 @@
             margin: 0; /* Remove margin */
         }
 
+        /* Dark Mode Toggle */
+        #darkModeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.75rem;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        #darkModeToggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -353,6 +389,21 @@
         };
 
         ReactDOM.render(<BattleSystem />, document.getElementById("root"));
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        
+        if (savedTheme === "dark") {
+            document.body.setAttribute("data-theme", "dark");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            const currentTheme = document.body.getAttribute("data-theme");
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+            document.body.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+        });
     </script>
 </body>
 </html>
