@@ -390,7 +390,21 @@
 
             // Add messages to battle log
             const addToLog = (message) => {
-                setBattleLog(prevLog => [...prevLog, message].slice(-5));
+                let emoji = '';
+                if (message.includes('dealt')) {
+                    emoji = '💪'; // Attack
+                } else if (message.includes('Critical Hit')) {
+                    emoji = '💥'; // Critical Hit
+                } else if (message.includes('healed')) {
+                    emoji = '❤️'; // Heal
+                } else if (message.includes('won')) {
+                    emoji = '🏆'; // Win
+                } else if (message.includes('lost')) {
+                    emoji = '❌'; // Lose
+                } else if (message.includes('defending')) {
+                    emoji = '🛡️'; // Defend
+                }
+                setBattleLog(prevLog => [...prevLog, `${emoji} ${message}`].slice(-5));
             };
 
             // Check for win/loss conditions
