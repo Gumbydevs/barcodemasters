@@ -191,6 +191,20 @@
     </div>
 
     <script type="text/babel">
+        // Add Firebase configuration at the top of the script
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         function BattleSystem() {
             // Add isDefending state
             const [isDefending, setIsDefending] = React.useState(false);
@@ -218,7 +232,10 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const monsterData = Object.fromEntries(urlParams.entries());
                 if (monsterData) {
-                    setPlayerMonster(monsterData);
+                    setPlayerMonster({
+                        ...monsterData,
+                        id: urlParams.get('id') // Make sure to include monster ID in URL params
+                    });
                     setPlayerHealth(monsterData.HP);
                 }
             }, []);
@@ -270,13 +287,21 @@
             };
 
             // Check for win/loss conditions
-            const checkBattleOutcome = () => {
+            const checkBattleOutcome = async () => {
                 if (opponentHealth <= 0) {
                     setIsBattleOver(true);
                     addToLog("You won!");
+                    // Update player monster's experience for winning
+                    if (playerMonster && playerMonster.id) {
+                        await updateMonsterExperience(playerMonster.id, true);
+                    }
                 } else if (playerHealth <= 0) {
                     setIsBattleOver(true);
                     addToLog("You lost!");
+                    // Update player monster's experience for losing
+                    if (playerMonster && playerMonster.id) {
+                        await updateMonsterExperience(playerMonster.id, false);
+                    }
                 }
             };
 
@@ -321,10 +346,23 @@
                     checkBattleOutcome();
                     return;
                 }
-                const actions = ['attack', 'defend', 'heal'];
-                const randomAction = actions[Math.floor(Math.random() * 3)];
 
-                switch (randomAction) {
+                // Weighted action selection
+                const actions = [];
+                // 70% chance to attack (7 entries)
+                for (let i = 0; i < 7; i++) actions.push('attack');
+                // 20% chance to heal (2 entries)
+                for (let i = 0; i < 2; i++) actions.push('heal');
+                // 10% chance to defend (1 entry)
+                actions.push('defend');
+
+                const randomAction = actions[Math.floor(Math.random() * actions.length)];
+
+                 // Add heal threshold check
+                const shouldHeal = opponentHealth < (opponentMonster.HP * 0.3); // Only consider healing below 30% HP
+                const finalAction = shouldHeal ? (Math.random() < 0.6 ? 'heal' : randomAction) : randomAction;
+
+                switch(finalAction) {
                     case 'attack':
                         const damage = Math.floor(Math.random() * 20) + 10;
                         const reducedDamage = isDefending ? Math.floor(damage / 2) : damage; // Reduce damage if defending
@@ -362,6 +400,32 @@
                 HP: 100,
                 AP: 10,
                 Speed: 10
+            };
+
+            // Add new function to update monster experience
+            const updateMonsterExperience = async (monsterId, isWinner) => {
+                try {
+                    const monsterRef = db.collection('monsters').doc(monsterId);
+                    const monsterDoc = await monsterRef.get();
+                    
+                    if (!monsterDoc.exists) {
+                        console.error('Monster not found in database');
+                        return;
+                    }
+
+                    const currentExp = monsterDoc.data().experience || 0;
+                    const expChange = isWinner ? 50 : -20; // Gain 50 XP for win, lose 20 XP for loss
+                    const newExp = Math.max(0, currentExp + expChange); // Prevent negative XP
+
+                    await monsterRef.update({
+                        experience: newExp
+                    });
+
+                    addToLog(`${isWinner ? 'Gained' : 'Lost'} ${Math.abs(expChange)} experience points!`);
+                } catch (error) {
+                    console.error('Error updating monster experience:', error);
+                    addToLog('Failed to update experience points.');
+                }
             };
 
             return (
