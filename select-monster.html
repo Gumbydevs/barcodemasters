@@ -162,6 +162,31 @@
             text-align: center;
             margin-top: 2rem;
         }
+
+        .xp-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .xp-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        .monster-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -195,7 +220,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Your Firebase config
         const firebaseConfig = {
@@ -214,6 +239,31 @@
         let selectedMonsterId = null;
         let selectedMonsterData = null; // Add this line to store selected monster data
 
+        async function getUsernameById(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                    return userDoc.data().username;
+                } else {
+                    return 'Unknown User';
+                }
+            } catch (error) {
+                console.error('Error fetching username:', error);
+                return 'Unknown User';
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
         async function loadMonsters() {
             const user = auth.currentUser;
             if (!user) {
@@ -226,32 +276,51 @@
             const querySnapshot = await getDocs(q);
 
             const grid = document.getElementById('monsterGrid');
-            querySnapshot.forEach(doc => {
+            for (const doc of querySnapshot.docs) {
                 const monster = doc.data();
+                const ownerUsername = await getUsernameById(monster.ownerId);
+                const xpToNextLevel = monster.level * 100;
+                const xpProgress = (monster.experience / xpToNextLevel) * 100;
+
                 const card = document.createElement('div');
                 card.className = 'monster-card';
                 card.innerHTML = `
-                    <div class="monster-name">${monster.monsterName}</div>
-                    <div class="monster-stats">
-                        <div class="stat-item">
-                            <span>Level</span>
-                            <span>${monster.level}</span>
+                    <div class="monster-info">
+                        <div class="monster-name">${monster.monsterName}</div>
+                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                        
+                        <div class="monster-stats">
+                            <div class="stat-item">
+                                <span>Level</span>
+                                <span>${monster.level}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>HP</span>
+                                <span>${monster.HP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>AP</span>
+                                <span>${monster.AP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Speed</span>
+                                <span>${monster.Speed}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>XP</span>
+                                <span>${monster.experience}/${xpToNextLevel}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Created</span>
+                                <span>${formatDate(monster.dateCreated)}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Owner</span>
+                                <span>${ownerUsername}</span>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span>Type</span>
-                            <span>${monster.type}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>HP</span>
-                            <span>${monster.HP}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>AP</span>
-                            <span>${monster.AP}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Speed</span>
-                            <span>${monster.Speed}</span>
+                        <div class="xp-progress">
+                            <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
                         </div>
                     </div>
                 `;
@@ -267,7 +336,7 @@
                 });
 
                 grid.appendChild(card);
-            });
+            }
         }
 
         // Update the battle button click handler
