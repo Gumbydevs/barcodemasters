@@ -135,11 +135,15 @@
         </div>
 
         <div class="navigation-grid">
-            <button class="nav-button" onclick="location.href='monster-collection.html'">Back to Collection</button>
             <button class="nav-button start-battle-button" onclick="startBattle()">Start Battle</button>
         </div>
 
         <div id="root"></div>
+
+        <!-- Move the back button here, after the root div -->
+        <div class="navigation-grid" style="margin-top: 2rem;">
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Back to Profile</button>
+        </div>
 
         <footer>
             <p>Version: <span id="versionNumber">1.0.03</span></p>
