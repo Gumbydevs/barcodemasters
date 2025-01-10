@@ -471,26 +471,6 @@
             font-size: 0.9rem;
             color: #a8b3cf;
         }
-
-        /* Add these new styles */
-        .monster-type-container {
-            margin: 0.5rem 0;
-        }
-
-        .type-description {
-            font-size: 0.9rem;
-            color: #a8b3cf;
-            margin-top: 0.5rem;
-            line-height: 1.4;
-            padding: 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-        }
-
-        .monster-card {
-            /* Update existing monster-card styles if needed */
-            padding: 1.5rem;
-        }
     </style>
 
 <script type="module">
@@ -591,35 +571,16 @@
     }
 }
 
-    // Add this new function to fetch monster type description
-    async function getMonsterTypeDescription(type) {
-        try {
-            const typeDoc = await getDoc(doc(db, 'monsterTypes', type));
-            if (typeDoc.exists()) {
-                return typeDoc.data().description;
-            }
-            return 'Description not available';
-        } catch (error) {
-            console.error('Error fetching type description:', error);
-            return 'Description not available';
-        }
-    }
-
-    // Modify the createMonsterCard function
     async function createMonsterCard(monster) {
         const xpToNextLevel = monster.level * 100;
         const xpProgress = (monster.experience / xpToNextLevel) * 100;
         const ownerUsername = await getUsernameById(monster.ownerId);
-        const typeDescription = await getMonsterTypeDescription(monster.type);
 
         return `
             <div class="monster-card" data-id="${monster.id}">
                 <div class="monster-info">
                     <div class="monster-name">${monster.monsterName}</div>
-                    <div class="monster-type-container">
-                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                        <div class="type-description">${typeDescription}</div>
-                    </div>
+                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
                     
                     <div class="monster-stats">
                         <div class="stat-item">
