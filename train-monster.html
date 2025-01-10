@@ -471,6 +471,49 @@ function showToast(message) {
     }, 3000);
 }
 
+// Add this function before startTraining
+function calculateTrainingDuration(currentStatValue) {
+    let duration;
+    
+    // Random factor between 0.85 and 1.15 (±15% variation)
+    const randomFactor = 0.85 + (Math.random() * 0.3);
+    
+    if (currentStatValue <= 5) {
+        // 15-30 seconds for stats 0-5
+        duration = (15000 + (currentStatValue * 3000)) * randomFactor;
+    } else if (currentStatValue <= 10) {
+        // 1-2 minutes for stats 5-10
+        const baseMinutes = 1 + ((currentStatValue - 5) / 5);
+        duration = (baseMinutes * 60000) * randomFactor;
+    } else {
+        // Original calculation for stats above 10
+        const baseDuration = 120000;
+        const growthFactor = 1.08;
+        const bracket = Math.floor((currentStatValue - 10) / 3);
+        const multiplier = Math.pow(growthFactor, bracket);
+        const linearIncrease = (currentStatValue - 10) * 30000;
+        
+        duration = ((baseDuration * multiplier) + linearIncrease) * randomFactor;
+    }
+    
+    // Cap at 8 hours maximum
+    const maxDuration = 8 * 60 * 60 * 1000;
+    return Math.min(Math.floor(duration), maxDuration);
+}
+
+// Add this helper function to format longer durations
+function formatTrainingTime(milliseconds) {
+    if (milliseconds < 60000) { // Less than 1 minute
+        return `${Math.ceil(milliseconds / 1000)}s`;
+    } else if (milliseconds < 3600000) { // Less than 1 hour
+        return `${Math.ceil(milliseconds / 60000)}m`;
+    } else { // Hours and minutes
+        const hours = Math.floor(milliseconds / 3600000);
+        const minutes = Math.ceil((milliseconds % 3600000) / 60000);
+        return `${hours}h ${minutes}m`;
+    }
+}
+
 // Modified startTraining function
 async function startTraining() {
     const selectedMonsterId = document.getElementById('monsterSelect').value;
@@ -482,7 +525,15 @@ async function startTraining() {
         return;
     }
 
-    // Disable the start button and stat select during training
+    // Get current stat value
+    const monsterRef = doc(db, 'monsters', selectedMonsterId);
+    const monsterDoc = await getDoc(monsterRef);
+    const currentStatValue = monsterDoc.data()[selectedStat];
+    
+    // Calculate training duration based on current stat value
+    const trainingDuration = calculateTrainingDuration(currentStatValue);
+
+    // Disable UI elements
     startButton.disabled = true;
     document.getElementById('statSelect').disabled = true;
     document.getElementById('monsterSelect').disabled = true;
@@ -494,7 +545,6 @@ async function startTraining() {
     timerContainer.style.display = 'block';
     progressFill.style.width = '0%';
 
-    const trainingDuration = 5000; // 5 seconds
     const startTime = Date.now();
     
     // Update the timer every 100ms
@@ -504,14 +554,14 @@ async function startTraining() {
         const progress = (elapsed / trainingDuration) * 100;
         
         progressFill.style.width = `${Math.min(100, progress)}%`;
-        timeRemaining.textContent = `Time remaining: ${Math.ceil(remaining / 1000)}s`;
+        timeRemaining.textContent = `Time remaining: ${formatTrainingTime(remaining)}`;
         
         if (remaining <= 0) {
             clearInterval(timerInterval);
         }
     }, 100);
 
-    // Simulate training with a 5-second timer
+    // Simulate training with a timer
     setTimeout(async () => {
         const statIncrease = Math.floor(Math.random() * 5) + 1;
         const xpIncrease = Math.floor(Math.random() * 6) + 5;
