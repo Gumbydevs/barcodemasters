@@ -84,6 +84,7 @@
                     document.querySelectorAll('.monster-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
                     selectedMonsterId = doc.id;
+                    console.log('Selected Monster ID:', selectedMonsterId); // Debugging line to track the selected ID
                     document.getElementById('startBattle').disabled = false;
                 });
 
@@ -91,8 +92,10 @@
             });
         }
 
+        // Only add the event listener once, outside the card click listener
         document.getElementById('startBattle').addEventListener('click', () => {
             if (selectedMonsterId) {
+                console.log('Redirecting to battle with monster ID:', selectedMonsterId); // Debugging line to track the ID before redirect
                 window.location.href = `battle.html?monsterId=${selectedMonsterId}`;
             }
         });
