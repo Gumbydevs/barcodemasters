@@ -142,9 +142,12 @@
             </select>
             <select id="levelFilter" class="filter-select">
                 <option value="">All Levels</option>
-                <option value="1">Level 1</option>
-                <option value="2">Level 2</option>
-                <option value="3">Level 3</option>
+                <script>
+                    // Generate options for levels 1-99
+                    for (let i = 1; i <= 99; i++) {
+                        document.write(`<option value="${i}">Level ${i}</option>`);
+                    }
+                </script>
             </select>
             <select id="sortBy" class="sort-select">
                 <option value="dateCreated">Date Created</option>
