@@ -237,6 +237,8 @@
 
         <h1>DNA Extractor</h1>
         
+        <button class="scan-button" id="startButton">Start Scanner</button>
+
         <div id="statusMessages">
             <p id="errorMessage" style="color: red; display: none;"></p>
             <p id="debugMessage">Ready to scan...</p>
@@ -259,6 +261,8 @@
             </div>
         </div>
                       
+        <div id="monsterResult" style="display: none;"></div>
+
         <div id="interactive" class="viewport" style="display: none;">
             <video id="video" autoplay playsinline muted></video>
             <div class="viewport-overlay">
@@ -268,9 +272,10 @@
             </div>
         </div>
 
-        <button class="scan-button" id="startButton">Start Scanner</button>
-        <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">Not all codes will result in a successful scan. We are continuously working to add more code libraries to increase the number of scannable codes.</p>
-        <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">QR codes are more likely to scan right now, barcode scanning is still somewhat limited.</p>    
+        <div class="additional-info" style="margin-top: 1rem;">
+            <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">Not all codes will result in a successful scan. We are continuously working to add more code libraries to increase the number of scannable codes.</p>
+            <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">QR codes are more likely to scan right now, barcode scanning is still somewhat limited.</p>    
+        </div>
         
         <!-- Add debug button -->
         <button class="scan-button" id="debugButton" style="display: none; background: linear-gradient(135deg, #8e44ad, #9b59b6);">
@@ -287,8 +292,6 @@
             <button class="nav-button" onclick="location.href='help.html'">Help</button>
             <button class="nav-button" id="logoutButton">Logout</button>
         </div>
-
-        <div id="monsterResult" style="display: none;"></div>
     </div>
 
     <footer>
