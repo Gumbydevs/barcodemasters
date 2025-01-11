@@ -191,7 +191,7 @@
         <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">QR codes are more likely to scan right now, barcode scanning is still somewhat limited.</p>    
         
         <!-- Add debug button -->
-        <button class="scan-button" id="debugButton" style="background: linear-gradient(135deg, #8e44ad, #9b59b6);">
+        <button class="scan-button" id="debugButton" style="display: none; background: linear-gradient(135deg, #8e44ad, #9b59b6);">
             Generate Test Monster
         </button>
 
@@ -988,8 +988,20 @@
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = 'index.html';
+            } else {
+                // Show debug button only for admin
+                const debugButton = document.getElementById('debugButton');
+                if (checkAdminStatus(user.uid)) {
+                    debugButton.style.display = 'block';
+                }
             }
         });
+
+        // Add this function after Firebase initialization
+        function checkAdminStatus(userId) {
+            const adminId = 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2';
+            return userId === adminId;
+        }
 
         // Dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
