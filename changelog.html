@@ -42,6 +42,10 @@
 <body>
 
 <div class="container">
+    <div class="navigation-grid" style="text-align: left; margin-bottom: 2rem;">
+        <button class="nav-button" onclick="location.href='profile.html'">Back to game!</button>
+    </div>
+    
     <h1>Barcode Masters Change Log</h1>
 
     <h2>Changelog for January 11, 2024</h2>
@@ -63,6 +67,14 @@
                 <li>Added exponential backoff for retries</li>
             </ul>
         </li>
+        <li><strong>Database Image Integration:</strong>
+            <ul>
+                <li>Successfully implemented saving of AI-generated monster profile images to Firebase</li>
+                <li>Added monster image retrieval from database across multiple pages</li>
+                <li>Implemented fallback placeholder system for failed image loads</li>
+                <li>Enhanced storage bucket configuration for new database setup</li>
+            </ul>
+        </li>
     </ul>
 
     <h3>Updated</h3>
@@ -72,6 +84,22 @@
                 <li>Enhanced loading state visuals during image generation</li>
                 <li>Added more informative progress messages</li>
                 <li>Improved error messaging for failed generations</li>
+            </ul>
+        </li>
+        <li><strong>Monster Display Enhancements:</strong>
+            <ul>
+                <li>Updated battle preview page placeholders</li>
+                <li>Enhanced monster select page with database-sourced images</li>
+                <li>Improved global monster index image display system</li>
+                <li>Enhanced createMonsterCard function with improved image support</li>
+                <li>Added responsive image containers across all monster pages</li>
+            </ul>
+        </li>
+        <li><strong>System Updates:</strong>
+            <ul>
+                <li>Updated scanner feature text for better usability</li>
+                <li>Added version number display on DNA page</li>
+                <li>Conducted live testing of DNA image generation with database saving</li>
             </ul>
         </li>
     </ul>
