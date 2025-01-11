@@ -456,29 +456,63 @@
         }
 
         function generateMonsterPrompt(monster, monsterTypes) {
-            const typeInfo = monsterTypes.find(t => t.typeName === monster.type);
-            const typeDescription = typeInfo ? typeInfo.description : '';
-            
-            const statModifiers = [];
-            if (monster.HP > 40) statModifiers.push('robust and powerful');
-            if (monster.AP > 25) statModifiers.push('fierce looking');
-            if (monster.Speed > 15) statModifiers.push('agile and sleek');
-            
-            const levelDetails = monster.level > 1 ? 'emanating strong power, enhanced appearance, ' : '';
-            
-            const basePrompt = `A ${monster.type.toLowerCase()} monster named ${monster.monsterName}, ${typeDescription}, ${statModifiers.join(', ')}, ${levelDetails}`;
-            
-            const styleModifiers = [
-                'high quality digital art',
-                'full body creature design',
-                'centered view',
-                'detailed fantasy game style',
-                'on simple background',
-                'professional game asset quality'
-            ].join(', ');
+            try {
+                // Get the specific monster type info from the database information
+                const typeInfo = monsterTypes.find(t => t.typeName === monster.type);
+                if (!typeInfo) {
+                    throw new Error('Monster type information not found');
+                }
 
-            return `${basePrompt} ${styleModifiers}`;
+                // Core prompt components using database information
+                const monsterBasics = [
+                    `fantasy creature character`,
+                    `${typeInfo.typeName.toLowerCase()} type monster`,
+                    typeInfo.description,
+                    `named ${monster.monsterName}`
+                ].filter(Boolean).join(', ');
+
+                // Physical characteristics based on stats
+                const physicalTraits = [];
+                if (monster.HP > 15) physicalTraits.push('powerful body structure');
+                if (monster.AP > 8) physicalTraits.push('strong offensive features');
+                if (monster.Speed > 5) physicalTraits.push('agile form');
+                if (monster.level > 1) physicalTraits.push('enhanced appearance');
+
+                // Style and quality specifications
+                const styleModifiers = [
+                    'full body creature shot',
+                    'clear monster design',
+                    'fantasy game character',
+                    'centered composition',
+                    'detailed features',
+                    'professional digital art',
+                    'sharp focus',
+                    'single creature',
+                    'full view',
+                    'neutral pose',
+                    'on plain background'
+                ].join(', ');
+
+                // Combine all elements
+                const finalPrompt = [
+                    monsterBasics,
+                    physicalTraits.join(', '),
+                    styleModifiers
+                ].filter(part => part).join(', ');
+
+                console.log('Generated prompt with type info:', {
+                    typeName: typeInfo.typeName,
+                    description: typeInfo.description,
+                    finalPrompt: finalPrompt
+                });
+
+                return finalPrompt;
+            } catch (error) {
+                console.error('Error in generateMonsterPrompt:', error);
+                return `fantasy creature character, full body monster design, ${monster.monsterName}`;
+            }
         }
+
         function calculateStat(statType, seed, statModifiers) {
             try {
                 if (!BASE_STAT_RANGES[statType]) {
@@ -581,33 +615,42 @@
                 return;
             }
 
-            // Initial display with loading state
-            monsterResult.style.display = 'block';
-            monsterResult.innerHTML = `
-                <div class="monster-card">
-                    <h2 style="text-align: center; margin-bottom: 1rem;">${monster.monsterName}</h2>
-                    <div class="monster-image">
-                        <div style="text-align: center;">
-                            <p>Generating monster image...</p>
-                            <p style="font-size: 0.8em;">This may take up to 30 seconds</p>
+            try {
+                // Generate prompt first before updating UI
+                const prompt = generateMonsterPrompt(monster, [monster.typeInfo]);
+                
+                // Clear console and display prompt prominently
+                console.clear();
+                console.log('%c AI Image Generation Prompt:', 'color: #2ecc71; font-size: 14px; font-weight: bold;');
+                console.log('%c' + prompt, 'color: #3498db; font-size: 12px;');
+                console.log('%c' + '='.repeat(50), 'color: #95a5a6;');
+
+                // Initial display with loading state
+                monsterResult.style.display = 'block';
+                monsterResult.innerHTML = `
+                    <div class="monster-card">
+                        <h2 style="text-align: center; margin-bottom: 1rem;">${monster.monsterName}</h2>
+                        <div class="monster-image">
+                            <div style="text-align: center;">
+                                <p>Generating monster image...</p>
+                                <p style="font-size: 0.8em;">This may take up to 30 seconds</p>
+                                <p style="font-size: 0.8em; color: #666;">Check console for prompt details</p>
+                            </div>
+                        </div>
+                        <div class="monster-stats">
+                            <p>Level: ${monster.level}</p>
+                            <p>Type: ${monster.type}</p>
+                            <p>HP: ${monster.HP}</p>
+                            <p>AP: ${monster.AP}</p>
+                            <p>Speed: ${monster.Speed}</p>
+                            <p>Hash ID: ${monster.hash}</p>
                         </div>
                     </div>
-                    <div class="monster-stats">
-                        <p>Level: ${monster.level}</p>
-                        <p>Type: ${monster.type}</p>
-                        <p>HP: ${monster.HP}</p>
-                        <p>AP: ${monster.AP}</p>
-                        <p>Speed: ${monster.Speed}</p>
-                        <p>Hash ID: ${monster.hash}</p>
-                    </div>
-                </div>
-            `;
+                `;
 
-            try {
-                const prompt = generateMonsterPrompt(monster, [monster.typeInfo]);
-                console.log('Generated prompt:', prompt);
+                updateDebugMessage('Generating image with custom prompt (check console for details)...');
 
-                // Function to attempt image generation with timeout
+                // Rest of the generation code
                 const generateImage = async (retryCount = 0) => {
                     const timeout = new Promise((_, reject) => 
                         setTimeout(() => reject(new Error('Request timeout')), 30000)
@@ -622,12 +665,18 @@
                             },
                             body: JSON.stringify({
                                 inputs: prompt,
-                                negative_prompt: 'text, watermark, logo, blur, distortion, low quality, disfigured, human features, cartoon style',
+                                negative_prompt: [
+                                    'text', 'watermark', 'logo', 'blur', 'distortion',
+                                    'low quality', 'disfigured', 'human features', 'cartoon style',
+                                    'abstract', 'multiple creatures', 'cropped', 'close-up',
+                                    'duplicate', 'multiple heads', 'extra limbs', 'deformed',
+                                    'bad anatomy', 'poorly drawn', 'partial body', 'blurry'
+                                ].join(', '),
                                 parameters: {
-                                    width: 280,  // Changed from 512
-                                    height: 280, // Changed from 512
-                                    num_inference_steps: 30,  // Reduced steps for faster generation
-                                    guidance_scale: 7.5
+                                    width: 280,
+                                    height: 280,
+                                    num_inference_steps: 35,
+                                    guidance_scale: 8.5
                                 }
                             })
                         });
