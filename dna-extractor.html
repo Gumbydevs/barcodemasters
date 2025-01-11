@@ -190,6 +190,11 @@
         <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">Not all codes will result in a successful scan. We are continuously working to add more code libraries to increase the number of scannable codes.</p>
         <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">QR codes are more likely to scan right now, barcode scanning is still somewhat limited.</p>    
         
+        <!-- Add debug button -->
+        <button class="scan-button" id="debugButton" style="background: linear-gradient(135deg, #8e44ad, #9b59b6);">
+            Generate Test Monster
+        </button>
+
         <div class="navigation-grid">
             <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
             <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
@@ -457,14 +462,14 @@
 
         function generateMonsterPrompt(monster, monsterTypes) {
             try {
-                // Get the specific monster type info from the database information
                 const typeInfo = monsterTypes.find(t => t.typeName === monster.type);
                 if (!typeInfo) {
                     throw new Error('Monster type information not found');
                 }
 
-                // Core prompt components using database information
+                // Core prompt components with new prefix
                 const monsterBasics = [
+                    `generate an appearance/avatar picture of a`,
                     `fantasy creature character`,
                     `${typeInfo.typeName.toLowerCase()} type monster`,
                     typeInfo.description,
@@ -480,17 +485,17 @@
 
                 // Style and quality specifications
                 const styleModifiers = [
-                    'full body creature shot',
+                    'full body creature art',
                     'clear monster design',
-                    'fantasy game character',
+                    'monster battle game character',
                     'centered composition',
-                    'detailed features',
-                    'professional digital art',
-                    'sharp focus',
-                    'single creature',
+                    'professional character art',
+                    'single monster creature',
                     'full view',
                     'neutral pose',
-                    'on plain background'
+                    'charcer design',
+                    'fantasy art style',
+                    'bold lines', 'vibrant colors', 'detailed shading'
                 ].join(', ');
 
                 // Combine all elements
@@ -667,36 +672,58 @@
                                 inputs: prompt,
                                 negative_prompt: [
                                     'text', 'watermark', 'logo', 'blur', 'distortion',
-                                    'low quality', 'disfigured', 'human features', 'cartoon style',
+                                    'low quality', 'disfigured', 'human features',
                                     'abstract', 'multiple creatures', 'cropped', 'close-up',
                                     'duplicate', 'multiple heads', 'extra limbs', 'deformed',
-                                    'bad anatomy', 'poorly drawn', 'partial body', 'blurry'
+                                    'bad anatomy', 'poorly drawn', 'partial body',
+                                    'grayscale', 'black and white', 'photo', 'photograph',
+                                    'rainbow colors', 'psychedelic', 'multicolored pattern',
+                                    'kaleidoscope', 'abstract pattern', 'fractals',
+                                    'multiple images', 'split image', 'collage',
+                                    'nsfw', 'nude', 'human', 'person', 'face',
+                                    '3d render', 'cartoon', 'anime', 'sketch', 'painting',
+                                    'artistic', 'surreal', 'geometric shapes'
                                 ].join(', '),
                                 parameters: {
                                     width: 280,
                                     height: 280,
-                                    num_inference_steps: 35,
-                                    guidance_scale: 8.5
+                                    num_inference_steps: 50,  // Increased from 35
+                                    guidance_scale: 12,      // Increased from 8.5
+                                    seed: Math.floor(Math.random() * 2147483647),
+                                    scheduler: "DPMSolverMultistep",
+                                    num_images_per_prompt: 1
                                 }
                             })
                         });
 
                         const response = await Promise.race([fetchPromise, timeout]);
                         
+                        if (response.status === 429) {
+                            // Rate limit hit - wait longer between retries
+                            if (retryCount < 3) {
+                                console.log(`Rate limit hit. Waiting before retry ${retryCount + 1}...`);
+                                const waitTime = (retryCount + 1) * 5000; // Increase wait time with each retry
+                                await new Promise(resolve => setTimeout(resolve, waitTime));
+                                return generateImage(retryCount + 1);
+                            } else {
+                                throw new Error('Rate limit exceeded. Please try again later.');
+                            }
+                        }
+
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
 
                         const blob = await response.blob();
-                        if (blob.size < 1000) {  // Check if the response is too small (likely an error)
+                        if (blob.size < 1000) {
                             throw new Error('Invalid image data received');
                         }
 
                         return URL.createObjectURL(blob);
                     } catch (error) {
-                        if (retryCount < 2) {  // Retry up to 2 times
+                        if (retryCount < 2 && error.message !== 'Rate limit exceeded. Please try again later.') {
                             console.log(`Retry attempt ${retryCount + 1}`);
-                            await new Promise(resolve => setTimeout(resolve, 2000));  // Wait 2s before retry
+                            await new Promise(resolve => setTimeout(resolve, 2000));
                             return generateImage(retryCount + 1);
                         }
                         throw error;
@@ -723,8 +750,8 @@
                     <div style="text-align: center; padding: 2rem;">
                         <p>Failed to generate image</p>
                         <p style="font-size: 0.8em; color: #666;">
-                            ${error.message === 'Request timeout' ? 
-                            'Request timed out. Please try again with a better connection.' : 
+                            ${error.message.includes('Rate limit') ? 
+                            'Server is busy. Please wait a few minutes and try again.' : 
                             'An error occurred during image generation.'}
                         </p>
                     </div>
@@ -737,6 +764,13 @@
             initializeScanner();
             
             document.getElementById('startButton').addEventListener('click', startScanning);
+            
+            // Add debug button listener for instant monster generation
+            document.getElementById('debugButton').addEventListener('click', async () => {
+                const testHash = Math.floor(Math.random() * 900000000 + 100000000).toString();
+                console.log('Generating test monster with hash:', testHash);
+                await generateMonster(testHash);
+            });
             
             document.getElementById('logoutButton').addEventListener('click', () => {
                 auth.signOut().then(() => {
