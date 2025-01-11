@@ -467,54 +467,41 @@
                     throw new Error('Monster type information not found');
                 }
 
-                // Core prompt components with new prefix
-                const monsterBasics = [
-                    `generate an appearance/avatar picture of a`,
-                    `fantasy creature character`,
-                    `${typeInfo.typeName.toLowerCase()} type monster`,
-                    typeInfo.description,
-                    `named ${monster.monsterName}`
-                ].filter(Boolean).join(', ');
+                // Core characteristics based on type and stats
+                const characteristics = [];
+                const typeTraits = {
+                    'Feral': 'wild beast-like creature with sharp features',
+                    'Fighter': 'muscular warrior-like beast with armored features',
+                    'Mage': 'mystical creature with ethereal features',
+                    'Ranged': 'swift creature with precision features',
+                    'Tank': 'heavily armored robust creature'
+                };
 
-                // Physical characteristics based on stats
-                const physicalTraits = [];
-                if (monster.HP > 15) physicalTraits.push('powerful body structure');
-                if (monster.AP > 8) physicalTraits.push('strong offensive features');
-                if (monster.Speed > 5) physicalTraits.push('agile form');
-                if (monster.level > 1) physicalTraits.push('enhanced appearance');
-
-                // Style and quality specifications
-                const styleModifiers = [
-                    'full body creature art',
-                    'clear monster design',
-                    'monster battle game character',
-                    'centered composition',
-                    'professional character art',
-                    'single monster creature',
-                    'full view',
-                    'neutral pose',
-                    'charcer design',
-                    'fantasy art style',
-                    'bold lines', 'vibrant colors', 'detailed shading'
+                characteristics.push(typeTraits[monster.type] || 'fantasy creature');
+                
+                // Add stat-based physical traits
+                if (monster.HP > 15) characteristics.push('massive, sturdy build');
+                if (monster.AP > 8) characteristics.push('visible powerful features');
+                if (monster.Speed > 5) characteristics.push('sleek, aerodynamic form');
+                
+                // Main prompt structure
+                const mainPrompt = [
+                    "a high quality professional digital art of a",
+                    "single fantasy creature character design",
+                    characteristics.join(', '),
+                    `themed after ${monster.monsterName.toLowerCase()}`,
+                    "full body shot",
+                    "centered composition",
+                    "on a simple background",
+                    "highly detailed",
+                    "looking powerful and dynamic"
                 ].join(', ');
 
-                // Combine all elements
-                const finalPrompt = [
-                    monsterBasics,
-                    physicalTraits.join(', '),
-                    styleModifiers
-                ].filter(part => part).join(', ');
-
-                console.log('Generated prompt with type info:', {
-                    typeName: typeInfo.typeName,
-                    description: typeInfo.description,
-                    finalPrompt: finalPrompt
-                });
-
-                return finalPrompt;
+                console.log('Generated prompt:', mainPrompt);
+                return mainPrompt;
             } catch (error) {
                 console.error('Error in generateMonsterPrompt:', error);
-                return `fantasy creature character, full body monster design, ${monster.monsterName}`;
+                return `high quality digital art of a fantasy creature character, full body, centered`;
             }
         }
 
@@ -661,8 +648,22 @@
                         setTimeout(() => reject(new Error('Request timeout')), 30000)
                     );
 
+                    // Updated model list with correct paths
+                    const models = [
+                        'Lykon/DreamShaper',
+                        'prompthero/openjourney-v4',
+                        'runwayml/stable-diffusion-v1-5',
+                        'stabilityai/stable-diffusion-2-1'
+                    ];
+
+                    const modelIndex = retryCount % models.length;
+                    const currentModel = models[modelIndex];
+
                     try {
-                        const fetchPromise = fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+                        console.log(`Attempting to use model: ${currentModel}`);
+                        updateDebugMessage(`Trying model: ${currentModel}...`);
+
+                        const fetchPromise = fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
                             method: 'POST',
                             headers: {
                                 'Authorization': 'Bearer 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',
@@ -672,46 +673,44 @@
                                 inputs: prompt,
                                 negative_prompt: [
                                     'text', 'watermark', 'logo', 'blur', 'distortion',
-                                    'low quality', 'disfigured', 'human features',
-                                    'abstract', 'multiple creatures', 'cropped', 'close-up',
-                                    'duplicate', 'multiple heads', 'extra limbs', 'deformed',
-                                    'bad anatomy', 'poorly drawn', 'partial body',
-                                    'grayscale', 'black and white', 'photo', 'photograph',
-                                    'rainbow colors', 'psychedelic', 'multicolored pattern',
-                                    'kaleidoscope', 'abstract pattern', 'fractals',
-                                    'multiple images', 'split image', 'collage',
-                                    'nsfw', 'nude', 'human', 'person', 'face',
-                                    '3d render', 'cartoon', 'anime', 'sketch', 'painting',
-                                    'artistic', 'surreal', 'geometric shapes'
+                                    'low quality', 'disfigured', 'human', 'person',
+                                    'abstract', 'multiple creatures', 'cropped',
+                                    'duplicate', 'multiple heads', 'extra limbs',
+                                    'bad anatomy', 'blurry', 'noisy',
+                                    'mutated', 'cross section', 'mutant',
+                                    'gore', 'nudity', 'nsfw',
+                                    'gradient', 'abstract pattern', 'rainbow',
+                                    'psychedelic', 'multicolored pattern'
                                 ].join(', '),
                                 parameters: {
-                                    width: 280,
-                                    height: 280,
-                                    num_inference_steps: 50,  // Increased from 35
-                                    guidance_scale: 12,      // Increased from 8.5
+                                    width: 512,
+                                    height: 512,
+                                    num_inference_steps: 30,
+                                    guidance_scale: 7.5,
                                     seed: Math.floor(Math.random() * 2147483647),
                                     scheduler: "DPMSolverMultistep",
-                                    num_images_per_prompt: 1
+                                    num_images_per_prompt: 1,
+                                    safety_checker: true
                                 }
                             })
                         });
 
                         const response = await Promise.race([fetchPromise, timeout]);
                         
-                        if (response.status === 429) {
-                            // Rate limit hit - wait longer between retries
-                            if (retryCount < 3) {
-                                console.log(`Rate limit hit. Waiting before retry ${retryCount + 1}...`);
-                                const waitTime = (retryCount + 1) * 5000; // Increase wait time with each retry
-                                await new Promise(resolve => setTimeout(resolve, waitTime));
-                                return generateImage(retryCount + 1);
-                            } else {
-                                throw new Error('Rate limit exceeded. Please try again later.');
-                            }
+                        if (response.status === 404) {
+                            console.log(`Model ${currentModel} not found, trying next model...`);
+                            return generateImage(retryCount + 1);
                         }
 
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                        if (response.status === 503 || response.status === 429) {
+                            // Service unavailable or rate limit - try next model
+                            if (retryCount < models.length * 2) { // Try each model up to twice
+                                console.log(`Model ${currentModel} unavailable, trying next model...`);
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                return generateImage(retryCount + 1);
+                            } else {
+                                throw new Error('All models unavailable. Please try again later.');
+                            }
                         }
 
                         const blob = await response.blob();
@@ -721,7 +720,7 @@
 
                         return URL.createObjectURL(blob);
                     } catch (error) {
-                        if (retryCount < 2 && error.message !== 'Rate limit exceeded. Please try again later.') {
+                        if (retryCount < 5) { // Increased retry limit
                             console.log(`Retry attempt ${retryCount + 1}`);
                             await new Promise(resolve => setTimeout(resolve, 2000));
                             return generateImage(retryCount + 1);
