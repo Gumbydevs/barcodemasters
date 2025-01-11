@@ -82,11 +82,23 @@
         }
 
         .monster-image {
+            width: 280px;  /* Fixed width */
+            height: 280px; /* Fixed height - making it square */
             background: rgba(0, 0, 0, 0.2);
-            padding: 2rem;
-            border-radius: 4px;
+            border-radius: 8px;
             text-align: center;
-            margin: 1rem 0;
+            margin: 1rem auto; /* Center the container */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .monster-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Changed from cover to contain */
+            border-radius: 8px;
         }
 
         .monster-stats {
@@ -612,8 +624,8 @@
                                 inputs: prompt,
                                 negative_prompt: 'text, watermark, logo, blur, distortion, low quality, disfigured, human features, cartoon style',
                                 parameters: {
-                                    width: 512,
-                                    height: 512,
+                                    width: 280,  // Changed from 512
+                                    height: 280, // Changed from 512
                                     num_inference_steps: 30,  // Reduced steps for faster generation
                                     guidance_scale: 7.5
                                 }
@@ -647,7 +659,7 @@
                 const monsterImage = monsterResult.querySelector('.monster-image');
                 monsterImage.innerHTML = `
                     <img src="${imageUrl}" alt="${monster.monsterName}" 
-                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; display: block;">
+                        style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
                 `;
 
                 const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
