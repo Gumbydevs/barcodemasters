@@ -44,7 +44,7 @@
 <div class="container">
     <h1>Barcode Masters Change Log</h1>
     
-    <h2>Changelog for January 10, 2024</h2>
+    <h2>Changelog for January 10, 2024 v2</h2>
     <h3>Added</h3>
     <ul>
         <li><strong>Monster Card Visual Enhancements:</strong>
@@ -82,6 +82,49 @@
         </li>
         <li><strong>Monster Stat Training Progress Persistence:</strong> Stat training state is stored in localStorage, allowing monster training progress to persist across sessions. The stat training resumes automatically after page reloads, navigation, or even after logging out.</li>
         <li><strong>Improved Monster Training UI Flow:</strong> The stat training progress bar and timer now display the dynamically calculated training duration. Stat training time is updated in real-time, and the UI is properly restored when returning to the page during ongoing monster training.</li>
+        <li><strong>Monster Generation Balancing:</strong>
+            <ul>
+                <li>Base Stats Adjustments:
+                    <ul>
+                        <li>Lowered base HP range from 5-50 to 3-20</li>
+                        <li>Lowered base AP range from 1-30 to 1-12</li>
+                        <li>Lowered base Speed range from 1-20 to 1-8</li>
+                    </ul>
+                </li>
+                <li>Level-Up Stat Multipliers:
+                    <ul>
+                        <li>Reduced stat multipliers from 30% to:
+                            <ul>
+                                <li>20% for HP</li>
+                                <li>15% for AP</li>
+                                <li>10% for Speed</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>DNA Extractor - AI Image Generation:</strong>
+            <ul>
+                <li>Integrated Hugging Face's Stable Diffusion API (stable-diffusion-2-1 model)</li>
+                <li>Implemented automatic image generation post barcode/QR scan</li>
+                <li>Added dynamic prompt generation based on:
+                    <ul>
+                        <li>Monster attributes and type descriptions</li>
+                        <li>Stats influence on appearance</li>
+                        <li>Special effects for higher-level monsters</li>
+                    </ul>
+                </li>
+                <li>Technical Improvements:
+                    <ul>
+                        <li>Firebase storage integration for generated images</li>
+                        <li>30-second timeout with 2 retry attempts</li>
+                        <li>Robust error handling and user feedback</li>
+                        <li>Loading state indicators during generation</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
     </ul>
 
     <h3>Updated</h3>
@@ -144,6 +187,7 @@
     <ul>
         <li><strong>Monster Stat Training Time Randomization:</strong> The ±15% random variation applied to stat training times for monster stats 0-5 and 5-10 may lead to slightly inconsistent training times, though this variation helps simulate more realistic training scenarios.</li>
         <li><strong>Cross-Device Training Persistence:</strong> Currently, monster training progress is stored in localStorage, which means training sessions cannot persist across multiple devices. This will be addressed in a future update by moving to database storage for full cross-device persistence.</li>
+        <li><strong>AI Image Generation:</strong> Initial image generation may take up to 30 seconds. Caching and optimization improvements are planned for future updates.</li>
     </ul>
 
     <h3>UI Improvements</h3>
