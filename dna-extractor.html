@@ -217,13 +217,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
             projectId: "barcodemasters-b4b9b",
-            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            storageBucket: "barcodemasters-b4b9b.appspot.com",
             messagingSenderId: "827677074735",
             appId: "1:827677074735:web:3bace3d02034348bc82dda",
             measurementId: "G-14YTBBLTPZ"
@@ -231,13 +232,14 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         // Make db available globally
         window.db = db;
 
-        // Constants
+        // Constants are supposed to be pulling from the database check this !
         const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
         const BASE_STAT_RANGES = {
             HP: { min: 3, max: 20 },    // Changed from {min: 5, max: 50}
@@ -653,98 +655,108 @@
 
                 // Rest of the generation code
                 const generateImage = async (retryCount = 0) => {
-                    const timeout = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Request timeout')), 30000)
-                    );
+    const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 30000)
+    );
 
-                    const models = [
-                        'Lykon/DreamShaper',
-                        'prompthero/openjourney-v4',
-                        'runwayml/stable-diffusion-v1-5',
-                        'stabilityai/stable-diffusion-2-1'
-                    ];
+    const models = [
+        'Lykon/DreamShaper',
+        'prompthero/openjourney-v4',
+        'runwayml/stable-diffusion-v1-5',
+        'stabilityai/stable-diffusion-2-1'
+    ];
 
-                    const modelIndex = retryCount % models.length;
-                    const currentModel = models[modelIndex];
+    const modelIndex = retryCount % models.length;
+    const currentModel = models[modelIndex];
+    const delay = Math.min(1000 * Math.pow(2, Math.floor(retryCount / models.length)), 32000);
 
-                    // Calculate delay with exponential backoff
-                    const delay = Math.min(1000 * Math.pow(2, Math.floor(retryCount / models.length)), 32000);
+    try {
+        if (retryCount > 0) {
+            console.log(`Waiting ${delay/1000} seconds before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
 
-                    try {
-                        if (retryCount > 0) {
-                            console.log(`Waiting ${delay/1000} seconds before retry...`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                        }
+        console.log(`Attempting to use model: ${currentModel}`);
+        updateDebugMessage(`Trying model: ${currentModel}...`);
 
-                        console.log(`Attempting to use model: ${currentModel}`);
-                        updateDebugMessage(`Trying model: ${currentModel}...`);
+        const fetchPromise = fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer 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',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inputs: prompt,
+                negative_prompt: [
+                    'text', 'watermark', 'logo', 'blur', 'distortion',
+                    'low quality', 'disfigured', 'human', 'person',
+                    'abstract', 'multiple creatures', 'cropped',
+                    'duplicate', 'multiple heads', 'extra limbs',
+                    'bad anatomy', 'blurry', 'noisy',
+                    'mutated', 'cross section', 'mutant',
+                    'gore', 'nudity', 'nsfw',
+                    'gradient', 'abstract pattern', 'rainbow',
+                    'psychedelic', 'multicolored pattern'
+                ].join(', '),
+                parameters: {
+                    width: 512,
+                    height: 512,
+                    num_inference_steps: 30,
+                    guidance_scale: 7.5,
+                    seed: Math.floor(Math.random() * 2147483647),
+                    scheduler: "DPMSolverMultistep",
+                    num_images_per_prompt: 1,
+                    safety_checker: true
+                }
+            })
+        });
 
-                        const fetchPromise = fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': 'Bearer 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',
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                inputs: prompt,
-                                negative_prompt: [
-                                    'text', 'watermark', 'logo', 'blur', 'distortion',
-                                    'low quality', 'disfigured', 'human', 'person',
-                                    'abstract', 'multiple creatures', 'cropped',
-                                    'duplicate', 'multiple heads', 'extra limbs',
-                                    'bad anatomy', 'blurry', 'noisy',
-                                    'mutated', 'cross section', 'mutant',
-                                    'gore', 'nudity', 'nsfw',
-                                    'gradient', 'abstract pattern', 'rainbow',
-                                    'psychedelic', 'multicolored pattern'
-                                ].join(', '),
-                                parameters: {
-                                    width: 512,
-                                    height: 512,
-                                    num_inference_steps: 30,
-                                    guidance_scale: 7.5,
-                                    seed: Math.floor(Math.random() * 2147483647),
-                                    scheduler: "DPMSolverMultistep",
-                                    num_images_per_prompt: 1,
-                                    safety_checker: true
-                                }
-                            })
-                        });
+        const response = await Promise.race([fetchPromise, timeout]);
+        
+        if (response.status === 404) {
+            console.log(`Model ${currentModel} not found, trying next model...`);
+            return generateImage(retryCount + 1);
+        }
 
-                        const response = await Promise.race([fetchPromise, timeout]);
-                        
-                        if (response.status === 404) {
-                            console.log(`Model ${currentModel} not found, trying next model...`);
-                            return generateImage(retryCount + 1);
-                        }
+        if (response.status === 429) {
+            console.log(`Rate limit hit for ${currentModel}, backing off...`);
+            if (retryCount < models.length * 4) {
+                return generateImage(retryCount + 1);
+            }
+            throw new Error('Rate limit exceeded. Please try again in a few minutes.');
+        }
 
-                        if (response.status === 429) {
-                            console.log(`Rate limit hit for ${currentModel}, backing off...`);
-                            if (retryCount < models.length * 4) { // Increased retry attempts
-                                return generateImage(retryCount + 1);
-                            }
-                            throw new Error('Rate limit exceeded. Please try again in a few minutes.');
-                        }
+        if (response.status === 503) {
+            console.log(`Service unavailable for ${currentModel}, trying next...`);
+            return generateImage(retryCount + 1);
+        }
 
-                        if (response.status === 503) {
-                            console.log(`Service unavailable for ${currentModel}, trying next...`);
-                            return generateImage(retryCount + 1);
-                        }
+        const blob = await response.blob();
+        if (blob.size < 1000) {
+            throw new Error('Invalid image data received');
+        }
 
-                        const blob = await response.blob();
-                        if (blob.size < 1000) {
-                            throw new Error('Invalid image data received');
-                        }
+        // Store in Firebase Storage
+        const monsterId = `${monster.hash}-${monster.ownerId}`;
+        const storageRef = ref(storage, `monster-images/${monsterId}`);
+        
+        // Upload the blob
+        await uploadBytes(storageRef, blob);
+        
+        // Get the permanent URL
+        const imageUrl = await getDownloadURL(storageRef);
+        const monsterRef = doc(db, 'monsters', monsterId);
+        await updateDoc(monsterRef, { imageUrl: imageUrl });
+        return imageUrl;
 
-                        return URL.createObjectURL(blob);
-                    } catch (error) {
-                        if (retryCount < models.length * 4) { // Increased retry limit
-                            console.log(`Retry attempt ${retryCount + 1}`);
-                            return generateImage(retryCount + 1);
-                        }
-                        throw new Error('All models unavailable. Please try again in a few minutes.');
-                    }
-                };
+    } catch (error) {
+        if (retryCount < models.length * 4) {
+            console.log(`Retry attempt ${retryCount + 1}`);
+            return generateImage(retryCount + 1);
+        }
+        throw new Error('All models unavailable. Please try again in a few minutes.');
+    }
+};
 
                 const imageUrl = await generateImage();
                 
@@ -754,10 +766,7 @@
                         style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
                 `;
 
-                const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
-                await updateDoc(monsterRef, {
-                    imageUrl: imageUrl
-                });
+
 
             } catch (error) {
                 console.error('Error generating image:', error);
