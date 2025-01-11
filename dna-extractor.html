@@ -18,7 +18,6 @@
             position: static;
             bottom: 0;
             box-sizing: border-box;
-            
         }
         .dna-extractor-container {
             width: 100%;
@@ -194,10 +193,9 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.06</span></p><p>
-        &copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
+        <p>Version: <span id="versionNumber">1.0.07</span></p>
+        <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
     </footer>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -219,6 +217,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Make db available globally
+        window.db = db;
+
         // Constants
         const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
         const BASE_STAT_RANGES = {
@@ -226,15 +227,11 @@
             AP: { min: 1, max: 30 },
             Speed: { min: 1, max: 20 }
         };
-       
-        function addDebugMessage(message) {
-            const debugDiv = document.getElementById('debugMessage');
-            const timestamp = new Date().toLocaleTimeString();
-            debugDiv.innerHTML += `<br>[${timestamp}] ${message}`;
-            debugDiv.scrollTop = debugDiv.scrollHeight;
-        }
+
         let codeReader = null;
         let selectedDeviceId = null;
+
+        // Utility Functions
         function updateDebugMessage(message) {
             document.getElementById('debugMessage').textContent = message;
             console.log('Debug:', message);
@@ -251,151 +248,17 @@
             document.getElementById('errorMessage').style.display = 'none';
         }
 
-        async function initializeScanner() {
-    try {
-        updateDebugMessage('Initializing scanner...');
-        hideError();
-        document.getElementById('interactive').style.display = 'none';  // Ensure video is hidden initially
-        document.getElementById('startButton').style.display = 'block'; // Ensure button is visible
-
-        // First explicitly request camera permission
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
-            });
-            stream.getTracks().forEach(track => track.stop()); // Stop the stream after getting permission
-        } catch (permissionError) {
-            throw new Error('Camera permission denied. Please allow camera access and try again.');
+        function addDebugMessage(message) {
+            const debugDiv = document.getElementById('debugMessage');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `<br>[${timestamp}] ${message}`;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
         }
 
-        // Then get the devices
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-
-        if (videoDevices.length === 0) {
-            throw new Error('No camera found');
+        function resetUI() {
+            document.getElementById('startButton').style.display = 'block';
+            document.getElementById('interactive').style.display = 'none';
         }
-
-        // Prefer back camera
-        const backCamera = videoDevices.find(device => 
-            device.label.toLowerCase().includes('back') ||
-            device.label.toLowerCase().includes('rear')
-        );
-        
-        selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
-        
-        // Initialize code reader
-        if (codeReader) {
-            codeReader.reset();
-        }
-        codeReader = new ZXing.BrowserMultiFormatReader();
-        
-        updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
-    } catch (err) {
-        console.error('Scanner initialization error:', err);
-        showError(err.message);
-        resetUI(); // Ensure UI is reset on error
-    }
-}
-
-// Function to sanitize and extract numeric hash from barcode/QR code
-function sanitizeCodeInput(rawInput) {
-    try {
-        let numbers = '';
-        
-        // First, check if the input is a URL
-        try {
-            const url = new URL(rawInput);
-            // Extract numbers from the pathname or search params
-            numbers = url.pathname.replace(/[^0-9]/g, '') || 
-                     url.search.replace(/[^0-9]/g, '') ||
-                     url.host.replace(/[^0-9]/g, '');
-        } catch (e) {
-            // Not a URL, extract numbers directly
-            numbers = rawInput.replace(/[^0-9]/g, '');
-        }
-
-        // Generate a more random-looking hash
-        let hash = '';
-        const input = numbers || rawInput;
-        let total = 1;
-
-        // Use a better hashing algorithm
-        for (let i = 0; i < input.length; i++) {
-            total = (total * 31 + input.charCodeAt(i)) >>> 0;
-        }
-
-        // Ensure first digit isn't 0
-        const firstDigit = (total % 9) + 1;
-        hash = firstDigit.toString();
-
-        // Generate remaining 8 digits using the hash
-        while (hash.length < 9) {
-            total = (total * 31) >>> 0;
-            hash += (total % 10).toString();
-        }
-
-        return hash;
-    } catch (error) {
-        console.error('Error sanitizing code input:', error);
-        // Fallback: create a non-zero 9-digit hash
-        const timestamp = Date.now().toString();
-        return ('1' + timestamp).slice(-9);
-    }
-}
-
-async function startScanning() {
-    const videoElement = document.getElementById('interactive');
-    
-    try {
-        hideError();
-        document.getElementById('startButton').style.display = 'none';
-        videoElement.style.display = 'block';
-
-        updateDebugMessage('Starting scanner...');
-
-        await codeReader.decodeFromVideoDevice(
-            selectedDeviceId,
-            'video',
-            async (result, err) => {
-                if (result) {
-                    updateDebugMessage('Code found!');
-                    stopScanning();
-                    // Sanitize the code before generating monster
-                    const sanitizedHash = sanitizeCodeInput(result.text);
-                    await generateMonster(sanitizedHash);
-                }
-                if (err && !(err instanceof ZXing.NotFoundException)) {
-                    console.error('Scanning error:', err);
-                }
-            }
-        );
-
-        updateDebugMessage('Scanner active - point at a barcode or QR code');
-    } catch (err) {
-        console.error('Error starting scanner:', err);
-        showError('Scanning failed: ' + err.message);
-        resetUI();
-    }
-}
-
-function stopScanning() {
-    try {
-        if (codeReader) {
-            codeReader.reset();
-        }
-        resetUI(); // This calls your existing resetUI function
-    } catch (error) {
-        console.error('Error stopping scanner:', error);
-        resetUI(); // Ensure UI is reset even if there's an error
-    }
-}
-
-// Your existing resetUI function remains unchanged
-function resetUI() {
-    document.getElementById('startButton').style.display = 'block';
-    document.getElementById('interactive').style.display = 'none';
-}
 
         function generateHash(str) {
             let hash = 0;
@@ -411,7 +274,134 @@ function resetUI() {
             const x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         }
-        // Function to fetch monster types from Firestore
+        // Scanner Functions
+        async function initializeScanner() {
+            try {
+                updateDebugMessage('Initializing scanner...');
+                hideError();
+                document.getElementById('interactive').style.display = 'none';
+                document.getElementById('startButton').style.display = 'block';
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' } 
+                    });
+                    stream.getTracks().forEach(track => track.stop());
+                } catch (permissionError) {
+                    throw new Error('Camera permission denied. Please allow camera access and try again.');
+                }
+
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                if (videoDevices.length === 0) {
+                    throw new Error('No camera found');
+                }
+
+                const backCamera = videoDevices.find(device => 
+                    device.label.toLowerCase().includes('back') ||
+                    device.label.toLowerCase().includes('rear')
+                );
+                
+                selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
+                
+                if (codeReader) {
+                    codeReader.reset();
+                }
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                
+                updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
+            } catch (err) {
+                console.error('Scanner initialization error:', err);
+                showError(err.message);
+                resetUI();
+            }
+        }
+
+        function sanitizeCodeInput(rawInput) {
+            try {
+                let numbers = '';
+                
+                try {
+                    const url = new URL(rawInput);
+                    numbers = url.pathname.replace(/[^0-9]/g, '') || 
+                             url.search.replace(/[^0-9]/g, '') ||
+                             url.host.replace(/[^0-9]/g, '');
+                } catch (e) {
+                    numbers = rawInput.replace(/[^0-9]/g, '');
+                }
+
+                let hash = '';
+                const input = numbers || rawInput;
+                let total = 1;
+
+                for (let i = 0; i < input.length; i++) {
+                    total = (total * 31 + input.charCodeAt(i)) >>> 0;
+                }
+
+                const firstDigit = (total % 9) + 1;
+                hash = firstDigit.toString();
+
+                while (hash.length < 9) {
+                    total = (total * 31) >>> 0;
+                    hash += (total % 10).toString();
+                }
+
+                return hash;
+            } catch (error) {
+                console.error('Error sanitizing code input:', error);
+                const timestamp = Date.now().toString();
+                return ('1' + timestamp).slice(-9);
+            }
+        }
+
+        async function startScanning() {
+            const videoElement = document.getElementById('interactive');
+            
+            try {
+                hideError();
+                document.getElementById('startButton').style.display = 'none';
+                videoElement.style.display = 'block';
+
+                updateDebugMessage('Starting scanner...');
+
+                await codeReader.decodeFromVideoDevice(
+                    selectedDeviceId,
+                    'video',
+                    async (result, err) => {
+                        if (result) {
+                            updateDebugMessage('Code found!');
+                            stopScanning();
+                            const sanitizedHash = sanitizeCodeInput(result.text);
+                            await generateMonster(sanitizedHash);
+                        }
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error('Scanning error:', err);
+                        }
+                    }
+                );
+
+                updateDebugMessage('Scanner active - point at a barcode or QR code');
+            } catch (err) {
+                console.error('Error starting scanner:', err);
+                showError('Scanning failed: ' + err.message);
+                resetUI();
+            }
+        }
+
+        function stopScanning() {
+            try {
+                if (codeReader) {
+                    codeReader.reset();
+                }
+                resetUI();
+            } catch (error) {
+                console.error('Error stopping scanner:', error);
+                resetUI();
+            }
+        }
+
+        // Monster Generation Functions
         async function getMonsterTypes() {
             try {
                 const monsterTypesCollection = collection(db, 'monsterTypes');
@@ -419,7 +409,6 @@ function resetUI() {
                 
                 const types = [];
                 snapshot.forEach(doc => {
-                    // Get the data from each document
                     const data = doc.data();
                     types.push({
                         typeName: data.typeName,
@@ -432,13 +421,10 @@ function resetUI() {
                     });
                 });
 
-                // Add error checking
                 if (types.length === 0) {
-                    console.error('No monster types found in database');
                     throw new Error('No monster types found in database');
                 }
 
-                console.log('Fetched monster types:', types); // Debug log
                 return types;
             } catch (error) {
                 console.error('Error fetching monster types:', error);
@@ -447,152 +433,148 @@ function resetUI() {
         }
 
         function generateName(seed) {
-            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon', 'Astro', 'Hyper', 'Ultra', 'Mega', 'Omega', 'Alpha', 'Proto', 'Neo', 'Retro', 'Wild', 'Savage', 'Primal', 'Ancient', 'Dark', 'Light', 'Divine', 'Infernal', 'Celestial', 'Spectral', 'Phantom', 'Ghost', 'Spirit', 'Core', 'Vector', 'Binary', 'Mecha', 'Robo', 'Nano', 'Byte', 'Data', 'Digital', 'Virtual', 'Crypto', 'Steam', 'Spark', 'Surge', 'Pulse', 'Wave', 'Sonic', 'Echo', 'Bass', 'Flux', 'Flow', 'Stream', 'Ocean', 'Sky', 'Nova', 'Nebula', 'Comet', 'Meteor', 'Planet', 'World', 'Realm', 'Zone', 'Matrix', 'Cube', 'Prism', 'Metal', 'Leaf', 'Forest', 'Desert', 'Mountain', 'Cave', 'Castle', 'Tower', 'Temple', 'Nexus', 'Gate', 'Dawn', 'Dusk', 'Twilight', 'Rune', 'Glyph', 'Sigil', 'Mythic', 'Legend', 'Lunar', 'Solar', 'Astral', 'Ethereal', 'Arcane', 'Mystic', 'Ember', 'Blaze', 'Infinity', 'Zero', 'Apex', 'Prime', 'Elite', 'Royal', 'Feral', 'Rapid', 'Swift', 'Mighty', 'Supreme', 'Ultimate'];
-            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'beam', 'pulse', 'wave', 'quake', 'storm', 'fury', 'rage', 'wrath', 'might', 'power', 'force', 'surge', 'blast', 'burst', 'nova', 'flare', 'spark', 'shock', 'bolt', 'slash', 'cut', 'pierce', 'crush', 'smash', 'slam', 'crash', 'boom', 'break', 'shatter', 'splinter', 'rend', 'tear', 'shred', 'drill', 'sting', 'bite', 'guard', 'shield', 'ward', 'aegis', 'armor', 'shell', 'scale', 'hide', 'skin', 'form', 'shape', 'shift', 'phase', 'drift', 'flow', 'stream', 'tide', 'current', 'force', 'rush', 'dash', 'sprint', 'leap', 'bound', 'dive', 'soar', 'glide', 'float', 'rise', 'fall', 'crash', 'impact', 'strike', 'hit', 'shot', 'fire', 'blaze', 'flame', 'frost', 'ice', 'storm', 'tempest', 'gale', 'breeze', 'wind', 'air', 'earth', 'stone', 'rock', 'crystal', 'gem', 'jewel', 'core', 'heart', 'soul', 'spirit', 'mind', 'thought', 'dream', 'wish', 'hope', 'fate', 'destiny', 'doom', 'bane', 'curse', 'hex', 'spell', 'charm', 'rune', 'sigil', 'mark', 'sign', 'symbol', 'code', 'cipher', 'script', 'text', 'word', 'song', 'tune', 'melody', 'rhythm', 'beat', 'pulse'];
+            // Your existing prefixes and suffixes arrays...
+            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon'];
+            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'beam', 'pulse', 'wave', 'quake', 'storm', 'fury', 'rage', 'wrath', 'might', 'power', 'force'];
             
             const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
             const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
             
             return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
         }
-  
-        // Updated calculateStat function
-function calculateStat(statType, seed, statModifiers) {
-    try {
-        // Ensure we have valid inputs
-        if (!BASE_STAT_RANGES[statType]) {
-            console.error('Invalid stat type:', statType);
-            return 0;
+
+        function generateMonsterPrompt(monster, monsterTypes) {
+            const typeInfo = monsterTypes.find(t => t.typeName === monster.type);
+            const typeDescription = typeInfo ? typeInfo.description : '';
+            
+            const statModifiers = [];
+            if (monster.HP > 40) statModifiers.push('robust and powerful');
+            if (monster.AP > 25) statModifiers.push('fierce looking');
+            if (monster.Speed > 15) statModifiers.push('agile and sleek');
+            
+            const levelDetails = monster.level > 1 ? 'emanating strong power, enhanced appearance, ' : '';
+            
+            const basePrompt = `A ${monster.type.toLowerCase()} monster named ${monster.monsterName}, ${typeDescription}, ${statModifiers.join(', ')}, ${levelDetails}`;
+            
+            const styleModifiers = [
+                'high quality digital art',
+                'full body creature design',
+                'centered view',
+                'detailed fantasy game style',
+                'on simple background',
+                'professional game asset quality'
+            ].join(', ');
+
+            return `${basePrompt} ${styleModifiers}`;
         }
-        
-        const range = BASE_STAT_RANGES[statType];
-        
-        // Ensure modifier exists and is a number, default to 1 if not
-        const modifier = typeof statModifiers[statType] === 'number' ? statModifiers[statType] : 1;
-        
-        // Generate consistent random value based on seed
-        const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
-        
-        // Calculate base stat
-        const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
-        
-        // Apply modifier and small random variation
-        const modifiedStat = Math.round(baseStat * modifier);
-        
-        console.log(`Calculating ${statType}:`, {
-            baseStat,
-            modifier,
-            modifiedStat
-        });
-        
-        return modifiedStat;
-    } catch (error) {
-        console.error('Error in calculateStat:', error);
-        return BASE_STAT_RANGES[statType].min; // Return minimum as fallback
-    }
-}
-
-// Updated monster generation section
-async function generateMonster(hash) {
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            throw new Error('User not authenticated');
-        }
-
-        // Fetch monster types first
-        const monsterTypes = await getMonsterTypes();
-        console.log('Fetched monster types:', monsterTypes);
-
-        if (!monsterTypes || monsterTypes.length === 0) {
-            throw new Error('No monster types available');
-        }
-
-        let seed;
-        try {
-            // First generate a hash string
-            const hashStr = generateHash(hash);
-            // Convert to number, but use a fallback if parsing fails
-            seed = parseInt(hashStr, 16);
-            if (isNaN(seed)) {
-                console.warn('Hash parsing failed, using fallback seed generation');
-                seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        function calculateStat(statType, seed, statModifiers) {
+            try {
+                if (!BASE_STAT_RANGES[statType]) {
+                    console.error('Invalid stat type:', statType);
+                    return 0;
+                }
+                
+                const range = BASE_STAT_RANGES[statType];
+                const modifier = typeof statModifiers[statType] === 'number' ? statModifiers[statType] : 1;
+                const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
+                const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
+                const modifiedStat = Math.round(baseStat * modifier);
+                
+                return modifiedStat;
+            } catch (error) {
+                console.error('Error in calculateStat:', error);
+                return BASE_STAT_RANGES[statType].min;
             }
-            console.log('Generated seed:', seed);
-        } catch (error) {
-            console.error('Error generating seed:', error);
-            // Fallback to a simple hash
-            seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
         }
 
-        const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
-        const selectedType = monsterTypes[typeIndex];
+        async function generateMonster(hash) {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    throw new Error('User not authenticated');
+                }
 
-        console.log('Selected monster type:', selectedType);
+                const monsterTypes = await getMonsterTypes();
+                console.log('Fetched monster types:', monsterTypes);
 
-        if (!selectedType.statModifiers) {
-            throw new Error('Invalid monster type: missing stat modifiers');
+                if (!monsterTypes || monsterTypes.length === 0) {
+                    throw new Error('No monster types available');
+                }
+
+                let seed;
+                try {
+                    const hashStr = generateHash(hash);
+                    seed = parseInt(hashStr, 16);
+                    if (isNaN(seed)) {
+                        console.warn('Hash parsing failed, using fallback seed generation');
+                        seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                    }
+                } catch (error) {
+                    console.error('Error generating seed:', error);
+                    seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                }
+
+                const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
+                const selectedType = monsterTypes[typeIndex];
+
+                if (!selectedType.statModifiers) {
+                    throw new Error('Invalid monster type: missing stat modifiers');
+                }
+
+                const level = seededRandom(seed) < 0.2 ? 2 : 1;
+                const monster = {
+                    hash,
+                    monsterName: generateName(seed),
+                    type: selectedType.typeName,
+                    level,
+                    HP: calculateStat('HP', seed, selectedType.statModifiers),
+                    AP: calculateStat('AP', seed, selectedType.statModifiers),
+                    Speed: calculateStat('Speed', seed, selectedType.statModifiers),
+                    experience: 0,
+                    ownerId: user.uid,
+                    dateCreated: new Date().toISOString(),
+                    typeInfo: selectedType
+                };
+
+                if (level > 1) {
+                    monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.3));
+                    monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.3));
+                    monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.3));
+                }
+
+                const monsterInstanceId = `${hash}-${user.uid}`;
+                const monsterRef = doc(db, 'monsters', monsterInstanceId);
+                await setDoc(monsterRef, monster);
+
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, {
+                    usedHash: arrayUnion(hash)
+                });
+
+                displayMonster(monster);
+                updateDebugMessage('Monster generated successfully!');
+                return monster;
+            } catch (error) {
+                console.error('Error generating monster:', error);
+                showError(error.message || 'Failed to generate monster');
+                return null;
+            }
         }
 
-        // Generate monster with modifiers
-        const level = seededRandom(seed) < 0.2 ? 2 : 1;
-        const monster = {
-            hash,
-            monsterName: generateName(seed),
-            type: selectedType.typeName,
-            level,
-            HP: calculateStat('HP', seed, selectedType.statModifiers),
-            AP: calculateStat('AP', seed, selectedType.statModifiers),
-            Speed: calculateStat('Speed', seed, selectedType.statModifiers),
-            experience: 0,
-            ownerId: user.uid,
-            dateCreated: new Date().toISOString()
-        };
-
-        // Apply level multiplier after base stats are calculated
-        if (level > 1) {
-            monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.3));
-            monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.3));
-            monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.3));
-        }
-
-        console.log('Generated monster:', monster);
-
-        // Save to database
-        const monsterInstanceId = `${hash}-${user.uid}`;
-        const monsterRef = doc(db, 'monsters', monsterInstanceId);
-        await setDoc(monsterRef, monster);
-
-        // Update used hashes
-        const userRef = doc(db, 'users', user.uid);
-        await updateDoc(userRef, {
-            usedHash: arrayUnion(hash)
-        });
-
-        displayMonster(monster);
-        updateDebugMessage('Monster generated successfully!');
-        return monster;
-    } catch (error) {
-        console.error('Error generating monster:', error);
-        showError(error.message || 'Failed to generate monster');
-        return null;
-    }
-}
-
-        function displayMonster(monster) {
+        async function displayMonster(monster) {
             console.log('Displaying monster:', monster);
             const monsterResult = document.getElementById('monsterResult');
             if (!monsterResult) {
                 console.error('Monster result element not found!');
                 return;
             }
-            
+
             monsterResult.style.display = 'block';
             monsterResult.innerHTML = `
                 <div class="monster-card">
-                    <h2>${monster.monsterName}</h2>
+                    <h2 style="text-align: center; margin-bottom: 1rem;">${monster.monsterName}</h2>
                     <div class="monster-image">
-                        <p>Monster Image Placeholder</p>
+                        <div style="text-align: center;">Generating monster image...</div>
                     </div>
                     <div class="monster-stats">
                         <p>Level: ${monster.level}</p>
@@ -604,6 +586,54 @@ async function generateMonster(hash) {
                     </div>
                 </div>
             `;
+
+            try {
+                const prompt = generateMonsterPrompt(monster, [monster.typeInfo]);
+                console.log('Generated prompt:', prompt);
+
+                const response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer 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',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt,
+                        negative_prompt: 'text, watermark, logo, blur, distortion, low quality, disfigured, human features, cartoon style',
+                        parameters: {
+                            width: 512,  // Standard size that works well with the model
+                            height: 512  // Using square dimensions for consistency
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Image generation failed: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+
+                const monsterImage = monsterResult.querySelector('.monster-image');
+                monsterImage.innerHTML = `
+                    <img src="${imageUrl}" alt="${monster.monsterName}" 
+                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; display: block;">
+                `;
+
+                const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
+                await updateDoc(monsterRef, {
+                    imageUrl: imageUrl
+                });
+
+            } catch (error) {
+                console.error('Error generating image:', error);
+                const monsterImage = monsterResult.querySelector('.monster-image');
+                monsterImage.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        Failed to generate image
+                    </div>
+                `;
+            }
         }
 
         // Event Listeners
@@ -631,7 +661,7 @@ async function generateMonster(hash) {
         // Dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
         const savedTheme = localStorage.getItem("theme");
-        
+
         if (savedTheme === "dark") {
             document.body.classList.add("dark-mode");
         }

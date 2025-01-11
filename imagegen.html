@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monster Image Generator</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .image-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .image-container img {
+            max-width: 100%;
+            border: 1px solid #ccc;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            display: none;
+        }
+        .status-message.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monster Image Generator</h1>
+        
+        <div class="input-group">
+            <label for="prompt">Describe your monster:</label><br>
+            <textarea id="prompt" rows="4" cols="50"></textarea>
+        </div>
+
+        <div class="input-group">
+            <button id="generateBtn">Generate Monster</button>
+            <button id="saveBtn" disabled>Save to Firebase</button>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+
+        <div class="image-container">
+            <img id="generatedImage" style="display: none;">
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // Firebase configuration - replace with your config
+        const firebaseConfig = {
+            // Your Firebase config here
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
+
+        async function generateImage() {
+            const userPrompt = document.getElementById('prompt').value;
+            const generateBtn = document.getElementById('generateBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            function updateStatus(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.style.backgroundColor = isError ? '#ffebee' : '#f0f0f0';
+                statusMessage.classList.add('visible');
+            }
+
+            generateBtn.disabled = true;
+            updateStatus('Generating image...');
+
+            try {
+                let retries = 0;
+                const maxRetries = 10;
+                let response;
+                
+                while (retries < maxRetries) {
+                    response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer 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',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            inputs: userPrompt + ", high quality, detailed fantasy art style, game asset",
+                        })
+                    });
+
+                    if (response.status === 429) {
+                        updateStatus('Rate limit reached. Waiting 60 seconds...', true);
+                        await new Promise(resolve => setTimeout(resolve, 60000));
+                        retries++;
+                        continue;
+                    }
+
+                    if (response.status === 503) {
+                        const errorData = await response.json();
+                        const waitTime = Math.min(errorData.estimated_time || 5, 20);
+                        updateStatus('Model is loading, please wait...');
+                        await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+                        retries++;
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    // If we get here, we have a successful response
+                    break;
+                }
+
+                if (retries >= maxRetries) {
+                    throw new Error('Maximum retries reached. Please try again later.');
+                }
+
+                const blob = await response.blob();
+                if (blob.type.startsWith('image/')) {
+                    const imageUrl = URL.createObjectURL(blob);
+                    const img = document.getElementById('generatedImage');
+                    img.src = imageUrl;
+                    img.style.display = 'block';
+                    saveBtn.disabled = false;
+                    updateStatus('Image generated successfully!');
+                } else {
+                    throw new Error('Received invalid response from API');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                updateStatus(`Error: ${error.message}`, true);
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        async function saveToFirebase() {
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                const img = document.getElementById('generatedImage');
+                const response = await fetch(img.src);
+                const blob = await response.blob();
+                
+                // Create a unique filename
+                const filename = `monsters/${Date.now()}.png`;
+                const storageRef = ref(storage, filename);
+                
+                // Upload to Firebase Storage
+                await uploadBytes(storageRef, blob);
+                
+                // Get the download URL
+                const downloadURL = await getDownloadURL(storageRef);
+                console.log('Image saved:', downloadURL);
+                alert('Image saved successfully!');
+            } catch (error) {
+                console.error('Error saving to Firebase:', error);
+                alert('Error saving image. Please try again.');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save to Firebase';
+            }
+        }
+
+        // Add event listeners after DOM loads
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('generateBtn').addEventListener('click', generateImage);
+            document.getElementById('saveBtn').addEventListener('click', saveToFirebase);
+        });
+    </script>
+</body>
+</html>

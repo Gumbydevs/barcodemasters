@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
+    <title>Barcode Masters - DNA Extractor</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+    <style>
+        footer {
+            width: 100%;
+            padding: 1rem;
+            background: inherit;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            position: static;
+            bottom: 0;
+            box-sizing: border-box;
+            
+        }
+        .dna-extractor-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        #interactive.viewport {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        #interactive.viewport > canvas, #interactive.viewport > video {
+            max-width: 100%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-button {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem auto;
+            border: none;
+            display: block;
+        }
+
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .scan-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #statusMessages {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .monster-image {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            border-radius: 4px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .monster-stats p {
+            margin: 0;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .nav-button {
+            padding: 1rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .nav-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        #logoutButton:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+        }
+
+        body.dark-mode {
+            background: #121212;
+            color: white;
+        }
+
+        body.dark-mode .scan-button {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+
+        body.dark-mode .scan-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+    </style>
+</head>
+<body>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="dna-extractor-container">
+        <div class="logo-container">
+            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+        </div>
+
+        <h1>DNA Extractor</h1>
+        
+        <div id="statusMessages">
+            <p id="errorMessage" style="color: red; display: none;"></p>
+            <p id="debugMessage">Ready to scan...</p>
+        </div>
+                      
+        <div id="interactive" class="viewport" style="display: none;">
+            <video id="video" autoplay playsinline muted></video>
+        </div>
+
+        <button class="scan-button" id="startButton">Start Scanner</button>
+        <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">Not all codes will result in a successful scan. We are continuously working to add more code libraries to increase the number of scannable codes.</p>
+        <p style="text-align: center; font-size: 0.9rem; color: #555; margin-top: 0.5rem;">QR codes are more likely to scan right now, barcode scanning is still somewhat limited.</p>    
+        
+        <div class="navigation-grid">
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
+            <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
+            <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
+            <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>     
+            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
+            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
+            <button class="nav-button" onclick="location.href='help.html'">Help</button>
+            <button class="nav-button" id="logoutButton">Logout</button>
+        </div>
+
+        <div id="monsterResult" style="display: none;"></div>
+    </div>
+
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.06</span></p><p>
+        &copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Constants
+        const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
+        const BASE_STAT_RANGES = {
+            HP: { min: 5, max: 50 },
+            AP: { min: 1, max: 30 },
+            Speed: { min: 1, max: 20 }
+        };
+       
+        function addDebugMessage(message) {
+            const debugDiv = document.getElementById('debugMessage');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML += `<br>[${timestamp}] ${message}`;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+        let codeReader = null;
+        let selectedDeviceId = null;
+        function updateDebugMessage(message) {
+            document.getElementById('debugMessage').textContent = message;
+            console.log('Debug:', message);
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            console.error('Error:', message);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        async function initializeScanner() {
+    try {
+        updateDebugMessage('Initializing scanner...');
+        hideError();
+        document.getElementById('interactive').style.display = 'none';  // Ensure video is hidden initially
+        document.getElementById('startButton').style.display = 'block'; // Ensure button is visible
+
+        // First explicitly request camera permission
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } 
+            });
+            stream.getTracks().forEach(track => track.stop()); // Stop the stream after getting permission
+        } catch (permissionError) {
+            throw new Error('Camera permission denied. Please allow camera access and try again.');
+        }
+
+        // Then get the devices
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+        if (videoDevices.length === 0) {
+            throw new Error('No camera found');
+        }
+
+        // Prefer back camera
+        const backCamera = videoDevices.find(device => 
+            device.label.toLowerCase().includes('back') ||
+            device.label.toLowerCase().includes('rear')
+        );
+        
+        selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
+        
+        // Initialize code reader
+        if (codeReader) {
+            codeReader.reset();
+        }
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        
+        updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
+    } catch (err) {
+        console.error('Scanner initialization error:', err);
+        showError(err.message);
+        resetUI(); // Ensure UI is reset on error
+    }
+}
+
+// Function to sanitize and extract numeric hash from barcode/QR code
+function sanitizeCodeInput(rawInput) {
+    try {
+        let numbers = '';
+        
+        // First, check if the input is a URL
+        try {
+            const url = new URL(rawInput);
+            // Extract numbers from the pathname or search params
+            numbers = url.pathname.replace(/[^0-9]/g, '') || 
+                     url.search.replace(/[^0-9]/g, '') ||
+                     url.host.replace(/[^0-9]/g, '');
+        } catch (e) {
+            // Not a URL, extract numbers directly
+            numbers = rawInput.replace(/[^0-9]/g, '');
+        }
+
+        // Generate a more random-looking hash
+        let hash = '';
+        const input = numbers || rawInput;
+        let total = 1;
+
+        // Use a better hashing algorithm
+        for (let i = 0; i < input.length; i++) {
+            total = (total * 31 + input.charCodeAt(i)) >>> 0;
+        }
+
+        // Ensure first digit isn't 0
+        const firstDigit = (total % 9) + 1;
+        hash = firstDigit.toString();
+
+        // Generate remaining 8 digits using the hash
+        while (hash.length < 9) {
+            total = (total * 31) >>> 0;
+            hash += (total % 10).toString();
+        }
+
+        return hash;
+    } catch (error) {
+        console.error('Error sanitizing code input:', error);
+        // Fallback: create a non-zero 9-digit hash
+        const timestamp = Date.now().toString();
+        return ('1' + timestamp).slice(-9);
+    }
+}
+
+async function startScanning() {
+    const videoElement = document.getElementById('interactive');
+    
+    try {
+        hideError();
+        document.getElementById('startButton').style.display = 'none';
+        videoElement.style.display = 'block';
+
+        updateDebugMessage('Starting scanner...');
+
+        await codeReader.decodeFromVideoDevice(
+            selectedDeviceId,
+            'video',
+            async (result, err) => {
+                if (result) {
+                    updateDebugMessage('Code found!');
+                    stopScanning();
+                    // Sanitize the code before generating monster
+                    const sanitizedHash = sanitizeCodeInput(result.text);
+                    await generateMonster(sanitizedHash);
+                }
+                if (err && !(err instanceof ZXing.NotFoundException)) {
+                    console.error('Scanning error:', err);
+                }
+            }
+        );
+
+        updateDebugMessage('Scanner active - point at a barcode or QR code');
+    } catch (err) {
+        console.error('Error starting scanner:', err);
+        showError('Scanning failed: ' + err.message);
+        resetUI();
+    }
+}
+
+function stopScanning() {
+    try {
+        if (codeReader) {
+            codeReader.reset();
+        }
+        resetUI(); // This calls your existing resetUI function
+    } catch (error) {
+        console.error('Error stopping scanner:', error);
+        resetUI(); // Ensure UI is reset even if there's an error
+    }
+}
+
+// Your existing resetUI function remains unchanged
+function resetUI() {
+    document.getElementById('startButton').style.display = 'block';
+    document.getElementById('interactive').style.display = 'none';
+}
+
+        function generateHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString().padStart(9, '0').slice(0, 9);
+        }
+
+        function seededRandom(seed) {
+            const x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+        // Function to fetch monster types from Firestore
+        async function getMonsterTypes() {
+            try {
+                const monsterTypesCollection = collection(db, 'monsterTypes');
+                const snapshot = await getDocs(monsterTypesCollection);
+                
+                const types = [];
+                snapshot.forEach(doc => {
+                    // Get the data from each document
+                    const data = doc.data();
+                    types.push({
+                        typeName: data.typeName,
+                        description: data.description,
+                        statModifiers: {
+                            HP: data.statModifiers.HP || 1,
+                            AP: data.statModifiers.AP || 1,
+                            Speed: data.statModifiers.Speed || 1
+                        }
+                    });
+                });
+
+                // Add error checking
+                if (types.length === 0) {
+                    console.error('No monster types found in database');
+                    throw new Error('No monster types found in database');
+                }
+
+                console.log('Fetched monster types:', types); // Debug log
+                return types;
+            } catch (error) {
+                console.error('Error fetching monster types:', error);
+                throw error;
+            }
+        }
+
+        function generateName(seed) {
+            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon', 'Astro', 'Hyper', 'Ultra', 'Mega', 'Omega', 'Alpha', 'Proto', 'Neo', 'Retro', 'Wild', 'Savage', 'Primal', 'Ancient', 'Dark', 'Light', 'Divine', 'Infernal', 'Celestial', 'Spectral', 'Phantom', 'Ghost', 'Spirit', 'Core', 'Vector', 'Binary', 'Mecha', 'Robo', 'Nano', 'Byte', 'Data', 'Digital', 'Virtual', 'Crypto', 'Steam', 'Spark', 'Surge', 'Pulse', 'Wave', 'Sonic', 'Echo', 'Bass', 'Flux', 'Flow', 'Stream', 'Ocean', 'Sky', 'Nova', 'Nebula', 'Comet', 'Meteor', 'Planet', 'World', 'Realm', 'Zone', 'Matrix', 'Cube', 'Prism', 'Metal', 'Leaf', 'Forest', 'Desert', 'Mountain', 'Cave', 'Castle', 'Tower', 'Temple', 'Nexus', 'Gate', 'Dawn', 'Dusk', 'Twilight', 'Rune', 'Glyph', 'Sigil', 'Mythic', 'Legend', 'Lunar', 'Solar', 'Astral', 'Ethereal', 'Arcane', 'Mystic', 'Ember', 'Blaze', 'Infinity', 'Zero', 'Apex', 'Prime', 'Elite', 'Royal', 'Feral', 'Rapid', 'Swift', 'Mighty', 'Supreme', 'Ultimate'];
+            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'beam', 'pulse', 'wave', 'quake', 'storm', 'fury', 'rage', 'wrath', 'might', 'power', 'force', 'surge', 'blast', 'burst', 'nova', 'flare', 'spark', 'shock', 'bolt', 'slash', 'cut', 'pierce', 'crush', 'smash', 'slam', 'crash', 'boom', 'break', 'shatter', 'splinter', 'rend', 'tear', 'shred', 'drill', 'sting', 'bite', 'guard', 'shield', 'ward', 'aegis', 'armor', 'shell', 'scale', 'hide', 'skin', 'form', 'shape', 'shift', 'phase', 'drift', 'flow', 'stream', 'tide', 'current', 'force', 'rush', 'dash', 'sprint', 'leap', 'bound', 'dive', 'soar', 'glide', 'float', 'rise', 'fall', 'crash', 'impact', 'strike', 'hit', 'shot', 'fire', 'blaze', 'flame', 'frost', 'ice', 'storm', 'tempest', 'gale', 'breeze', 'wind', 'air', 'earth', 'stone', 'rock', 'crystal', 'gem', 'jewel', 'core', 'heart', 'soul', 'spirit', 'mind', 'thought', 'dream', 'wish', 'hope', 'fate', 'destiny', 'doom', 'bane', 'curse', 'hex', 'spell', 'charm', 'rune', 'sigil', 'mark', 'sign', 'symbol', 'code', 'cipher', 'script', 'text', 'word', 'song', 'tune', 'melody', 'rhythm', 'beat', 'pulse'];
+            
+            const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
+            const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
+            
+            return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
+        }
+  
+        // Updated calculateStat function
+function calculateStat(statType, seed, statModifiers) {
+    try {
+        // Ensure we have valid inputs
+        if (!BASE_STAT_RANGES[statType]) {
+            console.error('Invalid stat type:', statType);
+            return 0;
+        }
+        
+        const range = BASE_STAT_RANGES[statType];
+        
+        // Ensure modifier exists and is a number, default to 1 if not
+        const modifier = typeof statModifiers[statType] === 'number' ? statModifiers[statType] : 1;
+        
+        // Generate consistent random value based on seed
+        const randomValue = seededRandom(seed + Object.keys(BASE_STAT_RANGES).indexOf(statType));
+        
+        // Calculate base stat
+        const baseStat = Math.floor(randomValue * (range.max - range.min) + range.min);
+        
+        // Apply modifier and small random variation
+        const modifiedStat = Math.round(baseStat * modifier);
+        
+        console.log(`Calculating ${statType}:`, {
+            baseStat,
+            modifier,
+            modifiedStat
+        });
+        
+        return modifiedStat;
+    } catch (error) {
+        console.error('Error in calculateStat:', error);
+        return BASE_STAT_RANGES[statType].min; // Return minimum as fallback
+    }
+}
+
+// Updated monster generation section
+async function generateMonster(hash) {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('User not authenticated');
+        }
+
+        // Fetch monster types first
+        const monsterTypes = await getMonsterTypes();
+        console.log('Fetched monster types:', monsterTypes);
+
+        if (!monsterTypes || monsterTypes.length === 0) {
+            throw new Error('No monster types available');
+        }
+
+        let seed;
+        try {
+            // First generate a hash string
+            const hashStr = generateHash(hash);
+            // Convert to number, but use a fallback if parsing fails
+            seed = parseInt(hashStr, 16);
+            if (isNaN(seed)) {
+                console.warn('Hash parsing failed, using fallback seed generation');
+                seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            }
+            console.log('Generated seed:', seed);
+        } catch (error) {
+            console.error('Error generating seed:', error);
+            // Fallback to a simple hash
+            seed = Array.from(hash).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        }
+
+        const typeIndex = Math.floor(seededRandom(seed + 2) * monsterTypes.length);
+        const selectedType = monsterTypes[typeIndex];
+
+        console.log('Selected monster type:', selectedType);
+
+        if (!selectedType.statModifiers) {
+            throw new Error('Invalid monster type: missing stat modifiers');
+        }
+
+        // Generate monster with modifiers
+        const level = seededRandom(seed) < 0.2 ? 2 : 1;
+        const monster = {
+            hash,
+            monsterName: generateName(seed),
+            type: selectedType.typeName,
+            level,
+            HP: calculateStat('HP', seed, selectedType.statModifiers),
+            AP: calculateStat('AP', seed, selectedType.statModifiers),
+            Speed: calculateStat('Speed', seed, selectedType.statModifiers),
+            experience: 0,
+            ownerId: user.uid,
+            dateCreated: new Date().toISOString()
+        };
+
+        // Apply level multiplier after base stats are calculated
+        if (level > 1) {
+            monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.3));
+            monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.3));
+            monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.3));
+        }
+
+        console.log('Generated monster:', monster);
+
+        // Save to database
+        const monsterInstanceId = `${hash}-${user.uid}`;
+        const monsterRef = doc(db, 'monsters', monsterInstanceId);
+        await setDoc(monsterRef, monster);
+
+        // Update used hashes
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+            usedHash: arrayUnion(hash)
+        });
+
+        displayMonster(monster);
+        updateDebugMessage('Monster generated successfully!');
+        return monster;
+    } catch (error) {
+        console.error('Error generating monster:', error);
+        showError(error.message || 'Failed to generate monster');
+        return null;
+    }
+}
+
+        function displayMonster(monster) {
+            console.log('Displaying monster:', monster);
+            const monsterResult = document.getElementById('monsterResult');
+            if (!monsterResult) {
+                console.error('Monster result element not found!');
+                return;
+            }
+            
+            monsterResult.style.display = 'block';
+            monsterResult.innerHTML = `
+                <div class="monster-card">
+                    <h2>${monster.monsterName}</h2>
+                    <div class="monster-image">
+                        <p>Monster Image Placeholder</p>
+                    </div>
+                    <div class="monster-stats">
+                        <p>Level: ${monster.level}</p>
+                        <p>Type: ${monster.type}</p>
+                        <p>HP: ${monster.HP}</p>
+                        <p>AP: ${monster.AP}</p>
+                        <p>Speed: ${monster.Speed}</p>
+                        <p>Hash ID: ${monster.hash}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeScanner();
+            
+            document.getElementById('startButton').addEventListener('click', startScanning);
+            
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    window.location.href = 'index.html';
+                }).catch((error) => {
+                    showError('Logout failed: ' + error.message);
+                });
+            });
+        });
+
+        // Auth check
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+
+        darkModeToggle.addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        });
+    </script>
+</body>
+</html>
