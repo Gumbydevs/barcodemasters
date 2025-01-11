@@ -188,14 +188,17 @@
 
         .monster-preview {
             flex: 1;
-            min-width: 140px; /* Reduced minimum width */
-            max-width: 220px; /* Reduced maximum width */
-            padding: 0.75rem;
+            min-width: 200px; /* Consistent width for both sides */
+            max-width: 200px; /* Fixed maximum width */
+            padding: 1rem;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             backdrop-filter: blur(10px);
             margin: 0;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .monster-preview img {
@@ -234,7 +237,7 @@
             }
 
             .monster-preview {
-                min-width: 120px;
+                min-width: 140px;
                 padding: 0.5rem;
             }
 
@@ -277,6 +280,203 @@
             color: #a8b3cf;
             margin: 0.25rem 0;
         }
+
+        /* Add monster image container styles */
+        .monster-image-container {
+            width: 100%;
+            height: 280px;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(128, 128, 128, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        /* Update existing placeholder styles */
+        .monster-image-placeholder {
+            width: 100%;
+            height: 280px;
+            background: rgba(128, 128, 128, 0.1);
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-image-placeholder::before {
+            content: '👹';
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+
+        .monster-image-placeholder::after {
+            content: 'Monster appearance placeholder';
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Battle-specific image styles */
+        .monster-preview .monster-image-container,
+        .monster-preview .monster-image-placeholder {
+            height: 200px;
+            margin: 0.5rem 0;
+        }
+
+        .battle-container .monster .monster-image-container,
+        .battle-container .monster .monster-image-placeholder {
+            width: 150px;
+            height: 150px;
+            margin: 0 1rem 0 0;
+        }
+
+        @media (max-width: 480px) {
+            .monster-image-container,
+            .monster-image-placeholder {
+                height: 200px;
+            }
+            
+            .battle-container .monster .monster-image-container,
+            .battle-container .monster .monster-image-placeholder {
+                width: 100px;
+                height: 100px;
+            }
+        }
+
+        /* Update battle preview styles for consistency */
+        .monster-preview {
+            flex: 1;
+            min-width: 200px; /* Consistent width for both sides */
+            max-width: 200px; /* Fixed maximum width */
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            margin: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .monster-preview .monster-image-container,
+        .monster-preview .monster-image-placeholder {
+            width: 150px;  /* Fixed width */
+            height: 150px; /* Fixed height */
+            margin: 0.5rem auto;
+            border-radius: 8px;
+        }
+
+        .monster-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .versus-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem; /* Increased gap between monsters */
+            width: 100%;
+            padding: 1rem;
+        }
+
+        /* Update mobile styles for consistency */
+        @media (max-width: 480px) {
+            .monster-preview {
+                min-width: 140px;
+                max-width: 140px;
+                padding: 0.75rem;
+            }
+
+            .monster-preview .monster-image-container,
+            .monster-preview .monster-image-placeholder {
+                width: 120px;
+                height: 120px;
+            }
+
+            .versus-display {
+                gap: 1rem;
+            }
+        }
+
+        /* Updated monster preview container styles for perfect matching */
+        .monster-preview {
+            flex: 0 0 200px; /* Fixed width, no growing or shrinking */
+            width: 200px;
+            height: 300px; /* Fixed height for both containers */
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            margin: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* Evenly space content */
+        }
+
+        .monster-preview .monster-image-container,
+        .monster-preview .monster-image-placeholder {
+            width: 150px;
+            height: 150px;
+            margin: 0.5rem auto;
+            border-radius: 8px;
+        }
+
+        .versus-display {
+            display: flex;
+            align-items: center; /* Center vertically */
+            justify-content: center;
+            gap: 2rem;
+            padding: 1rem;
+            width: 100%;
+            max-width: 700px; /* Limit maximum width */
+            margin: 0 auto;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 480px) {
+            .monster-preview {
+                flex: 0 0 140px;
+                width: 140px;
+                height: 250px;
+                padding: 0.75rem;
+            }
+
+            .monster-preview .monster-image-container,
+            .monster-preview .monster-image-placeholder {
+                width: 120px;
+                height: 120px;
+            }
+
+            .versus-display {
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -291,14 +491,16 @@
         <div id="battlePreview" class="battle-preview">
             <div class="versus-display">
                 <div class="monster-preview">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3C/svg%3E" alt="Player Monster">
                     <h3 id="playerMonsterName">Your Monster</h3>
+                    <div id="playerMonsterImage">
+                        <!-- Image container will be dynamically inserted here -->
+                    </div>
                     <p id="playerMonsterStats">Loading stats...</p>
                 </div>
                 <div class="versus-text">VS</div>
                 <div class="monster-preview">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3C/svg%3E" alt="AI Monster">
                     <h3>AI Monster</h3>
+                    <div class="monster-image-placeholder"></div>
                     <p>Level 2 Robot</p>
                 </div>
             </div>
@@ -365,6 +567,12 @@
                         id: urlParams.get('id') // Make sure to include monster ID in URL params
                     });
                     setPlayerHealth(monsterData.HP);
+
+                    // Update preview image
+                    const previewImage = document.getElementById('playerMonsterImage');
+                    if (previewImage) {
+                        previewImage.innerHTML = getMonsterImageHTML(monsterData);
+                    }
                 }
             }, []);
 
@@ -594,12 +802,40 @@
                 }
             };
 
+            // Add this function to generate monster image HTML
+            const getMonsterImageHTML = (monster) => {
+                return monster?.imageUrl ? 
+                    `<div class="monster-image-container">
+                        <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
+                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
+                    </div>` : 
+                    `<div class="monster-image-placeholder"></div>`;
+            };
+
+            // Add helper function to generate image content
+            const MonsterImage = ({ monster }) => {
+                return monster?.imageUrl ? (
+                    <div className="monster-image-container">
+                        <img 
+                            src={monster.imageUrl} 
+                            alt={monster.monsterName}
+                            onError={(e) => {
+                                e.target.parentElement.innerHTML = '<div class="monster-image-placeholder"></div>';
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <div className="monster-image-placeholder"></div>
+                );
+            };
+
+            // Update the return JSX
             return (
                 <div className="battle-container">
                     <h2>{activeMonster.monsterName} vs {opponentMonster.monsterName}</h2>
                     
                     <div className="monster">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Player Monster" />
+                        <MonsterImage monster={playerMonster} />
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {activeMonster.type}</li>
@@ -623,7 +859,7 @@
                     </div>
 
                     <div className="monster">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3C/svg%3E" alt="Opponent Monster" />
+                        <MonsterImage monster={opponentMonster} />
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {opponentMonster.type}</li>
@@ -677,16 +913,31 @@
         }
 
         // Add function to update preview with monster data
-        function updatePreview() {
+        async function updatePreview() {
             const urlParams = new URLSearchParams(window.location.search);
             const monsterData = Object.fromEntries(urlParams.entries());
-            console.log('Received monster data:', monsterData); // Debug log
+            console.log('Updating preview with monster data:', monsterData);
 
             if (monsterData) {
                 // Update monster name
                 const nameElement = document.getElementById('playerMonsterName');
                 if (nameElement) {
                     nameElement.textContent = monsterData.monsterName || 'Your Monster';
+                }
+
+                // Update monster image with proper error handling
+                const imageContainer = document.getElementById('playerMonsterImage');
+                if (imageContainer && monsterData.imageUrl) {
+                    imageContainer.innerHTML = `
+                        <div class="monster-image-container">
+                            <img 
+                                src="${monsterData.imageUrl}" 
+                                alt="${monsterData.monsterName}"
+                                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'monster-image-placeholder\\'></div>';" 
+                            />
+                        </div>`;
+                } else {
+                    imageContainer.innerHTML = '<div class="monster-image-placeholder"></div>';
                 }
 
                 // Update monster stats
