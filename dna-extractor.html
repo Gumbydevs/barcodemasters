@@ -180,6 +180,21 @@
         <div id="statusMessages">
             <p id="errorMessage" style="color: red; display: none;"></p>
             <p id="debugMessage">Ready to scan...</p>
+            <div id="scanFeedback" style="display: none; margin-top: 0.5rem;">
+                <div class="scan-indicator" style="width: 100%; height: 4px; background: #ddd; border-radius: 2px;">
+                    <div class="scan-progress" style="width: 0%; height: 100%; background: #3498db; border-radius: 2px; transition: width 0.3s ease;"></div>
+                </div>
+                <p class="scan-status" style="font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">Scanning...</p>
+            </div>
+        </div>
+
+        <div id="scanGuide" style="text-align: center; margin: 1rem 0; display: none;">
+            <div style="border: 2px dashed #3498db; padding: 1rem; border-radius: 8px;">
+                <p style="margin: 0.5rem 0;">📱 Hold your device steady</p>
+                <p style="margin: 0.5rem 0;">🎯 Center the code in view</p>
+                <p style="margin: 0.5rem 0;">📏 Keep 6-8 inches away</p>
+                <p style="margin: 0.5rem 0;">💡 Ensure good lighting</p>
+            </div>
         </div>
                       
         <div id="interactive" class="viewport" style="display: none;">
@@ -376,31 +391,78 @@
 
         async function startScanning() {
             const videoElement = document.getElementById('interactive');
+            const scanFeedback = document.getElementById('scanFeedback');
+            const scanGuide = document.getElementById('scanGuide');
+            let scanAttempts = 0;
+            let lastScanTime = 0;
+            const SCAN_COOLDOWN = 1000; // 1 second between scan attempts
             
             try {
                 hideError();
                 document.getElementById('startButton').style.display = 'none';
                 videoElement.style.display = 'block';
+                scanFeedback.style.display = 'block';
+                scanGuide.style.display = 'block';
 
                 updateDebugMessage('Starting scanner...');
+
+                // Check if user has scanned any codes before
+                const user = auth.currentUser;
+                if (!user) throw new Error('User not authenticated');
+                
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                const usedHashes = userDoc.data()?.usedHash || [];
 
                 await codeReader.decodeFromVideoDevice(
                     selectedDeviceId,
                     'video',
                     async (result, err) => {
+                        const now = Date.now();
                         if (result) {
-                            updateDebugMessage('Code found!');
-                            stopScanning();
+                            if (now - lastScanTime < SCAN_COOLDOWN) {
+                                return; // Ignore rapid successive scans
+                            }
+                            lastScanTime = now;
+
                             const sanitizedHash = sanitizeCodeInput(result.text);
+                            
+                            // Check for duplicate hash
+                            if (usedHashes.includes(sanitizedHash)) {
+                                updateDebugMessage('This code has already been scanned!');
+                                showError('You have already extracted DNA from this code. Try a different one!');
+                                // Don't stop scanner, let them try another code
+                                return;
+                            }
+
+                            updateDebugMessage('Code found! Processing...');
+                            stopScanning();
                             await generateMonster(sanitizedHash);
                         }
                         if (err && !(err instanceof ZXing.NotFoundException)) {
-                            console.error('Scanning error:', err);
+                            scanAttempts++;
+                            const progress = Math.min((scanAttempts % 10) * 10, 100);
+                            document.querySelector('.scan-progress').style.width = `${progress}%`;
+                            
+                            if (err.message.includes('no MultiFormat Readers')) {
+                                showError('Scanner initialization failed. Please refresh the page.');
+                                stopScanning();
+                            }
+                        }
+
+                        // Update scanning feedback
+                        const scanStatus = document.querySelector('.scan-status');
+                        if (scanStatus) {
+                            if (scanAttempts % 20 === 0) {
+                                scanStatus.textContent = 'Still scanning... Try adjusting distance or angle';
+                            } else if (scanAttempts % 30 === 0) {
+                                scanStatus.textContent = 'Make sure the code is well-lit and centered';
+                            }
                         }
                     }
                 );
 
-                updateDebugMessage('Scanner active - point at a barcode or QR code');
+                updateDebugMessage('Scanner active - position a barcode or QR code in view');
             } catch (err) {
                 console.error('Error starting scanner:', err);
                 showError('Scanning failed: ' + err.message);
@@ -413,6 +475,8 @@
                 if (codeReader) {
                     codeReader.reset();
                 }
+                document.getElementById('scanFeedback').style.display = 'none';
+                document.getElementById('scanGuide').style.display = 'none';
                 resetUI();
             } catch (error) {
                 console.error('Error stopping scanner:', error);
@@ -475,7 +539,7 @@
                 
                 // Enhanced positive prompt structure with stronger framing rules
                 promptParts.push(
-                    "character card illustration",    
+                    "character illustration",    
                     "award winning digital art",
                     "masterpiece",
                     "clean image",
