@@ -237,7 +237,7 @@
 
         <h1>DNA Extractor</h1>
         
-        <button class="scan-button" id="startButton">Start Scanner</button>
+        <button class="scan-button" id="startButton">Start DNA Code Scan</button>
 
         <div id="statusMessages">
             <p id="errorMessage" style="color: red; display: none;"></p>
@@ -338,7 +338,10 @@
         // Utility Functions
         function updateDebugMessage(message) {
             document.getElementById('debugMessage').textContent = message;
-            console.log('Debug:', message);
+            // Only log technical messages to console
+            if (message.includes('Attempting model') || message.includes('error')) {
+                console.log('Debug:', message);
+            }
         }
 
         function showError(message) {
@@ -496,7 +499,7 @@
                 scanFeedback.style.display = 'block';
                 scanGuide.style.display = 'block';
 
-                updateDebugMessage('Starting scanner...');
+                updateDebugMessage('Activating DNA Scanner...');
 
                 // Check if user has scanned any codes before
                 const user = auth.currentUser;
@@ -527,7 +530,7 @@
                                 return;
                             }
 
-                            updateDebugMessage('Code found! Processing...');
+                            updateDebugMessage('Monster DNA Code detected! Beginning extraction...');
                             stopScanning();
                             await generateMonster(sanitizedHash);
                         }
@@ -545,11 +548,13 @@
                         // Update scanning feedback
                         const scanStatus = document.querySelector('.scan-status');
                         if (scanStatus) {
-                            if (scanAttempts % 20 === 0) {
-                                scanStatus.textContent = 'Still scanning... Try adjusting distance or angle';
-                            } else if (scanAttempts % 30 === 0) {
-                                scanStatus.textContent = 'Make sure the code is well-lit and centered';
-                            }
+                            const statusMessages = [
+                                'Searching for Monster DNA pattern...',
+                                'Analyzing genetic sequence...',
+                                'Scanning for viable DNA fragments...',
+                                'Aligning genetic markers...'
+                            ];
+                            scanStatus.textContent = statusMessages[Math.floor(scanAttempts/10) % statusMessages.length];
                         }
                     }
                 );
@@ -850,7 +855,7 @@
                 });
 
                 displayMonster(monster);
-                updateDebugMessage('Monster generated successfully!');
+                updateDebugMessage('Monster DNA sequence found! Beginning synthesis...');
                 return monster;
             } catch (error) {
                 console.error('Error generating monster:', error);
@@ -885,10 +890,10 @@
                         <h2 style="text-align: center; margin-bottom: 1rem;">${monster.monsterName}</h2>
                         <div class="monster-image">
                             <div style="text-align: center;">
-                                <p>Generating monster...</p>
-                                <p style="font-size: 0.8em;">This process may take up to a few minutes.</p>
-                                <p style="font-size: 0.8em;">Please remain on this page until the image appears</p>
-                                <p style="font-size: 0.8em;">If one generation fails, click the button to try again</p>
+                                <p>Synthesizing Monster DNA...</p>
+                                <p style="font-size: 0.8em;">Creating genetic structure...</p>
+                                <p style="font-size: 0.8em;">Stabilizing life form...</p>
+                                <p style="font-size: 0.8em;">Almost ready to materialize...</p>
                             </div>
                         </div>
                         <div class="monster-stats">
@@ -902,7 +907,7 @@
                     </div>
                 `;
 
-                updateDebugMessage('Generating image with custom prompt (check console for details)...');
+                updateDebugMessage('Materializing your monster...');
 
                 // Rest of the generation code
                 const generateImage = async (retryCount = 0) => {
@@ -1054,14 +1059,14 @@
                 const monsterImage = monsterResult.querySelector('.monster-image');
                 monsterImage.innerHTML = `
                     <div style="text-align: center; padding: 2rem;">
-                        <p>Failed to generate image</p>
+                        <p>DNA Synthesis Interrupted</p>
                         <p style="font-size: 0.8em; color: #666;">
                             ${error.message.includes('Rate limit') ? 
-                            'Server is busy. Please wait a few minutes and try again.' : 
-                            'An error occurred during image generation.'}
+                            'The DNA Synthesizer needs time to recharge. Please wait a moment...' : 
+                            'A DNA sequencing error occurred. Please try again.'}
                         </p>
                         <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
-                            Try Again
+                            Retry DNA Synthesis
                         </button>
                     </div>
                 `;
@@ -1072,11 +1077,10 @@
                     // Remove the retry button and show loading state
                     monsterImage.innerHTML = `
                         <div style="text-align: center;">
-                            <p>Regenerating monster image...</p>
-                            <p style="font-size: 0.8em;">This process may take up to a few minutes.</p>
-                            <p style="font-size: 0.8em;">We'll try multiple AI models to create the best possible image</p>
-                            <p style="font-size: 0.8em;">Please remain on this page until the image appears</p>
-                            <p style="font-size: 0.8em;">If one model fails, we'll automatically try others</p>
+                            <p>Recalibrating DNA Synthesis...</p>
+                            <p style="font-size: 0.8em;">Adjusting genetic parameters...</p>
+                            <p style="font-size: 0.8em;">Stabilizing molecular structure...</p>
+                            <p style="font-size: 0.8em;">Stand by for materialization...</p>
                         </div>
                     `;
 
@@ -1091,14 +1095,14 @@
                         // If retry fails, show the error message with retry button again
                         monsterImage.innerHTML = `
                             <div style="text-align: center; padding: 2rem;">
-                                <p>Failed to generate image</p>
+                                <p>DNA Synthesis Interrupted</p>
                                 <p style="font-size: 0.8em; color: #666;">
                                     ${retryError.message.includes('Rate limit') ? 
-                                    'Server is busy. Please wait a few minutes and try again.' : 
-                                    'An error occurred during image generation.'}
+                                    'The DNA Synthesizer needs time to recharge. Please wait a moment...' : 
+                                    'A DNA sequencing error occurred. Please try again.'}
                                 </p>
                                 <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
-                                    Try Again
+                                    Retry DNA Synthesis
                                 </button>
                             </div>
                         `;
