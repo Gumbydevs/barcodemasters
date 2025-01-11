@@ -655,108 +655,101 @@
 
                 // Rest of the generation code
                 const generateImage = async (retryCount = 0) => {
-    const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 30000)
-    );
+                    const timeout = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Request timeout')), 60000) // Increased timeout
+                    );
 
-    const models = [
-        'Lykon/DreamShaper',
-        'prompthero/openjourney-v4',
-        'runwayml/stable-diffusion-v1-5',
-        'stabilityai/stable-diffusion-2-1'
-    ];
+                    const models = [
+                        'Lykon/DreamShaper',
+                        'prompthero/openjourney-v4',
+                        'runwayml/stable-diffusion-v1-5',
+                        'stabilityai/stable-diffusion-2-1'
+                    ];
 
-    const modelIndex = retryCount % models.length;
-    const currentModel = models[modelIndex];
-    const delay = Math.min(1000 * Math.pow(2, Math.floor(retryCount / models.length)), 32000);
+                    const modelIndex = retryCount % models.length;
+                    const currentModel = models[modelIndex];
+                    
+                    // Exponential backoff with jitter
+                    const baseDelay = 2000; // Start with 2 seconds
+                    const maxDelay = 30000; // Max 30 seconds
+                    const jitter = Math.random() * 1000;
+                    const delay = Math.min(baseDelay * Math.pow(1.5, Math.floor(retryCount / 2)) + jitter, maxDelay);
 
-    try {
-        if (retryCount > 0) {
-            console.log(`Waiting ${delay/1000} seconds before retry...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
+                    try {
+                        if (retryCount > 0) {
+                            console.log(`Backing off for ${(delay/1000).toFixed(1)} seconds before retry ${retryCount}...`);
+                            updateDebugMessage(`Cooling down... Next attempt in ${(delay/1000).toFixed(1)} seconds`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
 
-        console.log(`Attempting to use model: ${currentModel}`);
-        updateDebugMessage(`Trying model: ${currentModel}...`);
+                        console.log(`Attempting model ${currentModel} (attempt ${retryCount + 1})`);
+                        updateDebugMessage(`Generating with ${currentModel.split('/')[1]}...`);
 
-        const fetchPromise = fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer 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',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inputs: prompt,
-                negative_prompt: [
-                    'text', 'watermark', 'logo', 'blur', 'distortion',
-                    'low quality', 'disfigured', 'human', 'person',
-                    'abstract', 'multiple creatures', 'cropped',
-                    'duplicate', 'multiple heads', 'extra limbs',
-                    'bad anatomy', 'blurry', 'noisy',
-                    'mutated', 'cross section', 'mutant',
-                    'gore', 'nudity', 'nsfw',
-                    'gradient', 'abstract pattern', 'rainbow',
-                    'psychedelic', 'multicolored pattern'
-                ].join(', '),
-                parameters: {
-                    width: 512,
-                    height: 512,
-                    num_inference_steps: 30,
-                    guidance_scale: 7.5,
-                    seed: Math.floor(Math.random() * 2147483647),
-                    scheduler: "DPMSolverMultistep",
-                    num_images_per_prompt: 1,
-                    safety_checker: true
-                }
-            })
-        });
+                        const response = await Promise.race([
+                            fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': 'Bearer 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',
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    inputs: prompt,
+                                    parameters: {
+                                        width: 512,
+                                        height: 512,
+                                        num_inference_steps: 25, // Reduced steps
+                                        guidance_scale: 7.0,
+                                        seed: Math.floor(Math.random() * 2147483647)
+                                    }
+                                })
+                            }),
+                            timeout
+                        ]);
 
-        const response = await Promise.race([fetchPromise, timeout]);
-        
-        if (response.status === 404) {
-            console.log(`Model ${currentModel} not found, trying next model...`);
-            return generateImage(retryCount + 1);
-        }
+                        // Handle various response status codes
+                        if (!response.ok) {
+                            const errorBody = await response.text();
+                            console.log(`Model response error: ${response.status} - ${errorBody}`);
 
-        if (response.status === 429) {
-            console.log(`Rate limit hit for ${currentModel}, backing off...`);
-            if (retryCount < models.length * 4) {
-                return generateImage(retryCount + 1);
-            }
-            throw new Error('Rate limit exceeded. Please try again in a few minutes.');
-        }
+                            if (response.status === 429 || response.status === 503) {
+                                if (retryCount < models.length * 3) { // Try each model up to 3 times
+                                    return generateImage(retryCount + 1);
+                                }
+                                throw new Error('All models are currently busy. Please try again later.');
+                            }
 
-        if (response.status === 503) {
-            console.log(`Service unavailable for ${currentModel}, trying next...`);
-            return generateImage(retryCount + 1);
-        }
+                            throw new Error(`Model error: ${response.status}`);
+                        }
 
-        const blob = await response.blob();
-        if (blob.size < 1000) {
-            throw new Error('Invalid image data received');
-        }
+                        const blob = await response.blob();
+                        if (blob.size < 1000) {
+                            throw new Error('Invalid image data received');
+                        }
 
-        // Store in Firebase Storage
-        const monsterId = `${monster.hash}-${monster.ownerId}`;
-        const storageRef = ref(storage, `monster-images/${monsterId}`);
-        
-        // Upload the blob
-        await uploadBytes(storageRef, blob);
-        
-        // Get the permanent URL
-        const imageUrl = await getDownloadURL(storageRef);
-        const monsterRef = doc(db, 'monsters', monsterId);
-        await updateDoc(monsterRef, { imageUrl: imageUrl });
-        return imageUrl;
+                        try {
+                            // Use the new upload function
+                            const imageUrl = await uploadMonsterImage(blob, monster);
+                            return imageUrl;
+                        } catch (storageError) {
+                            console.error('Storage error:', storageError);
+                            // Create temporary URL as fallback
+                            const tempUrl = URL.createObjectURL(blob);
+                            console.warn('Using temporary URL as fallback:', tempUrl);
+                            return tempUrl;
+                        }
 
-    } catch (error) {
-        if (retryCount < models.length * 4) {
-            console.log(`Retry attempt ${retryCount + 1}`);
-            return generateImage(retryCount + 1);
-        }
-        throw new Error('All models unavailable. Please try again in a few minutes.');
-    }
-};
+                    } catch (error) {
+                        console.error(`Attempt ${retryCount + 1} failed:`, error);
+                        
+                        if (retryCount < models.length * 3) {
+                            console.log('Retrying with next model...');
+                            return generateImage(retryCount + 1);
+                        }
+                        
+                        // If all retries failed, throw final error
+                        throw new Error('Unable to generate image after multiple attempts. Please try again later.');
+                    }
+                };
 
                 const imageUrl = await generateImage();
                 
@@ -781,6 +774,51 @@
                         </p>
                     </div>
                 `;
+            }
+        }
+
+        // Add this new function before generateImage
+        async function uploadMonsterImage(blob, monster) {
+            if (!blob || blob.size < 1000) {
+                throw new Error('Invalid image data received');
+            }
+
+            try {
+                // Create a unique ID for the monster image
+                const monsterId = `${monster.hash}-${monster.ownerId}`;
+                
+                // Create storage reference
+                const storageRef = ref(storage, `monster-images/${monsterId}.png`);
+                
+                // Create metadata
+                const metadata = {
+                    contentType: 'image/png',
+                    customMetadata: {
+                        monsterName: monster.monsterName,
+                        monsterType: monster.type,
+                        dateCreated: new Date().toISOString()
+                    }
+                };
+
+                // Upload the blob with metadata
+                const uploadResult = await uploadBytes(storageRef, blob, metadata);
+                console.log('Image uploaded successfully:', uploadResult);
+
+                // Get the download URL
+                const imageUrl = await getDownloadURL(storageRef);
+                console.log('Image URL generated:', imageUrl);
+
+                // Update monster document with image URL
+                const monsterRef = doc(db, 'monsters', monsterId);
+                await updateDoc(monsterRef, { 
+                    imageUrl: imageUrl,
+                    lastUpdated: new Date().toISOString()
+                });
+
+                return imageUrl;
+            } catch (error) {
+                console.error('Error in uploadMonsterImage:', error);
+                throw new Error(`Failed to upload image: ${error.message}`);
             }
         }
 
