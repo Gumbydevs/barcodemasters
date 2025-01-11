@@ -477,7 +477,7 @@
                 // Add type-specific description from database
                 characteristics.push(typeDescription);
 
-                // Add stat-based physical traits
+                // Add prompt modifyer based physical stat traits
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
                 if (monster.Speed > 5) characteristics.push('sleek, aerodynamic form');
@@ -629,8 +629,13 @@
                         <div class="monster-image">
                             <div style="text-align: center;">
                                 <p>Generating monster image...</p>
-                                <p style="font-size: 0.8em;">This may take up to 30 seconds</p>
-                                <p style="font-size: 0.8em; color: #666;">Check console for prompt details</p>
+                                <p style="font-size: 0.8em;">This process may take 15 seconds up to a couple minutes.</p>
+                                <p style="font-size: 0.8em;">We'll try multiple AI models to create the best possible image</p>
+                                <p style="font-size: 0.8em;">Please remain on this page until the image appears</p>
+                                <p style="font-size: 0.8em;">If one model fails, we'll automatically try others</p>
+                                <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.1); border-radius: 4px;">
+                                    <p style="font-size: 0.8em; color: #666;">Check console for prompt details</p>
+                                </div>
                             </div>
                         </div>
                         <div class="monster-stats">
