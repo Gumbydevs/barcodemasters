@@ -496,10 +496,15 @@
                     promptParts.push(typeInfo.description);
                 }
                 
-                // Add positive characteristics
+                // Add positive stat base characteristics
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
-                if (monster.Speed > 5) characteristics.push('sleek, aerodynamic form');
+                if (monster.Speed > 5) characteristics.push('sleek, nimble, aerodynamic form');
+
+                // Add negative stat based characteristics
+                if (monster.HP < 5) characteristics.push('frail, weak build');
+                if (monster.AP < 5) characteristics.push('scawny, weak features, no muscles');
+                if (monster.Speed < 5) characteristics.push('heavy, slow, sluggish form');
 
                 // Add characteristics if any exist
                 if (characteristics.length > 0) {
