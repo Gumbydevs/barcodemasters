@@ -569,12 +569,16 @@
                 return;
             }
 
+            // Initial display with loading state
             monsterResult.style.display = 'block';
             monsterResult.innerHTML = `
                 <div class="monster-card">
                     <h2 style="text-align: center; margin-bottom: 1rem;">${monster.monsterName}</h2>
                     <div class="monster-image">
-                        <div style="text-align: center;">Generating monster image...</div>
+                        <div style="text-align: center;">
+                            <p>Generating monster image...</p>
+                            <p style="font-size: 0.8em;">This may take up to 30 seconds</p>
+                        </div>
                     </div>
                     <div class="monster-stats">
                         <p>Level: ${monster.level}</p>
@@ -591,29 +595,55 @@
                 const prompt = generateMonsterPrompt(monster, [monster.typeInfo]);
                 console.log('Generated prompt:', prompt);
 
-                const response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer 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',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        inputs: prompt,
-                        negative_prompt: 'text, watermark, logo, blur, distortion, low quality, disfigured, human features, cartoon style',
-                        parameters: {
-                            width: 512,  // Standard size that works well with the model
-                            height: 512  // Using square dimensions for consistency
+                // Function to attempt image generation with timeout
+                const generateImage = async (retryCount = 0) => {
+                    const timeout = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Request timeout')), 30000)
+                    );
+
+                    try {
+                        const fetchPromise = fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer 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',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                inputs: prompt,
+                                negative_prompt: 'text, watermark, logo, blur, distortion, low quality, disfigured, human features, cartoon style',
+                                parameters: {
+                                    width: 512,
+                                    height: 512,
+                                    num_inference_steps: 30,  // Reduced steps for faster generation
+                                    guidance_scale: 7.5
+                                }
+                            })
+                        });
+
+                        const response = await Promise.race([fetchPromise, timeout]);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
                         }
-                    })
-                });
 
-                if (!response.ok) {
-                    throw new Error(`Image generation failed: ${response.status}`);
-                }
+                        const blob = await response.blob();
+                        if (blob.size < 1000) {  // Check if the response is too small (likely an error)
+                            throw new Error('Invalid image data received');
+                        }
 
-                const blob = await response.blob();
-                const imageUrl = URL.createObjectURL(blob);
+                        return URL.createObjectURL(blob);
+                    } catch (error) {
+                        if (retryCount < 2) {  // Retry up to 2 times
+                            console.log(`Retry attempt ${retryCount + 1}`);
+                            await new Promise(resolve => setTimeout(resolve, 2000));  // Wait 2s before retry
+                            return generateImage(retryCount + 1);
+                        }
+                        throw error;
+                    }
+                };
 
+                const imageUrl = await generateImage();
+                
                 const monsterImage = monsterResult.querySelector('.monster-image');
                 monsterImage.innerHTML = `
                     <img src="${imageUrl}" alt="${monster.monsterName}" 
@@ -630,7 +660,12 @@
                 const monsterImage = monsterResult.querySelector('.monster-image');
                 monsterImage.innerHTML = `
                     <div style="text-align: center; padding: 2rem;">
-                        Failed to generate image
+                        <p>Failed to generate image</p>
+                        <p style="font-size: 0.8em; color: #666;">
+                            ${error.message === 'Request timeout' ? 
+                            'Request timed out. Please try again with a better connection.' : 
+                            'An error occurred during image generation.'}
+                        </p>
                     </div>
                 `;
             }
