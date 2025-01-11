@@ -499,7 +499,7 @@
                 // Add positive stat base characteristics
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
-                if (monster.Speed > 5) characteristics.push('sleek, nimble, aerodynamic form');
+                if (monster.Speed > 5) characteristics.push('sleek, nimble, agile form');
 
                 // Add negative stat based characteristics
                 if (monster.HP < 5) characteristics.push('frail, weak build');
@@ -524,43 +524,43 @@
                 // Enhanced negative prompts with stronger anti-text and anti-logo rules
                 const negativePrompts = [
                     // Anti-cropping rules
-                    "(((cropped)))",
-                    "(((cropped limbs)))",
-                    "(((cropped body)))",
-                    "(((out of frame)))",
-                    "(((missing limbs)))",
+                   // "(((cropped)))",
+                   // "(((cropped limbs)))",
+                   // "(((cropped body)))",
+                   // "(((out of frame)))",
+                   // "(((missing limbs)))",
                     
                     // Text and logo prevention (strengthened)
-                    "(((text)))",
-                    "(((words)))",
-                    "(((letters)))",
-                    "(((writing)))",
-                    "(((logo)))",
-                    "(((watermark)))",
-                    "(((signature)))",
-                    "(((copyright)))",
-                    "(((artist name)))",
-                    "(((brand mark)))",
+                   // "(((text)))",
+                   // "(((words)))",
+                   // "(((letters)))",
+                   // "(((writing)))",
+                   // "(((logo)))",
+                   // "(((watermark)))",
+                   // "(((signature)))",
+                   // "(((copyright)))",
+                   // "(((artist name)))",
+                   // "(((brand mark)))",
                     
                     // Other existing rules
-                    "(((extra limbs)))",
-                    "((duplicate))",
-                    "((multiple views))",
-                    "((multiple creatures))",
-                    "((deformed))",
-                    "((amateur))",
-                    "((poorly drawn))",
-                    "((blurry))",
-                    "((bad anatomy))",
-                    "((bad proportions))",
-                    "((disfigured))",
-                    "((mutation))",
-                    "((humanoid))",
-                    "((human face))",
-                    "((human features))",
-                    "wings",
-                    "frame",
-                    "border"
+                    //"(((extra limbs)))",
+                    //"((duplicate))",
+                    //"((multiple views))",
+                    //"((multiple creatures))",
+                    //"((deformed))",
+                    //"((amateur))",
+                    //"((poorly drawn))",
+                    //"((blurry))",
+                    //"((bad anatomy))",
+                    //"((bad proportions))",
+                    //"((disfigured))",
+                    //"((mutation))",
+                    //"((humanoid))",
+                    //"((human face))",
+                    //"((human features))",
+                    //"wings",
+                    //"frame",
+                    //"border"
                 ];
 
                 // Debug output for verification
@@ -728,20 +728,19 @@
                         <h2 style="text-align: center; margin-bottom: 1rem;">${monster.monsterName}</h2>
                         <div class="monster-image">
                             <div style="text-align: center;">
-                                <p>Generating monster image...</p>
+                                <p>Generating monster...</p>
                                 <p style="font-size: 0.8em;">This process may take up to a few minutes.</p>
-                                <p style="font-size: 0.8em;">We'll try multiple AI models to create the best possible image</p>
                                 <p style="font-size: 0.8em;">Please remain on this page until the image appears</p>
-                                <p style="font-size: 0.8em;">If one model fails, we'll automatically try others</p>
+                                <p style="font-size: 0.8em;">If one generation fails, click the button to try again</p>
                             </div>
                         </div>
                         <div class="monster-stats">
-                            <p>Level: ${monster.level}</p>
-                            <p>Type: ${monster.type}</p>
-                            <p>HP: ${monster.HP}</p>
-                            <p>AP: ${monster.AP}</p>
-                            <p>Speed: ${monster.Speed}</p>
-                            <p>Hash ID: ${monster.hash}</p>
+                            <p>Level: <span class="stat-value">...</span></p>
+                            <p>Type: <span class="stat-value">...</span></p>
+                            <p>HP: <span class="stat-value">...</span></p>
+                            <p>AP: <span class="stat-value">...</span></p>
+                            <p>Speed: <span class="stat-value">...</span></p>
+                            <p>Hash ID: <span class="stat-value">...</span></p>
                         </div>
                     </div>
                 `;
@@ -855,7 +854,43 @@
                         style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
                 `;
 
+                // Reveal stats with a slight delay after image loads
+                setTimeout(() => {
+                    const statValues = monsterResult.querySelectorAll('.stat-value');
+                    const stats = [
+                        monster.level,
+                        monster.type,
+                        monster.HP,
+                        monster.AP,
+                        monster.Speed,
+                        monster.hash
+                    ];
+                    
+                    stats.forEach((stat, index) => {
+                        statValues[index].textContent = stat;
+                        statValues[index].style.transition = 'opacity 0.5s';
+                        statValues[index].style.opacity = '1';
+                    });
 
+                    // Add type description after stats are revealed
+                    if (monster.typeInfo && monster.typeInfo.description) {
+                        const typeDescription = document.createElement('p');
+                        typeDescription.style.fontStyle = 'italic';
+                        typeDescription.style.padding = '1rem';
+                        typeDescription.style.margin = '0.5rem 0';
+                        typeDescription.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+                        typeDescription.style.borderRadius = '4px';
+                        typeDescription.style.opacity = '0';
+                        typeDescription.style.transition = 'opacity 0.5s';
+                        typeDescription.textContent = monster.typeInfo.description;
+                        monsterImage.insertAdjacentElement('afterend', typeDescription);
+                        
+                        // Trigger reflow before adding opacity
+                        setTimeout(() => {
+                            typeDescription.style.opacity = '1';
+                        }, 100);
+                    }
+                }, 500); // Half second delay after image loads
 
             } catch (error) {
                 console.error('Error generating image:', error);
