@@ -469,51 +469,135 @@
                     throw new Error('Monster type information not found');
                 }
 
-                // Use database description for type-specific traits
-                const typeDescription = typeInfo.description || '';
-                console.log('Using type description:', typeDescription);
-
-                // Core characteristics based on type-specific info
+                // Create arrays for prompt parts
+                let promptParts = [];
                 const characteristics = [];
-                const negativeCharacteristics = [];
                 
-                // Add prompt modifyer based physical stat traits
+                // Enhanced positive prompt structure with stronger framing rules
+                promptParts.push(
+                    "award winning digital art",
+                    "masterpiece",
+                    "best quality",
+                    "highly detailed",
+                    `${monster.type.toLowerCase()} type creature`,
+                    "complete full body shot",  // Changed
+                    "entire creature visible",   // Added
+                    "fits completely in frame",  // Added
+                    "subject fully centered",    // Added
+                    "symmetrical front view",    // Changed
+                    "clear empty space around subject", // Added
+                    "proper composition"         // Added
+                );
+                
+                // Add type description
+                if (typeInfo.description) {
+                    promptParts.push(typeInfo.description);
+                }
+                
+                // Add positive characteristics
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
                 if (monster.Speed > 5) characteristics.push('sleek, aerodynamic form');
 
-                // Negative trait modifiers based on low stats
-                if (monster.HP < 8) negativeCharacteristics.push('frail frame, thin body structure');
-                if (monster.AP < 5) negativeCharacteristics.push('diminutive appearance, non-threatening');
-                if (monster.Speed < 3) negativeCharacteristics.push('bulky, cumbersome form');
-                
-                // Main prompt structure with type name first
-                const mainPrompt = [
-                    "a high quality professional digital art of a",
-                    `${monster.type.toLowerCase()} type creature`,
-                    typeDescription,  // Type description is included here only once
-                    characteristics.length > 0 ? characteristics.join(', ') : '',
-                    negativeCharacteristics.length > 0 ? `with ${negativeCharacteristics.join(', ')}` : '',
+                // Add characteristics if any exist
+                if (characteristics.length > 0) {
+                    promptParts.push(characteristics.join(', '));
+                }
+
+                promptParts.push(
                     `themed after ${monster.monsterName.toLowerCase()}`,
-                    "full body shot",
-                    "centered composition",
-                    "on a simple background",
-                    "highly detailed",
-                    "looking powerful and dynamic"
-                ].filter(Boolean).join(', ');
+                    "dramatic lighting",
+                    "vibrant colors",
+                    "4k resolution"
+                );
 
-                console.log('Generated prompt with characteristics:', {
-                    type: monster.type,
-                    description: typeDescription,
-                    positiveTraits: characteristics,
-                    negativeTraits: negativeCharacteristics,
-                    finalPrompt: mainPrompt
+                // Combine into positive prompt
+                const mainPrompt = promptParts.filter(Boolean).join(', ');
+
+                // Enhanced negative prompts with stronger anti-text and anti-logo rules
+                const negativePrompts = [
+                    // Anti-cropping rules
+                    "(((cropped)))",
+                    "(((cropped limbs)))",
+                    "(((cropped body)))",
+                    "(((out of frame)))",
+                    "(((missing limbs)))",
+                    
+                    // Text and logo prevention (strengthened)
+                    "(((text)))",
+                    "(((words)))",
+                    "(((letters)))",
+                    "(((writing)))",
+                    "(((logo)))",
+                    "(((watermark)))",
+                    "(((signature)))",
+                    "(((copyright)))",
+                    "(((artist name)))",
+                    "(((brand mark)))",
+                    
+                    // Other existing rules
+                    "(((extra limbs)))",
+                    "((duplicate))",
+                    "((multiple views))",
+                    "((multiple creatures))",
+                    "((deformed))",
+                    "((amateur))",
+                    "((poorly drawn))",
+                    "((blurry))",
+                    "((bad anatomy))",
+                    "((bad proportions))",
+                    "((disfigured))",
+                    "((mutation))",
+                    "((humanoid))",
+                    "((human face))",
+                    "((human features))",
+                    "wings",
+                    "frame",
+                    "border"
+                ];
+
+                // Debug output for verification
+                console.group('Monster Prompt Debug');
+                console.log('Monster Type:', monster.type);
+                console.log('Base Stats:', {
+                    HP: monster.HP,
+                    AP: monster.AP,
+                    Speed: monster.Speed
                 });
+                console.log('Characteristics:', characteristics);
+                console.log('Final Positive Prompt:', mainPrompt);
+                console.log('Negative Prompts:', negativePrompts.join(', '));
+                console.groupEnd();
 
-                return mainPrompt;
+                return {
+                    positivePrompt: mainPrompt,
+                    negativePrompt: negativePrompts.join(', ')
+                };
             } catch (error) {
                 console.error('Error in generateMonsterPrompt:', error);
-                return `high quality digital art of a fantasy creature character, full body, centered`;
+                return {
+                    positivePrompt: 'high quality digital art of a fantasy creature character, full body, centered',
+                    negativePrompt: '((cropped)), ((out of frame)), ((bad anatomy)), ((extra limbs))'
+                };
+            }
+        }
+
+        // Add this new function to verify image generation parameters
+        function verifyImageGenerationParams(prompt, model) {
+            console.group('Image Generation Parameters');
+            console.log('Model:', model);
+            console.log('Positive Prompt Length:', prompt.positivePrompt.length);
+            console.log('Negative Prompt Length:', prompt.negativePrompt.length);
+            console.log('Full Positive Prompt:', prompt.positivePrompt);
+            console.log('Full Negative Prompt:', prompt.negativePrompt);
+            console.groupEnd();
+
+            // Add verification logic here
+            if (prompt.positivePrompt.length < 10) {
+                throw new Error('Positive prompt too short');
+            }
+            if (!prompt.positivePrompt.includes('full body')) {
+                console.warn('Warning: Prompt missing full body specification');
             }
         }
 
@@ -626,7 +710,8 @@
                 // Clear console and display prompt prominently
                 console.clear();
                 console.log('%c AI Image Generation Prompt:', 'color: #2ecc71; font-size: 14px; font-weight: bold;');
-                console.log('%c' + prompt, 'color: #3498db; font-size: 12px;');
+                console.log('%c' + prompt.positivePrompt, 'color: #3498db; font-size: 12px;');
+                console.log('%c' + prompt.negativePrompt, 'color: #e74c3c; font-size: 12px;');
                 console.log('%c' + '='.repeat(50), 'color: #95a5a6;');
 
                 // Initial display with loading state
@@ -696,12 +781,13 @@
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({
-                                    inputs: prompt,
+                                    inputs: prompt.positivePrompt,
                                     parameters: {
+                                        negative_prompt: prompt.negativePrompt,
                                         width: 512,
                                         height: 512,
-                                        num_inference_steps: 25, // Reduced steps
-                                        guidance_scale: 7.0,
+                                        num_inference_steps: 30, // Increased for better quality
+                                        guidance_scale: 8.5,     // Increased for stronger prompt adherence
                                         seed: Math.floor(Math.random() * 2147483647)
                                     }
                                 })
