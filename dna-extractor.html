@@ -467,27 +467,26 @@
                     throw new Error('Monster type information not found');
                 }
 
-                // Core characteristics based on type and stats
-                const characteristics = [];
-                const typeTraits = {
-                    'Feral': 'wild beast-like creature with sharp features',
-                    'Fighter': 'muscular warrior-like beast with armored features',
-                    'Mage': 'mystical creature with ethereal features',
-                    'Ranged': 'swift creature with precision features',
-                    'Tank': 'heavily armored robust creature'
-                };
+                // Use database description for type-specific traits
+                const typeDescription = typeInfo.description || '';
+                console.log('Using type description:', typeDescription);
 
-                characteristics.push(typeTraits[monster.type] || 'fantasy creature');
+                // Core characteristics based on type-specific info
+                const characteristics = [];
                 
+                // Add type-specific description from database
+                characteristics.push(typeDescription);
+
                 // Add stat-based physical traits
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
                 if (monster.Speed > 5) characteristics.push('sleek, aerodynamic form');
                 
-                // Main prompt structure
+                // Main prompt structure with type name first
                 const mainPrompt = [
                     "a high quality professional digital art of a",
-                    "single fantasy creature character design",
+                    `${monster.type.toLowerCase()} type creature`, // Add type name early
+                    typeDescription,  // Include database description
                     characteristics.join(', '),
                     `themed after ${monster.monsterName.toLowerCase()}`,
                     "full body shot",
@@ -495,9 +494,14 @@
                     "on a simple background",
                     "highly detailed",
                     "looking powerful and dynamic"
-                ].join(', ');
+                ].filter(Boolean).join(', ');
 
-                console.log('Generated prompt:', mainPrompt);
+                console.log('Generated prompt with type info:', {
+                    type: monster.type,
+                    description: typeDescription,
+                    finalPrompt: mainPrompt
+                });
+
                 return mainPrompt;
             } catch (error) {
                 console.error('Error in generateMonsterPrompt:', error);
@@ -648,7 +652,6 @@
                         setTimeout(() => reject(new Error('Request timeout')), 30000)
                     );
 
-                    // Updated model list with correct paths
                     const models = [
                         'Lykon/DreamShaper',
                         'prompthero/openjourney-v4',
@@ -659,7 +662,15 @@
                     const modelIndex = retryCount % models.length;
                     const currentModel = models[modelIndex];
 
+                    // Calculate delay with exponential backoff
+                    const delay = Math.min(1000 * Math.pow(2, Math.floor(retryCount / models.length)), 32000);
+
                     try {
+                        if (retryCount > 0) {
+                            console.log(`Waiting ${delay/1000} seconds before retry...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+
                         console.log(`Attempting to use model: ${currentModel}`);
                         updateDebugMessage(`Trying model: ${currentModel}...`);
 
@@ -702,15 +713,17 @@
                             return generateImage(retryCount + 1);
                         }
 
-                        if (response.status === 503 || response.status === 429) {
-                            // Service unavailable or rate limit - try next model
-                            if (retryCount < models.length * 2) { // Try each model up to twice
-                                console.log(`Model ${currentModel} unavailable, trying next model...`);
-                                await new Promise(resolve => setTimeout(resolve, 2000));
+                        if (response.status === 429) {
+                            console.log(`Rate limit hit for ${currentModel}, backing off...`);
+                            if (retryCount < models.length * 4) { // Increased retry attempts
                                 return generateImage(retryCount + 1);
-                            } else {
-                                throw new Error('All models unavailable. Please try again later.');
                             }
+                            throw new Error('Rate limit exceeded. Please try again in a few minutes.');
+                        }
+
+                        if (response.status === 503) {
+                            console.log(`Service unavailable for ${currentModel}, trying next...`);
+                            return generateImage(retryCount + 1);
                         }
 
                         const blob = await response.blob();
@@ -720,12 +733,11 @@
 
                         return URL.createObjectURL(blob);
                     } catch (error) {
-                        if (retryCount < 5) { // Increased retry limit
+                        if (retryCount < models.length * 4) { // Increased retry limit
                             console.log(`Retry attempt ${retryCount + 1}`);
-                            await new Promise(resolve => setTimeout(resolve, 2000));
                             return generateImage(retryCount + 1);
                         }
-                        throw error;
+                        throw new Error('All models unavailable. Please try again in a few minutes.');
                     }
                 };
 
