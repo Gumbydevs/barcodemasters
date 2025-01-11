@@ -47,6 +47,23 @@
     <h2>Changelog for January 10, 2024</h2>
     <h3>Added</h3>
     <ul>
+        <li><strong>Monster Card Visual Enhancements:</strong>
+            <ul>
+                <li>Implemented new placeholder system between monster name and type</li>
+                <li>Added Japanese oni/ogre emoji (👹) to replace generic game controller</li>
+                <li>Created responsive placeholder with semi-transparent background</li>
+                <li>Added subtle borders for better visual definition</li>
+            </ul>
+        </li>
+        <li><strong>Monster Type Description System:</strong>
+            <ul>
+                <li>Implemented getMonsterTypeDescription function to fetch descriptions from monsterTypes collection</li>
+                <li>Added description caching system to optimize Firestore queries</li>
+                <li>Enhanced monster card template with type description display</li>
+                <li>Implemented new styling for type description presentation</li>
+            </ul>
+        </li>
+        <li><strong>MVP Monster Showcase:</strong> Enhanced profile display to showcase the user's highest level monster, including comprehensive statistics such as total wins and accumulated experience points.</li>
         <li><strong>Battle System Enhancements:</strong>
             <ul>
                 <li>Added critical hit system with visual effects and multiplier damage</li>
@@ -69,6 +86,30 @@
 
     <h3>Updated</h3>
     <ul>
+        <li><strong>Card Layout Improvements:</strong>
+            <ul>
+                <li>Enhanced placeholder visibility with contrasting backgrounds</li>
+                <li>Optimized text readability across both theme modes</li>
+                <li>Improved mobile responsiveness with adjusted spacing and font sizes</li>
+                <li>Standardized card heights and spacing in grid layouts</li>
+                <li>Refined button spacing for mobile interfaces</li>
+            </ul>
+        </li>
+        <li><strong>Train Monster Page Enhancements:</strong>
+            <ul>
+                <li>Updated monster card formatting</li>
+                <li>Implemented placeholder system consistency</li>
+                <li>Added monster type descriptions</li>
+            </ul>
+        </li>
+        <li><strong>UI/UX Improvements:</strong>
+            <ul>
+                <li>Enhanced stat box visibility across light and dark modes on the monster-index page</li>
+                <li>Optimized stat number visibility in monster-collection page for both themes</li>
+                <li>Maintained heading color consistency while improving overall contrast</li>
+                <li>Refined type description layout and presentation</li>
+            </ul>
+        </li>
         <li><strong>Monster Stat Training Time Display:</strong> The training time display now includes seconds, with updates every 100ms for smoother countdowns. The format is as follows:
             <ul>
                 <li>"Xs" for stat training times under a minute</li>
@@ -81,6 +122,19 @@
 
     <h3>Fixed</h3>
     <ul>
+        <li><strong>Permission and Layout Issues:</strong>
+            <ul>
+                <li>Resolved owner permissions issues on training page</li>
+                <li>Fixed card overflow issues in grid layouts</li>
+                <li>Corrected placeholder alignment and spacing</li>
+            </ul>
+        </li>
+        <li><strong>General Fixes:</strong>
+            <ul>
+                <li>Removed erroneous changelog elements for improved accuracy</li>
+                <li>Corrected text contrast issues in various UI components</li>
+            </ul>
+        </li>
         <li><strong>Monster Training Section Visibility:</strong> Ensured that the stat training section is visible when resuming monster training, even after a page reload.</li>
         <li><strong>Training UI Restoration:</strong> Fixed issues related to restoring the monster stat training UI state properly when returning to the page.</li>
         <li><strong>Handling User Actions During Monster Training:</strong> Improved handling of page refreshes, navigation, and even logging out, so the monster stat training state persists and resumes correctly.</li>
