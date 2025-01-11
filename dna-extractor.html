@@ -223,9 +223,9 @@
         // Constants
         const MONSTER_TYPES = ['Feral', 'Fighter', 'Mage', 'Ranged', 'Tank'];
         const BASE_STAT_RANGES = {
-            HP: { min: 5, max: 50 },
-            AP: { min: 1, max: 30 },
-            Speed: { min: 1, max: 20 }
+            HP: { min: 3, max: 20 },    // Changed from {min: 5, max: 50}
+            AP: { min: 1, max: 12 },    // Changed from {min: 1, max: 30}
+            Speed: { min: 1, max: 8 }   // Changed from {min: 1, max: 20}
         };
 
         let codeReader = null;
@@ -537,9 +537,9 @@
                 };
 
                 if (level > 1) {
-                    monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.3));
-                    monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.3));
-                    monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.3));
+                    monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.2));     // Changed from 0.3
+                    monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.15));    // Changed from 0.3
+                    monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.1)); // Changed from 0.3
                 }
 
                 const monsterInstanceId = `${hash}-${user.uid}`;
