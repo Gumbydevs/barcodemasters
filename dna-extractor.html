@@ -475,21 +475,25 @@
 
                 // Core characteristics based on type-specific info
                 const characteristics = [];
+                const negativeCharacteristics = [];
                 
-                // Add type-specific description from database
-                characteristics.push(typeDescription);
-
                 // Add prompt modifyer based physical stat traits
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
                 if (monster.Speed > 5) characteristics.push('sleek, aerodynamic form');
+
+                // Negative trait modifiers based on low stats
+                if (monster.HP < 8) negativeCharacteristics.push('frail frame, thin body structure');
+                if (monster.AP < 5) negativeCharacteristics.push('diminutive appearance, non-threatening');
+                if (monster.Speed < 3) negativeCharacteristics.push('bulky, cumbersome form');
                 
                 // Main prompt structure with type name first
                 const mainPrompt = [
                     "a high quality professional digital art of a",
-                    `${monster.type.toLowerCase()} type creature`, // Add type name early
-                    typeDescription,  // Include database description
-                    characteristics.join(', '),
+                    `${monster.type.toLowerCase()} type creature`,
+                    typeDescription,  // Type description is included here only once
+                    characteristics.length > 0 ? characteristics.join(', ') : '',
+                    negativeCharacteristics.length > 0 ? `with ${negativeCharacteristics.join(', ')}` : '',
                     `themed after ${monster.monsterName.toLowerCase()}`,
                     "full body shot",
                     "centered composition",
@@ -498,9 +502,11 @@
                     "looking powerful and dynamic"
                 ].filter(Boolean).join(', ');
 
-                console.log('Generated prompt with type info:', {
+                console.log('Generated prompt with characteristics:', {
                     type: monster.type,
                     description: typeDescription,
+                    positiveTraits: characteristics,
+                    negativeTraits: negativeCharacteristics,
                     finalPrompt: mainPrompt
                 });
 

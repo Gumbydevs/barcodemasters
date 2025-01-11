@@ -125,6 +125,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -138,6 +139,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         let currentUserId = '';
         const ADMIN_UID = 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2';
@@ -179,6 +181,46 @@
             }
         }
 
+        async function deleteMonsterImage(monster) {
+            try {
+                // Update path to match storage rules structure
+                const imagePath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
+                const imageRef = ref(storage, imagePath);
+                
+                try {
+                    // Get user token for authenticated deletion
+                    const token = await auth.currentUser.getIdToken();
+                    
+                    // Set auth headers
+                    const headers = new Headers({
+                        'Authorization': `Bearer ${token}`
+                    });
+
+                    // Get download URL to check if image exists
+                    const downloadURL = await imageRef.getDownloadURL();
+                    
+                    if (downloadURL) {
+                        await deleteObject(imageRef);
+                        console.log(`Deleted image: ${imagePath}`);
+                    }
+                    return true;
+                } catch (error) {
+                    if (error.code === 'storage/object-not-found') {
+                        console.log(`Image not found: ${imagePath}`);
+                        return true; // Consider it a success if file doesn't exist
+                    } else {
+                        console.error(`Failed to delete image: ${error.code} - ${error.message}`);
+                        // Don't throw error for storage issues, just log them
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error(`Error handling image deletion: ${error.message}`);
+                // Don't throw error for storage issues, just log them
+                return true;
+            }
+        }
+
         function createMonsterCard(hash, ownerId, monster) {
             const div = document.createElement('div');
             div.className = 'monster-card';
@@ -215,9 +257,10 @@
             div.querySelector('.delete-btn').addEventListener('click', async () => {
                 if (confirm('Are you sure you want to delete this monster?')) {
                     try {
+                        await deleteMonsterImage(monster);
                         await deleteDoc(doc(db, 'monsters', documentId));
                         div.remove();
-                        showStatus('Monster deleted successfully!');
+                        showStatus('Monster deleted successfully! (Image deletion may be restricted by storage rules)');
                     } catch (error) {
                         showStatus('Error deleting monster: ' + error.message, true);
                     }
@@ -244,6 +287,7 @@
                     const monster = doc.data();
                     const documentId = `${monster.hash}-${monster.ownerId}`;
                     try {
+                        await deleteMonsterImage(monster);
                         await deleteDoc(doc.ref);
                         successCount++;
                     } catch (error) {
@@ -254,7 +298,7 @@
 
                 document.getElementById('monsterList').innerHTML = '';
                 document.getElementById('deleteAllSection').style.display = 'none';
-                showStatus(`Deleted ${successCount} monsters successfully.${errorCount > 0 ? ` Failed to delete ${errorCount} monsters.` : ''}`);
+                showStatus(`Deleted ${successCount} monsters successfully. (Image deletion may be restricted by storage rules)${errorCount > 0 ? ` Failed to delete ${errorCount} monsters.` : ''}`);
                 
                 if (successCount > 0) {
                     setTimeout(() => searchMonsters(userId), 1000);
