@@ -256,6 +256,22 @@
     body.dark-mode .monster-image-placeholder::after {
         color: rgba(255, 255, 255, 0.8);
     }
+
+    /* Add these XP progress bar styles */
+    .xp-progress {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        margin: 0.5rem 0;
+        overflow: hidden;
+    }
+
+    .xp-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #3498db, #2ecc71);
+        transition: width 0.3s ease;
+    }
     </style>
 </head>
 <body>
@@ -350,19 +366,40 @@
     });
 }
 
+// ...existing code...
+
 async function getUsernameById(userId) {
     try {
-        const userDoc = await getDoc(doc(db, 'users', userId));
+        console.log('Fetching username for userId:', userId);
+        // Get user document directly from users collection
+        const userRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userRef);
+        
         if (userDoc.exists()) {
-            return userDoc.data().username;
-        } else {
-            return 'Unknown User';
+            const userData = userDoc.data();
+            console.log('User data found:', userData);
+            
+            // Try to find any available identifier in order of preference
+            if (userData.username) {
+                return userData.username;
+            } else if (userData.displayName) {
+                return userData.displayName;
+            } else if (userData.name) {
+                return userData.name;
+            } else if (userData.email) {
+                // Just use the part before @ for email
+                return userData.email.split('@')[0];
+            }
         }
+        console.log('No username found in user data');
+        return 'Unknown User';
     } catch (error) {
         console.error('Error fetching username:', error);
         return 'Unknown User';
     }
 }
+
+// ...existing code...
 
 async function getMonsterTypeDescription(type) {
     try {
