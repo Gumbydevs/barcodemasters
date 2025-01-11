@@ -96,8 +96,19 @@
         <h1>Monster Manager (Admin)</h1>
         
         <div class="search-section">
-            <input type="text" id="userIdInput" class="user-input" placeholder="Enter User ID">
-            <button id="searchBtn" class="save-btn">Search Monsters</button>
+            <div class="user-select-container" style="margin-bottom: 20px;">
+                <select id="userSelect" class="user-input">
+                    <option value="">Select a user...</option>
+                </select>
+                <div id="selectedUserInfo" style="margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px; display: none;">
+                    <p>Username: <span id="selectedUsername"></span></p>
+                    <p>User ID: <span id="selectedUserId"></span></p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="userIdInput" class="user-input" placeholder="Enter User ID">
+                <button id="searchBtn" class="save-btn">Search Monsters</button>
+            </div>
         </div>
 
         <div id="statusMessage" class="status-message" style="display: none;"></div>
@@ -113,7 +124,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -253,6 +264,42 @@
             }
         }
 
+        async function loadUsers() {
+            try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, orderBy('username'));
+                const querySnapshot = await getDocs(q);
+                
+                const userSelect = document.getElementById('userSelect');
+                userSelect.innerHTML = '<option value="">Select a user...</option>';
+                
+                querySnapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    if (userData.username) {
+                        const option = document.createElement('option');
+                        option.value = doc.id;
+                        option.textContent = userData.username;
+                        userSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                showStatus('Error loading users: ' + error.message, true);
+            }
+        }
+
+        function updateSelectedUserInfo(userId, username) {
+            const selectedUserInfo = document.getElementById('selectedUserInfo');
+            const selectedUsernameSpan = document.getElementById('selectedUsername');
+            const selectedUserIdSpan = document.getElementById('selectedUserId');
+            
+            selectedUsernameSpan.textContent = username;
+            selectedUserIdSpan.textContent = userId;
+            selectedUserInfo.style.display = 'block';
+            
+            // Auto-fill the user ID input
+            document.getElementById('userIdInput').value = userId;
+        }
+
         document.getElementById('searchBtn').addEventListener('click', () => {
             const userId = document.getElementById('userIdInput').value.trim();
             if (userId) {
@@ -268,8 +315,25 @@
             }
         });
 
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userSelect').addEventListener('change', (e) => {
+                const userId = e.target.value;
+                const username = e.target.options[e.target.selectedIndex].text;
+                
+                if (userId) {
+                    updateSelectedUserInfo(userId, username);
+                    searchMonsters(userId);
+                } else {
+                    document.getElementById('selectedUserInfo').style.display = 'none';
+                    document.getElementById('userIdInput').value = '';
+                    document.getElementById('monsterList').innerHTML = '';
+                    document.getElementById('deleteAllSection').style.display = 'none';
+                }
+            });
+        });
+
         // Check if user is admin
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
                 return;
@@ -280,6 +344,9 @@
                 showStatus('Unauthorized access. Admin rights required.', true);
                 return;
             }
+
+            // Load users after confirming admin status
+            await loadUsers();
         });
     </script>
 </body>
