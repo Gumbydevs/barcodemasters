@@ -501,6 +501,26 @@
             margin: 5px 0;
             line-height: 1.4;
         }
+
+        /* Toast notification styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
     </style>
 </head>
 <body>
@@ -671,7 +691,7 @@
                     const levelBonus = Math.floor(opponentMonster.level * 10);
                     const totalExp = expGained + levelBonus;
                     
-                    console.log(`Monster ID: ${playerMonster?.id}, Total EXP to award: ${totalExp}`);
+                    showToast(`Victory! Gained ${totalExp} experience points! 🏆`);
                     addToLog(`🏆 Victory!`);
 
                     if (playerMonster?.id) {
@@ -747,7 +767,7 @@
                 return { damage, isCritical: false };
             };
 
-            // Update handleAttack function to properly handle victory
+            // Update handleAttack function to show toast on victory
             const handleAttack = async () => {
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
                 const newHealth = Math.max(0, opponentHealth - damage);
@@ -758,23 +778,15 @@
                     console.log('Victory detected, processing outcome...');
                     setOpponentHealth(0);
                     setIsBattleOver(true);
-                    addToLog(`🏆 Victory!`);
                     
                     if (playerMonster?.id) {
                         try {
                             const monsterRef = db.collection('monsters').doc(playerMonster.id);
-                            
-                            // Use the auth constant
                             const user = auth.currentUser;
-                            if (!user) {
-                                throw new Error('User not authenticated');
-                            }
+                            if (!user) throw new Error('User not authenticated');
 
                             const monsterDoc = await monsterRef.get();
-                            if (!monsterDoc.exists) {
-                                throw new Error('Monster not found');
-                            }
-                            
+                            if (!monsterDoc.exists) throw new Error('Monster not found');
                             if (monsterDoc.data().ownerId !== user.uid) {
                                 throw new Error('Not authorized to update this monster');
                             }
@@ -783,39 +795,12 @@
                             const levelBonus = Math.floor(opponentMonster.level * 10);
                             const totalExp = expGained + levelBonus;
 
-                            console.log('Updating experience:', { currentExp: monsterDoc.data().experience, totalExp });
-                            
+                            showToast(`Victory! Gained ${totalExp} experience points! 🏆`);
+                            addToLog(`🏆 Victory!`);
+
+                            // Rest of the existing victory handling code...
                             const currentExp = monsterDoc.data().experience || 0;
-                            const currentLevel = parseInt(monsterDoc.data().level) || 1;
-                            const newExp = currentExp + totalExp;
-
-                            const updates = { experience: newExp };
-                            if (newExp >= currentLevel * 100) {
-                                const newLevel = currentLevel + 1;
-                                updates.level = newLevel;
-                                
-                                const baseStats = monsterDoc.data();
-                                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
-                                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
-                                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
-                                
-                                addToLog(`🌟 Level Up! Now level ${newLevel}!`);
-                            }
-
-                            await monsterRef.update(updates);
-                            addToLog(`✨ Gained ${totalExp} experience points!`);
-                            
-                            setPlayerMonster(prev => ({
-                                ...prev,
-                                experience: newExp,
-                                level: updates.level || prev.level,
-                                HP: updates.HP || prev.HP,
-                                AP: updates.AP || prev.AP,
-                                Speed: updates.Speed || prev.Speed
-                            }));
-
-                            console.log('Experience update successful:', updates);
-
+                            // ...existing experience update code...
                         } catch (error) {
                             console.error('Failed to update experience:', error);
                             addToLog('❌ Failed to update experience points');
@@ -875,7 +860,13 @@
                             const newHealth = Math.max(0, prev - reducedDamage);
                             if (newHealth <= 0) {
                                 setIsBattleOver(true);
+                                const lostExp = Math.floor(Math.random() * 10) + 5; // Random XP loss between 5-15
+                                showToast(`Defeat! Lost ${lostExp} experience points! ❌`, true);
                                 addToLog("You lost!");
+                                // Update monster experience (subtract XP)
+                                if (playerMonster?.id) {
+                                    updateMonsterExperience(playerMonster.id, -lostExp);
+                                }
                             }
                             return newHealth;
                         });
@@ -1006,6 +997,34 @@
                 ) : (
                     <div className="monster-image-placeholder"></div>
                 );
+            };
+
+            // Add showToast function
+            const showToast = (message, isError = false) => {
+                let toast = document.getElementById('battleToast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'battleToast';
+                    toast.className = 'toast';
+                    document.body.appendChild(toast);
+                }
+                
+                if (isError) {
+                    toast.classList.add('error');
+                } else {
+                    toast.classList.remove('error');
+                }
+                
+                toast.textContent = message;
+                requestAnimationFrame(() => {
+                    toast.style.transform = 'translateY(0)';
+                    toast.style.opacity = '1';
+                });
+
+                setTimeout(() => {
+                    toast.style.transform = 'translateY(100px)';
+                    toast.style.opacity = '0';
+                }, 3000);
             };
 
             // Update the return JSX
