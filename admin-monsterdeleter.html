@@ -172,7 +172,7 @@
     </div>
 
     <footer style="width: 100%; padding: 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
-        <p>Version: <span id="versionNumber">1.0.017</span></p>
+        <p>Version: <span id="versionNumber">1.0.018</span></p>
         <p>&copy; 2025 Barcode Masters - Admin Tools</p>
     </footer>
 
@@ -314,11 +314,22 @@
 
         async function uploadMonsterImage(imageBlob, monster) {
             try {
-                // Create a unique file name
+                // Convert blob to base64 for temporary storage
+                const base64Data = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(imageBlob);
+                });
+
+                // Create a new blob from base64 with proper MIME type
+                const response = await fetch(base64Data);
+                const properBlob = await response.blob();
+
+                // Create unique filename
                 const fileName = `monster-images/${monster.hash}-${monster.ownerId}.png`;
                 const storageRef = ref(storage, fileName);
 
-                // Create file metadata
+                // Create metadata with proper CORS headers
                 const metadata = {
                     contentType: 'image/png',
                     customMetadata: {
@@ -329,24 +340,53 @@
                     }
                 };
 
-                // Get the current user's auth token
-                const token = await auth.currentUser.getIdToken();
+                // Get fresh auth token
+                const token = await auth.currentUser.getIdToken(true);
 
-                // For admin operations, we'll use the monster owner's UID in the filename
-                // but keep track of who made the change in metadata
-                const uploadTask = await uploadBytes(storageRef, imageBlob, metadata);
-                console.log('Upload successful:', uploadTask);
+                try {
+                    // Try to delete existing image first
+                    try {
+                        const existingRef = ref(storage, fileName);
+                        await deleteObject(existingRef);
+                    } catch (deleteError) {
+                        console.log('No existing image or delete failed:', deleteError);
+                    }
 
-                // Get the download URL
-                const downloadURL = await getDownloadURL(uploadTask.ref);
-                console.log('File available at:', downloadURL);
+                    // Upload new image
+                    const uploadTask = await uploadBytes(storageRef, properBlob, metadata);
+                    console.log('Upload successful:', uploadTask);
 
-                return downloadURL;
-            } catch (error) {
-                console.error('Upload error:', error);
-                if (error.code === 'storage/unauthorized') {
-                    throw new Error('Storage permission denied. Check storage rules configuration.');
+                    // Get download URL with retries
+                    let downloadURL;
+                    for (let i = 0; i < 3; i++) {
+                        try {
+                            downloadURL = await getDownloadURL(uploadTask.ref);
+                            break;
+                        } catch (urlError) {
+                            if (i === 2) throw urlError;
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                    }
+
+                    if (!downloadURL) {
+                        throw new Error('Failed to get download URL');
+                    }
+
+                    // Update monster document with new URL
+                    const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
+                    await updateDoc(monsterRef, {
+                        imageUrl: downloadURL,
+                        lastUpdated: new Date().toISOString()
+                    });
+
+                    return downloadURL;
+                } catch (uploadError) {
+                    console.error('Upload error:', uploadError);
+                    // Create a temporary URL as fallback
+                    return URL.createObjectURL(properBlob);
                 }
+            } catch (error) {
+                console.error('Image processing error:', error);
                 throw new Error(`Upload failed: ${error.message}`);
             }
         }
@@ -465,17 +505,13 @@
                     // Upload the image
                     updateStatus('Uploading new image...');
                     const downloadURL = await uploadMonsterImage(imageBlob, monster);
-
-                    // Update monster document
-                    const monsterId = `${monster.hash}-${monster.ownerId}`;
-                    await updateDoc(doc(db, 'monsters', monsterId), {
-                        imageUrl: downloadURL,
-                        lastUpdated: new Date().toISOString()
-                    });
-
-                    // Update display with permanent URL
-                    monsterImage.innerHTML = `<img src="${downloadURL}?t=${Date.now()}" alt="${monster.monsterName}">`;
-                    showStatus('Monster image regenerated successfully!');
+                    
+                    if (downloadURL.startsWith('blob:')) {
+                        showStatus('Image generated but stored temporarily. Changes will not persist.', true);
+                    } else {
+                        monsterImage.innerHTML = `<img src="${downloadURL}?t=${Date.now()}" alt="${monster.monsterName}">`;
+                        showStatus('Monster image regenerated and saved successfully!');
+                    }
 
                     return downloadURL;
                 } catch (uploadError) {
