@@ -513,6 +513,7 @@
                 );
 
                 updateDebugMessage('Scanner active - point at a barcode or QR code');
+                await refreshScanLimits(); // Add this line at the beginning
             } catch (err) {
                 console.error('Error starting scanner:', err);
                 showError('Scanning failed: ' + err.message);
@@ -811,7 +812,9 @@
                 });
 
                 // After successful monster generation, update the display
-                updateScanLimitDisplay(userData.dailyScans || {}, dailyScanLimit);
+                const updatedUserDoc = await getDoc(userRef);
+                const updatedUserData = updatedUserDoc.data();
+                updateScanLimitDisplay(updatedUserData.dailyScans || {}, updatedUserData.dailyScanLimit || 3);
 
                 displayMonster(monster);
                 updateDebugMessage('Monster DNA sequence found! Beginning synthesis...');
@@ -1216,6 +1219,24 @@
             `;
         }
 
+        // Add a new function to refresh scan limits
+        async function refreshScanLimits() {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    updateScanLimitDisplay(userData.dailyScans || {}, userData.dailyScanLimit || 3);
+                }
+            } catch (error) {
+                console.error('Error refreshing scan limits:', error);
+            }
+        }
+
         // Event Listeners
         document.addEventListener('DOMContentLoaded', async () => {
             initializeScanner();
@@ -1253,6 +1274,9 @@
                     showError('Logout failed: ' + error.message);
                 });
             });
+
+            // Add periodic refresh of scan limits every 30 seconds
+            setInterval(refreshScanLimits, 30000);
         });
 
         // Auth check
