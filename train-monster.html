@@ -334,6 +334,27 @@
             height: 200px;
         }
     }
+
+    /* Level up toast specific styles */
+    .toast.level-up {
+        background: rgba(241, 196, 15, 0.9); /* Yellow background */
+        bottom: 90px; /* Position above the regular toast */
+    }
+
+    /* Update original toast styles to handle stacking */
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        background: rgba(46, 204, 113, 0.9); /* Default green background */
+    }
     </style>
 </head>
 <body>
@@ -608,25 +629,17 @@ function showError(message) {
     }, 5000);
 }
 
-function showToast(message) {
-    let toast = document.getElementById('toast');
+function showToast(message, isLevelUp = false) {
+    let toastId = isLevelUp ? 'levelUpToast' : 'toast';
+    let toast = document.getElementById(toastId);
+    
     if (!toast) {
         toast = document.createElement('div');
-        toast.id = 'toast';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(46, 204, 113, 0.9);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        `;
+        toast.id = toastId;
+        toast.className = 'toast';
+        if (isLevelUp) {
+            toast.classList.add('level-up');
+        }
         document.body.appendChild(toast);
     }
     
@@ -639,6 +652,11 @@ function showToast(message) {
     setTimeout(() => {
         toast.style.transform = 'translateY(100px)';
         toast.style.opacity = '0';
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.parentElement.removeChild(toast);
+            }
+        }, 300);
     }, 3000);
 }
 
@@ -815,7 +833,8 @@ async function completeTraining() {
                 updates.AP = Math.round(baseStats.AP * (1 + 0.15));
                 updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
                 
-                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`);
+                // Show level up toast first (will appear above the training completion toast)
+                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`, true);
             }
 
             await updateDoc(monsterRef, updates);
