@@ -46,6 +46,77 @@
         <button class="nav-button" onclick="location.href='profile.html'">Back to game!</button>
     </div>
 
+    <h2>Changelog for January 12, 2024</h2>
+    <h3>Added</h3>
+    <ul>
+        <li><strong>Account System Overhaul:</strong>
+            <ul>
+                <li>Implemented tiered account system:
+                    <ul>
+                        <li>Free accounts: 3 DNA extractions per day</li>
+                        <li>Premium accounts: 10 DNA extractions per day</li>
+                        <li>VIP accounts: 25 DNA extractions per day</li>
+                    </ul>
+                </li>
+                <li>Added daily scan limit tracking and reset system</li>
+                <li>Created persistent scan limit counter across sessions</li>
+            </ul>
+        </li>
+        <li><strong>New User Database Structure:</strong>
+            <ul>
+                <li>Automatic user document creation upon first login</li>
+                <li>Default field initialization for new accounts:
+                    <ul>
+                        <li>accountType: 'free'</li>
+                        <li>dailyScanLimit: 3</li>
+                        <li>dailyScans: {}</li>
+                        <li>usedHash: []</li>
+                        <li>username</li>
+                        <li>email</li>
+                        <li>registrationDate</li>
+                    </ul>
+                </li>
+                <li>Added data validation and sanitization for user fields</li>
+            </ul>
+        </li>
+        <li><strong>Login System Enhancements:</strong>
+            <ul>
+                <li>Improved error handling during authentication</li>
+                <li>Added automatic database field verification</li>
+                <li>Enhanced session management and persistence</li>
+                <li>Implemented proper logout cleanup</li>
+            </ul>
+        </li>
+        <li><strong>User Experience Improvements:</strong>
+            <ul>
+                <li>Added visual scan limit counter</li>
+                <li>Enhanced feedback for remaining daily scans</li>
+                <li>Implemented clear error messages for scan limit exceeded</li>
+                <li>Added account upgrade prompts for free users</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Fixed</h3>
+    <ul>
+        <li><strong>Database Issues:</strong>
+            <ul>
+                <li>Resolved missing user document creation on first login</li>
+                <li>Fixed inconsistent field initialization</li>
+                <li>Corrected transaction handling for scan limit updates</li>
+                <li>Improved error recovery for failed database operations</li>
+            </ul>
+        </li>
+        <li><strong>Authentication Flow:</strong>
+            <ul>
+                <li>Fixed session persistence issues</li>
+                <li>Corrected redirect handling after login</li>
+                <li>Improved error messaging for failed logins</li>
+                <li>Enhanced security checks for protected routes</li>
+            </ul>
+        </li>
+    </ul>
+
     <h2>Changelog for January 11, 2024</h2>
     <h3>Fixed</h3>
     <ul>
