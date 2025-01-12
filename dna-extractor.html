@@ -381,6 +381,45 @@
             const x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
         }
+
+        function sanitizeCodeInput(code) {
+            try {
+                // Validate input
+                if (!code || typeof code !== 'string') {
+                    throw new Error('Invalid code input');
+                }
+
+                // Remove non-alphanumeric characters and whitespace
+                let sanitized = code.replace(/[^a-zA-Z0-9]/g, '');
+                
+                // Check if we have any valid characters left
+                if (!sanitized || sanitized.length < 1) {
+                    throw new Error('No valid characters in code');
+                }
+
+                // Pad short codes by repeating the content
+                if (sanitized.length < 8) {
+                    let temp = sanitized;
+                    while (sanitized.length < 8) {
+                        sanitized += temp;
+                    }
+                }
+
+                // Limit maximum length to 32 characters
+                sanitized = sanitized.substring(0, 32);
+
+                // Additional validation
+                if (!/^[a-zA-Z0-9]+$/.test(sanitized)) {
+                    throw new Error('Invalid characters detected after sanitization');
+                }
+
+                return sanitized;
+            } catch (error) {
+                console.error('Code sanitization error:', error);
+                throw new Error(`Invalid code format: ${error.message}`);
+            }
+        }
+
         // Scanner Functions
         async function initializeScanner() {
             try {
@@ -389,46 +428,15 @@
                 document.getElementById('interactive').style.display = 'none';
                 document.getElementById('startButton').style.display = 'block';
 
-                try {
-                    const constraints = { 
-                        video: { 
-                            facingMode: 'environment',
-                            focusMode: 'continuous',
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                            advanced: [
-                                { autoFocus: true },
-                                { focusDistance: { ideal: 0.4 } } // Closer focus for barcodes
-                            ]
-                        } 
-                    };
-
-                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    const track = stream.getVideoTracks()[0];
-                    
-                    // Apply additional camera settings if supported
-                    if (track.getCapabilities) {
-                        const capabilities = track.getCapabilities();
-                        const settings = {};
-                        
-                        if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
-                            settings.focusMode = 'continuous';
-                        }
-                        
-                        if (capabilities.zoom) {
-                            settings.zoom = capabilities.zoom.max * 0.25; // Use 25% of max zoom
-                        }
-                        
-                        if (Object.keys(settings).length > 0) {
-                            await track.applyConstraints({ advanced: [settings] });
-                        }
-                    }
-
-                    stream.getTracks().forEach(track => track.stop());
-                } catch (permissionError) {
-                    throw new Error('Camera permission denied. Please allow camera access and try again.');
+                // Reset any existing scanner
+                if (codeReader) {
+                    codeReader.reset();
                 }
 
+                // Simple initialization - this was the key difference in the working version
+                codeReader = new ZXing.BrowserMultiFormatReader();
+                
+                // Get cameras
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
@@ -436,130 +444,57 @@
                     throw new Error('No camera found');
                 }
 
-                const backCamera = videoDevices.find(device => 
+                selectedDeviceId = videoDevices.find(device => 
                     device.label.toLowerCase().includes('back') ||
                     device.label.toLowerCase().includes('rear')
-                );
+                )?.deviceId || videoDevices[0].deviceId;
                 
-                selectedDeviceId = backCamera ? backCamera.deviceId : videoDevices[0].deviceId;
-                
-                if (codeReader) {
-                    codeReader.reset();
-                }
-                codeReader = new ZXing.BrowserMultiFormatReader();
-                
+                console.log('Scanner initialized with device:', selectedDeviceId);
                 updateDebugMessage('Scanner ready. Click "Start Scanner" to begin.');
+                return true;
             } catch (err) {
                 console.error('Scanner initialization error:', err);
                 showError(err.message);
                 resetUI();
+                return false;
             }
         }
 
         async function startScanning() {
             const videoElement = document.getElementById('interactive');
-            const scanFeedback = document.getElementById('scanFeedback');
-            const scanGuide = document.getElementById('scanGuide');
-            let scanAttempts = 0;
-            let lastScanTime = 0;
-            const SCAN_COOLDOWN = 1000; // 1 second between scan attempts
             
             try {
-                // Add this near the beginning of the try block
-                const videoTrack = (await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'environment',
-                        focusMode: 'continuous',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        advanced: [
-                            { autoFocus: true },
-                            { focusDistance: { ideal: 0.4 } }
-                        ]
-                    }
-                })).getVideoTracks()[0];
-
-                // Attempt to optimize camera settings
-                try {
-                    await videoTrack.applyConstraints({
-                        advanced: [{
-                            brightness: { ideal: 100 },
-                            contrast: { ideal: 100 },
-                            sharpness: { ideal: 100 },
-                            focusMode: 'continuous'
-                        }]
-                    });
-                } catch (settingsError) {
-                    console.warn('Could not apply optimal camera settings:', settingsError);
-                }
-
                 hideError();
                 document.getElementById('startButton').style.display = 'none';
                 videoElement.style.display = 'block';
-                scanFeedback.style.display = 'block';
-                scanGuide.style.display = 'block';
+                document.getElementById('scanFeedback').style.display = 'block';
+                document.getElementById('scanGuide').style.display = 'block';
 
-                updateDebugMessage('Activating DNA Scanner...');
-
-                // Check if user has scanned any codes before
-                const user = auth.currentUser;
-                if (!user) throw new Error('User not authenticated');
-                
-                const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
-                const usedHashes = userDoc.data()?.usedHash || [];
+                updateDebugMessage('Starting scanner...');
 
                 await codeReader.decodeFromVideoDevice(
                     selectedDeviceId,
                     'video',
                     async (result, err) => {
-                        const now = Date.now();
                         if (result) {
-                            if (now - lastScanTime < SCAN_COOLDOWN) {
-                                return; // Ignore rapid successive scans
+                            updateDebugMessage('Code found!');
+                            console.log('Scan result:', result);
+                            try {
+                                const sanitizedHash = sanitizeCodeInput(result.text);
+                                stopScanning();
+                                await generateMonster(sanitizedHash);
+                            } catch (error) {
+                                console.error('Error processing scan:', error);
+                                showError(error.message);
                             }
-                            lastScanTime = now;
-
-                            const sanitizedHash = sanitizeCodeInput(result.text);
-                            
-                            // Check for duplicate hash
-                            if (usedHashes.includes(sanitizedHash)) {
-                                updateDebugMessage('This code has already been scanned!');
-                                showError('You have already extracted DNA from this code. Try a different one!');
-                                // Don't stop scanner, let them try another code
-                                return;
-                            }
-
-                            updateDebugMessage('Monster DNA Code detected! Beginning extraction...');
-                            stopScanning();
-                            await generateMonster(sanitizedHash);
                         }
                         if (err && !(err instanceof ZXing.NotFoundException)) {
-                            scanAttempts++;
-                            const progress = Math.min((scanAttempts % 10) * 10, 100);
-                            document.querySelector('.scan-progress').style.width = `${progress}%`;
-                            
-                            if (err.message.includes('no MultiFormat Readers')) {
-                                showError('Scanner initialization failed. Please refresh the page.');
-                                stopScanning();
-                            }
-                        }
-
-                        // Update scanning feedback
-                        const scanStatus = document.querySelector('.scan-status');
-                        if (scanStatus) {
-                            const statusMessages = [
-                                'Searching for Monster DNA pattern...',
-                                'Analyzing genetic sequence...',
-                                'Scanning for viable DNA fragments...',
-                                'Aligning genetic markers...'
-                            ];
-                            scanStatus.textContent = statusMessages[Math.floor(scanAttempts/10) % statusMessages.length];
+                            console.error('Scanning error:', err);
                         }
                     }
                 );
 
-                updateDebugMessage('Scanner active - position a barcode or QR code in view');
+                updateDebugMessage('Scanner active - point at a barcode or QR code');
             } catch (err) {
                 console.error('Error starting scanner:', err);
                 showError('Scanning failed: ' + err.message);
@@ -571,6 +506,11 @@
             try {
                 if (codeReader) {
                     codeReader.reset();
+                    const video = document.getElementById('video');
+                    if (video && video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                        video.srcObject = null;
+                    }
                 }
                 document.getElementById('scanFeedback').style.display = 'none';
                 document.getElementById('scanGuide').style.display = 'none';
@@ -613,9 +553,8 @@
         }
 
         function generateName(seed) {
-            // Your existing prefixes and suffixes arrays...
             const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon'];
-            const suffixes = ['fang', 'claw', 'wing', 'blade', 'heart', 'soul', 'strike', 'beam', 'pulse', 'wave', 'quake', 'storm', 'fury', 'rage', 'wrath', 'might', 'power', 'force'];
+            const suffixes = ['beast', 'walker', 'striker', 'hunter', 'claw', 'fang', 'wing', 'scale', 'spirit', 'soul', 'heart', 'blade', 'stalker', 'guard', 'sentinel', 'warden', 'keeper', 'slayer', 'bringer', 'weaver'];
             
             const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
             const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
@@ -623,15 +562,9 @@
             return `${prefixes[prefixIndex]}${suffixes[suffixIndex]}`;
         }
 
-        function generateMonsterPrompt(monster, monsterTypes) {
+        function generateMonsterPrompt(monster, typeInfo) {
             try {
-                const typeInfo = monsterTypes.find(t => t.typeName === monster.type);
-                if (!typeInfo) {
-                    throw new Error('Monster type information not found');
-                }
-
-                // Create arrays for prompt parts
-                let promptParts = [];
+                const promptParts = [];
                 const characteristics = [];
                 
                 // Enhanced positive prompt structure with stronger framing rules
@@ -643,31 +576,28 @@
                     "best quality",
                     "highly detailed",
                     `${monster.type.toLowerCase()} type creature`,
-                    "complete full body shot",  // Changed
-                    "entire creature visible",   // Added
-                    "fits completely in frame",  // Added
-                    "subject fully centered",    // Added
-                    "symmetrical front view",    // Changed
-                    "clear empty space around subject", // Added
-                    "proper composition"         // Added
+                    "complete full body shot",
+                    "entire creature visible",
+                    "fits completely in frame",
+                    "subject fully centered",
+                    "symmetrical front view",
+                    "clear empty space around subject",
+                    "proper composition"
                 );
                 
                 // Add type description
-                if (typeInfo.description) {
-                    promptParts.push(typeInfo.description);
+                if (typeInfo[0] && typeInfo[0].description) {
+                    promptParts.push(typeInfo[0].description);
                 }
                 
-                // Add positive stat base characteristics
+                // Add stat-based characteristics
                 if (monster.HP > 15) characteristics.push('massive, sturdy build');
                 if (monster.AP > 8) characteristics.push('visible powerful features');
                 if (monster.Speed > 5) characteristics.push('sleek, nimble, agile form');
-
-                // Add negative stat based characteristics
                 if (monster.HP < 5) characteristics.push('frail, weak build');
-                if (monster.AP < 5) characteristics.push('scawny, weak features, no muscles');
-                if (monster.Speed < 5) characteristics.push('heavy, slow, sluggish form');
+                if (monster.AP < 5) characteristics.push('scrawny, weak features');
+                if (monster.Speed < 5) characteristics.push('heavy, slow form');
 
-                // Add characteristics if any exist
                 if (characteristics.length > 0) {
                     promptParts.push(characteristics.join(', '));
                 }
@@ -679,94 +609,17 @@
                     "4k resolution"
                 );
 
-                // Combine into positive prompt
-                const mainPrompt = promptParts.filter(Boolean).join(', ');
-
-                // Enhanced negative prompts with stronger anti-text and anti-logo rules
-                const negativePrompts = [
-                    // Anti-cropping rules
-                   // "(((cropped)))",
-                   // "(((cropped limbs)))",
-                   // "(((cropped body)))",
-                   // "(((out of frame)))",
-                   // "(((missing limbs)))",
-                    
-                    // Text and logo prevention (strengthened)
-                    "text on image",
-                   // "(((text)))",
-                   // "(((words)))",
-                   // "(((letters)))",
-                   // "(((writing)))",
-                   // "(((logo)))",
-                   // "(((watermark)))",
-                   // "(((signature)))",
-                   // "(((copyright)))",
-                   // "(((artist name)))",
-                   // "(((brand mark)))",
-                    
-                    // Other existing rules
-                    //"(((extra limbs)))",
-                    //"((duplicate))",
-                    //"((multiple views))",
-                    //"((multiple creatures))",
-                    //"((deformed))",
-                    //"((amateur))",
-                    //"((poorly drawn))",
-                    //"((blurry))",
-                    //"((bad anatomy))",
-                    //"((bad proportions))",
-                    //"((disfigured))",
-                    //"((mutation))",
-                    //"((humanoid))",
-                    //"((human face))",
-                    //"((human features))",
-                    "wings on non winged creature",
-                    //"frame",
-                    //"border"
-                ];
-
-                // Debug output for verification
-                console.group('Monster Prompt Debug');
-                console.log('Monster Type:', monster.type);
-                console.log('Base Stats:', {
-                    HP: monster.HP,
-                    AP: monster.AP,
-                    Speed: monster.Speed
-                });
-                console.log('Characteristics:', characteristics);
-                console.log('Final Positive Prompt:', mainPrompt);
-                console.log('Negative Prompts:', negativePrompts.join(', '));
-                console.groupEnd();
-
                 return {
-                    positivePrompt: mainPrompt,
-                    negativePrompt: negativePrompts.join(', ')
+                    positivePrompt: promptParts.filter(Boolean).join(', '),
+                    negativePrompt: "text, watermark, signature, cropped, bad anatomy, bad proportions, extra limbs, duplicate, deformed, mutation, blurry"
                 };
+
             } catch (error) {
                 console.error('Error in generateMonsterPrompt:', error);
                 return {
                     positivePrompt: 'high quality digital art of a fantasy creature character, full body, centered',
-                    negativePrompt: '((cropped)), ((out of frame)), ((bad anatomy)), ((extra limbs))'
+                    negativePrompt: 'text, watermark, signature, cropped, bad anatomy, extra limbs'
                 };
-            }
-        }
-
-        // Add this new function to verify image generation parameters
-        function verifyImageGenerationParams(prompt, model) {
-            console.group('Image Generation Parameters');
-            console.log('Model:', model);
-            console.log('Positive Prompt Length:', prompt.positivePrompt.length);
-            console.log('Negative Prompt Length:', prompt.negativePrompt.length);
-            console.log('Full Positive Prompt:', prompt.positivePrompt);
-            console.log('Full Negative Prompt:', prompt.negativePrompt);
-            console.groupEnd();
-
-            // Add verification logic here
-            if (prompt.positivePrompt.length < 10) {
-                throw new Error('Positive prompt too short');
-            }
-            if (!prompt.positivePrompt.includes('full body')) {
-                console.warn('Warning: Prompt missing full body specification');
             }
         }
 
@@ -891,9 +744,9 @@
                         <div class="monster-image">
                             <div style="text-align: center;">
                                 <p>Synthesizing Monster DNA...</p>
-                                <p style="font-size: 0.8em;">Creating genetic structure...</p>
-                                <p style="font-size: 0.8em;">Stabilizing life form...</p>
-                                <p style="font-size: 0.8em;">Almost ready to materialize...</p>
+                                <p style="font-size: 0.8em;">Extracting genetic structure...</p>
+                                <p style="font-size: 0.8em;">Synthizing physical form...</p>
+                                <p style="font-size: 0.8em;">Getting ready to materialize...</p>
                             </div>
                         </div>
                         <div class="monster-stats">
@@ -919,7 +772,7 @@
                         'Lykon/DreamShaper',
                         'prompthero/openjourney-v4',
                         'runwayml/stable-diffusion-v1-5',
-                        'stabilityai/stable-diffusion-2-1'
+                        //'stabilityai/stable-diffusion-2-1'
                     ];
 
                     const modelIndex = retryCount % models.length;
@@ -1211,6 +1064,35 @@
             document.body.classList.toggle("dark-mode");
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
         });
+
+        // Update dark mode styles
+        const darkModeStyles = `
+            body.dark-mode {
+                background: #121212;
+                color: #ffffff;
+            }
+            
+            body.dark-mode .monster-card {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            
+            body.dark-mode .scan-button {
+                background: linear-gradient(135deg, #2c3e50, #3498db);
+            }
+            
+            body.dark-mode .scan-button:hover {
+                background: linear-gradient(135deg, #34495e, #2980b9);
+            }
+            
+            body.dark-mode #statusMessages {
+                background: rgba(255, 255, 255, 0.05);
+            }
+        `;
+
+        // Add dark mode styles to document
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = darkModeStyles;
+        document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
