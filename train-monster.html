@@ -786,26 +786,44 @@ async function completeTraining() {
 
     const {monsterId, stat, currentStatValue} = state;
     const statIncrease = Math.floor(Math.random() * 5) + 1;
-    const xpIncrease = Math.floor(Math.random() * 6) + 5;
+    const xpIncrease = Math.floor(Math.random() * 6) + 5; // Base XP gain from training
 
     try {
         const monsterRef = doc(db, 'monsters', monsterId);
         const monsterDoc = await getDoc(monsterRef);
         
         if (monsterDoc.exists()) {
-            const updatedStatValue = monsterDoc.data()[stat] + statIncrease;
-            const updatedXPValue = monsterDoc.data().experience + xpIncrease;
+            const monsterData = monsterDoc.data();
+            const currentExp = monsterData.experience || 0;
+            const currentLevel = parseInt(monsterData.level) || 1;
+            const newExp = currentExp + xpIncrease;
             
-            await updateDoc(monsterRef, {
-                [stat]: updatedStatValue,
-                experience: updatedXPValue
-            });
+            // Create updates object
+            const updates = {
+                [stat]: monsterData[stat] + statIncrease,
+                experience: newExp
+            };
+
+            // Check for level up
+            if (newExp >= currentLevel * 100) {
+                const newLevel = currentLevel + 1;
+                updates.level = newLevel;
+                
+                // Update stats with level-up bonuses
+                const baseStats = monsterData;
+                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
+                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
+                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
+                
+                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`);
+            }
+
+            await updateDoc(monsterRef, updates);
 
             const updatedMonsterData = {
-                ...monsterDoc.data(),
+                ...monsterData,
                 id: monsterId,
-                [stat]: updatedStatValue,
-                experience: updatedXPValue
+                ...updates
             };
             
             // Update UI
