@@ -172,7 +172,7 @@
     </div>
 
     <footer style="width: 100%; padding: 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
-        <p>Version: <span id="versionNumber">1.0.015</span></p>
+        <p>Version: <span id="versionNumber">1.0.016</span></p>
         <p>&copy; 2025 Barcode Masters - Admin Tools</p>
     </footer>
 
@@ -238,31 +238,33 @@
 
         async function deleteMonsterImage(monster) {
             try {
-                // Use the correct path format that matches storage rules
+                // Skip deletion attempt if no image URL exists
+                if (!monster.imageUrl) {
+                    console.log('No existing image URL, skipping deletion');
+                    return true;
+                }
+
                 const imagePath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
                 const imageRef = ref(storage, imagePath);
-                
+
                 try {
-                    // Try to delete the image
                     await deleteObject(imageRef);
-                    console.log(`Deleted image: ${imagePath}`);
+                    console.log('Image deleted successfully:', imagePath);
                     return true;
                 } catch (error) {
-                    if (error.code === 'storage/object-not-found') {
-                        console.log(`Image not found: ${imagePath}`);
-                        return true;
-                    } else if (error.code === 'storage/unauthorized') {
-                        console.error('Storage permission denied. Check storage rules configuration.');
-                        // Don't throw - allow the operation to continue even if image deletion fails
-                        return true;
-                    } else {
-                        console.error(`Failed to delete image: ${error.code} - ${error.message}`);
+                    // Don't treat these errors as failures, just log them
+                    if (error.code === 'storage/object-not-found' || 
+                        error.code === 'storage/unauthorized' ||
+                        error.message.includes('CORS')) {
+                        console.log('Skipping image deletion due to:', error.code || 'CORS issue');
                         return true;
                     }
+                    console.warn('Non-critical image deletion error:', error);
+                    return true; // Continue with operation even if deletion fails
                 }
             } catch (error) {
-                console.error(`Error handling image deletion: ${error.message}`);
-                return true;
+                console.warn('Image deletion error:', error);
+                return true; // Continue with operation even if deletion fails
             }
         }
 
@@ -372,12 +374,8 @@
                     throw new Error('Unauthorized operation');
                 }
 
-                // Try to delete existing image first
-                try {
-                    await deleteMonsterImage(monster);
-                } catch (deleteError) {
-                    console.warn('Error deleting old image:', deleteError);
-                }
+                // Don't wait for deletion to complete
+                deleteMonsterImage(monster).catch(console.warn);
 
                 // Generate new image
                 const prompt = generatePrompt(monster);
