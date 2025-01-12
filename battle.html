@@ -6,6 +6,7 @@
     <title>Barcode Masters - Battle System</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -521,7 +522,7 @@
     </div>
 
     <script type="text/babel">
-        // Add Firebase configuration at the top of the script
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
             authDomain: "barcodemasters-b4b9b.firebaseapp.com",
@@ -534,6 +535,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth(); // Add this line
 
         function BattleSystem() {
             // Add isDefending state
@@ -638,21 +640,64 @@
 
             // Check for win/loss conditions
             const checkBattleOutcome = async () => {
+                console.log('Processing battle outcome...');
+                
                 if (opponentHealth <= 0) {
                     setIsBattleOver(true);
-                    addToLog("You won!");
-                    // Update player monster's experience for winning
-                    if (playerMonster && playerMonster.id) {
-                        await updateMonsterExperience(playerMonster.id, true);
-                    }
-                } else if (playerHealth <= 0) {
-                    setIsBattleOver(true);
-                    addToLog("You lost!");
-                    // Update player monster's experience for losing
-                    if (playerMonster && playerMonster.id) {
-                        await updateMonsterExperience(playerMonster.id, false);
+                    const expGained = 50;
+                    const levelBonus = Math.floor(opponentMonster.level * 10);
+                    const totalExp = expGained + levelBonus;
+                    
+                    console.log(`Monster ID: ${playerMonster?.id}, Total EXP to award: ${totalExp}`);
+                    addToLog(`🏆 Victory!`);
+
+                    if (playerMonster?.id) {
+                        try {
+                            const monsterRef = db.collection('monsters').doc(playerMonster.id);
+                            const monsterDoc = await monsterRef.get();
+                            
+                            if (!monsterDoc.exists) {
+                                console.error('Monster document not found');
+                                return;
+                            }
+
+                            const currentExp = monsterDoc.data().experience || 0;
+                            const currentLevel = parseInt(monsterDoc.data().level) || 1;
+                            const newExp = currentExp + totalExp;
+                            
+                            // Check for level up
+                            const updates = { experience: newExp };
+                            if (newExp >= currentLevel * 100) {
+                                const newLevel = currentLevel + 1;
+                                updates.level = newLevel;
+                                
+                                // Update stats
+                                const baseStats = monsterDoc.data();
+                                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
+                                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
+                                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
+                                
+                                addToLog(`🌟 Level Up! Now level ${newLevel}!`);
+                            }
+
+                            await monsterRef.update(updates);
+                            addToLog(`✨ Gained ${totalExp} experience points!`);
+                            console.log('Experience updated successfully:', updates);
+                            
+                            // Update the display
+                            setPlayerMonster(prev => ({
+                                ...prev,
+                                experience: newExp,
+                                level: updates.level || prev.level
+                            }));
+
+                        } catch (error) {
+                            console.error('Failed to update experience:', error);
+                            addToLog('❌ Failed to update experience');
+                        }
                     }
                 }
+                // Don't set isPlayerTurn to false here anymore
             };
 
             // Player action handlers
@@ -679,19 +724,83 @@
                 return { damage, isCritical: false };
             };
 
-            // Update handleAttack function
-            const handleAttack = () => {
+            // Update handleAttack function to properly handle victory
+            const handleAttack = async () => {
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
-                setOpponentHealth(prev => {
-                    const newHealth = Math.max(0, prev - damage);
-                    if (newHealth <= 0) {
-                        setIsBattleOver(true);
-                        addToLog("You won!");
-                    }
-                    return newHealth;
-                });
+                const newHealth = Math.max(0, opponentHealth - damage);
+                setOpponentHealth(newHealth);
                 addToLog(`You dealt ${damage} damage!${isCritical ? ' (Critical Hit!)' : ''}`);
-                setIsPlayerTurn(false);
+                
+                if (newHealth <= 0) {
+                    console.log('Victory detected, processing outcome...');
+                    setOpponentHealth(0);
+                    setIsBattleOver(true);
+                    addToLog(`🏆 Victory!`);
+                    
+                    if (playerMonster?.id) {
+                        try {
+                            const monsterRef = db.collection('monsters').doc(playerMonster.id);
+                            
+                            // Use the auth constant
+                            const user = auth.currentUser;
+                            if (!user) {
+                                throw new Error('User not authenticated');
+                            }
+
+                            const monsterDoc = await monsterRef.get();
+                            if (!monsterDoc.exists) {
+                                throw new Error('Monster not found');
+                            }
+                            
+                            if (monsterDoc.data().ownerId !== user.uid) {
+                                throw new Error('Not authorized to update this monster');
+                            }
+
+                            const expGained = 50;
+                            const levelBonus = Math.floor(opponentMonster.level * 10);
+                            const totalExp = expGained + levelBonus;
+
+                            console.log('Updating experience:', { currentExp: monsterDoc.data().experience, totalExp });
+                            
+                            const currentExp = monsterDoc.data().experience || 0;
+                            const currentLevel = parseInt(monsterDoc.data().level) || 1;
+                            const newExp = currentExp + totalExp;
+
+                            const updates = { experience: newExp };
+                            if (newExp >= currentLevel * 100) {
+                                const newLevel = currentLevel + 1;
+                                updates.level = newLevel;
+                                
+                                const baseStats = monsterDoc.data();
+                                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
+                                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
+                                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
+                                
+                                addToLog(`🌟 Level Up! Now level ${newLevel}!`);
+                            }
+
+                            await monsterRef.update(updates);
+                            addToLog(`✨ Gained ${totalExp} experience points!`);
+                            
+                            setPlayerMonster(prev => ({
+                                ...prev,
+                                experience: newExp,
+                                level: updates.level || prev.level,
+                                HP: updates.HP || prev.HP,
+                                AP: updates.AP || prev.AP,
+                                Speed: updates.Speed || prev.Speed
+                            }));
+
+                            console.log('Experience update successful:', updates);
+
+                        } catch (error) {
+                            console.error('Failed to update experience:', error);
+                            addToLog('❌ Failed to update experience points');
+                        }
+                    }
+                } else {
+                    setIsPlayerTurn(false);
+                }
             };
 
             // Update handleDefend function
@@ -715,10 +824,9 @@
 
             // Opponent AI behavior
             // Update opponent turn to handle defense
-            const opponentTurn = () => {
+            const opponentTurn = async () => {
                 if (opponentHealth <= 0 || playerHealth <= 0) {
-                    checkBattleOutcome();
-                    return;
+                    return; // Don't continue if battle is over
                 }
 
                 // Weighted action selection
@@ -777,28 +885,76 @@
             };
 
             // Add new function to update monster experience
-            const updateMonsterExperience = async (monsterId, isWinner) => {
+            const updateMonsterExperience = async (monsterId, expChange) => {
+                console.log(`Starting experience update for monster ${monsterId} by ${expChange}`);
+                
                 try {
                     const monsterRef = db.collection('monsters').doc(monsterId);
                     const monsterDoc = await monsterRef.get();
                     
                     if (!monsterDoc.exists) {
-                        console.error('Monster not found in database');
-                        return;
+                        console.error('Monster document not found');
+                        throw new Error('Monster not found in database');
                     }
 
-                    const currentExp = monsterDoc.data().experience || 0;
-                    const expChange = isWinner ? 50 : -20; // Gain 50 XP for win, lose 20 XP for loss
-                    const newExp = Math.max(0, currentExp + expChange); // Prevent negative XP
+                    const monsterData = monsterDoc.data();
+                    console.log('Current monster data:', monsterData);
 
-                    await monsterRef.update({
+                    // Ensure numeric values
+                    const currentExp = parseInt(monsterData.experience) || 0;
+                    const currentLevel = parseInt(monsterData.level) || 1;
+                    const newExp = Math.max(0, currentExp + expChange);
+                    
+                    console.log(`Experience: ${currentExp} -> ${newExp}`);
+
+                    const updates = {
                         experience: newExp
-                    });
+                    };
 
-                    addToLog(`${isWinner ? 'Gained' : 'Lost'} ${Math.abs(expChange)} experience points!`);
+                    // Check for level up
+                    if (expChange > 0) {
+                        const expForNextLevel = currentLevel * 100;
+                        console.log(`Exp needed for next level: ${expForNextLevel}`);
+                        
+                        if (newExp >= expForNextLevel) {
+                            const newLevel = currentLevel + 1;
+                            console.log(`Level up! ${currentLevel} -> ${newLevel}`);
+                            
+                            // Get base stats
+                            const baseHP = parseInt(monsterData.HP) || 10;
+                            const baseAP = parseInt(monsterData.AP) || 5;
+                            const baseSpeed = parseInt(monsterData.Speed) || 5;
+
+                            // Calculate new stats with level multipliers
+                            updates.level = newLevel;
+                            updates.HP = Math.round(baseHP * (1 + (newLevel - 1) * 0.2));
+                            updates.AP = Math.round(baseAP * (1 + (newLevel - 1) * 0.15));
+                            updates.Speed = Math.round(baseSpeed * (1 + (newLevel - 1) * 0.1));
+
+                            console.log('New stats after level up:', updates);
+                        }
+                    }
+
+                    console.log('Applying updates to database:', updates);
+                    await monsterRef.update(updates);
+                    console.log('Database update successful');
+
+                    return {
+                        success: true,
+                        levelUp: updates.level !== undefined,
+                        newLevel: updates.level || currentLevel,
+                        expChange,
+                        newExp,
+                        newStats: {
+                            HP: updates.HP,
+                            AP: updates.AP,
+                            Speed: updates.Speed
+                        }
+                    };
+
                 } catch (error) {
-                    console.error('Error updating monster experience:', error);
-                    addToLog('Failed to update experience points.');
+                    console.error('Error in updateMonsterExperience:', error);
+                    throw error;
                 }
             };
 
