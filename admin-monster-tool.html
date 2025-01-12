@@ -172,7 +172,7 @@
     </div>
 
     <footer style="width: 100%; padding: 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
-        <p>Version: <span id="versionNumber">1.0.02</span></p>
+        <p>Version: <span id="versionNumber">1.0.021</span></p>
         <p>&copy; 2025 Barcode Masters - Admin Tools</p>
     </footer>
 
@@ -314,70 +314,44 @@
 
         async function uploadMonsterImage(imageBlob, monster) {
             try {
-                // Convert blob to proper PNG format
+                // Convert blob to proper PNG format with promise-based approach
+                const img = await createImageBitmap(imageBlob);
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                    img.src = URL.createObjectURL(imageBlob);
-                });
-                
                 canvas.width = img.width;
                 canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
                 
-                const pngBlob = await new Promise(resolve => {
-                    canvas.toBlob(resolve, 'image/png');
-                });
-
-                // Create storage reference for the monster image
+                // Get PNG blob
+                const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                
+                // Create storage reference - IMPORTANT: Match the exact path format used in DNA extractor
                 const imagePath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
                 const storageRef = ref(storage, imagePath);
 
-                // Get fresh ID token
-                const token = await auth.currentUser.getIdToken(true);
-                
-                // Upload with metadata
+                // Upload with correct metadata
                 const uploadResult = await uploadBytes(storageRef, pngBlob, {
                     contentType: 'image/png',
                     customMetadata: {
                         userId: monster.ownerId,
                         monsterName: monster.monsterName,
-                        dateModified: new Date().toISOString(),
-                        updatedBy: auth.currentUser.uid,
-                        isAdminUpdate: 'true' // Add flag to indicate admin update
+                        dateCreated: new Date().toISOString(),
+                        updatedBy: auth.currentUser.uid
                     }
                 });
 
-                // Get download URL with retries
-                let downloadURL;
-                for (let i = 0; i < 3; i++) {
-                    try {
-                        downloadURL = await getDownloadURL(uploadResult.ref);
-                        if (downloadURL) break;
-                    } catch (error) {
-                        console.warn(`Retry ${i + 1} getting download URL:`, error);
-                        if (i === 2) throw error;
-                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-                    }
-                }
-
-                if (!downloadURL) {
-                    throw new Error('Failed to get download URL after retries');
-                }
+                // Get download URL immediately after upload
+                const downloadURL = await getDownloadURL(uploadResult.ref);
 
                 // Update monster document
                 const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
                 await updateDoc(monsterRef, {
                     imageUrl: downloadURL,
-                    lastUpdated: new Date().toISOString(),
-                    updatedBy: auth.currentUser.uid
+                    lastUpdated: new Date().toISOString()
                 });
 
                 return downloadURL;
+
             } catch (error) {
                 console.error('Upload error:', error);
                 throw new Error(`Upload failed: ${error.message}`);
