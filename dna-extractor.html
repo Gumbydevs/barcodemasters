@@ -225,6 +225,20 @@
             50% { top: 100%; }
             100% { top: 0; }
         }
+
+        .scan-limit-display {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .scan-limit-count {
+            font-weight: bold;
+            color: #3498db;
+        }
     </style>
 </head>
 <body>
@@ -248,6 +262,10 @@
                 </div>
                 <p class="scan-status" style="font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">Scanning...</p>
             </div>
+        </div>
+
+        <div id="scanLimitDisplay" class="scan-limit-display">
+            Loading scan limit...
         </div>
 
         <div id="scanGuide" style="text-align: center; margin: 0.5rem 0; display: none;">
@@ -650,7 +668,7 @@
                     throw new Error('User not authenticated');
                 }
 
-                // Add validation for previously used hash
+                // Get user document
                 const userRef = doc(db, 'users', user.uid);
                 const userDoc = await getDoc(userRef);
                 
@@ -659,8 +677,12 @@
                 }
 
                 const userData = userDoc.data();
+                
+                // Check for user's daily scan limit (default to 3 if not set)
+                const dailyScanLimit = userData.dailyScanLimit || 3;
+
+                // Check for duplicate hash
                 if (userData.usedHash && userData.usedHash.includes(hash)) {
-                    // Update UI to show duplicate scan error
                     const monsterResult = document.getElementById('monsterResult');
                     monsterResult.style.display = 'block';
                     monsterResult.innerHTML = `
@@ -681,6 +703,40 @@
                     updateDebugMessage('DNA code already used by this player');
                     return null;
                 }
+
+                // Check daily scan limit
+                const today = new Date().toISOString().split('T')[0];
+                const dailyScans = userData.dailyScans || {};
+                const todayScans = dailyScans[today] || 0;
+
+                if (todayScans >= dailyScanLimit) {
+                    const monsterResult = document.getElementById('monsterResult');
+                    monsterResult.style.display = 'block';
+                    monsterResult.innerHTML = `
+                        <div class="monster-card">
+                            <div style="text-align: center; padding: 2rem;">
+                                <h3 style="color: #e74c3c;">Daily DNA Extraction Limit Reached</h3>
+                                <p>You have used ${todayScans} out of ${dailyScanLimit} DNA extractions for today.</p>
+                                <p style="font-size: 0.9em; margin-top: 1rem;">Please wait until tomorrow to extract more DNA codes.</p>
+                                <p style="font-size: 0.8em; color: #666;">Next reset: 12:00 AM your local time</p>
+                                ${userData.accountType === 'free' ? `
+                                    <p style="font-size: 0.8em; margin-top: 1rem;">
+                                        <a href="upgrade-account.html" style="color: #3498db;">Upgrade your account</a>
+                                        for additional daily DNA extractions!
+                                    </p>
+                                ` : ''}
+                                <button class="nav-button" onclick="location.href='monster-collection.html'" style="margin-top: 1rem;">
+                                    View Your Collection
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    updateDebugMessage('Daily DNA extraction limit reached');
+                    return null;
+                }
+
+                // Add remaining scans count to debug message
+                updateDebugMessage(`DNA Extractor ready (${dailyScanLimit - todayScans} extractions remaining today)`);
 
                 const monsterTypes = await getMonsterTypes();
                 console.log('Fetched monster types:', monsterTypes);
@@ -721,7 +777,8 @@
                     experience: 0,
                     ownerId: user.uid,
                     dateCreated: new Date().toISOString(),
-                    typeInfo: selectedType
+                    typeInfo: selectedType,
+                    createdBy: userData.username || 'Unknown Player'
                 };
 
                 if (level > 1) {
@@ -734,13 +791,32 @@
                 const monsterRef = doc(db, 'monsters', monsterInstanceId);
                 await setDoc(monsterRef, monster);
 
-                await updateDoc(userRef, {
-                    usedHash: arrayUnion(hash)
+                // Update user's daily scans and used hash in a transaction
+                await runTransaction(db, async (transaction) => {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userSnapshot = await transaction.get(userDocRef);
+                    
+                    if (!userSnapshot.exists()) {
+                        throw new Error('User document does not exist!');
+                    }
+
+                    const userData = userSnapshot.data();
+                    const newDailyScans = { ...userData.dailyScans } || {};
+                    newDailyScans[today] = (newDailyScans[today] || 0) + 1;
+
+                    transaction.update(userDocRef, {
+                        usedHash: arrayUnion(hash),
+                        dailyScans: newDailyScans
+                    });
                 });
+
+                // After successful monster generation, update the display
+                updateScanLimitDisplay(userData.dailyScans || {}, dailyScanLimit);
 
                 displayMonster(monster);
                 updateDebugMessage('Monster DNA sequence found! Beginning synthesis...');
                 return monster;
+
             } catch (error) {
                 console.error('Error generating monster:', error);
                 showError(error.message || 'Failed to generate monster');
@@ -1042,9 +1118,74 @@
             }
         }
 
+        // Add this new function to initialize/update user fields
+        async function ensureUserFields(userId) {
+            try {
+                const userRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userRef);
+                
+                if (!userDoc.exists()) {
+                    throw new Error('User document not found');
+                }
+
+                const userData = userDoc.data();
+                const updates = {};
+                
+                // Default values for required fields
+                if (!userData.dailyScanLimit) updates.dailyScanLimit = 3;
+                if (!userData.dailyScans) updates.dailyScans = {};
+                if (!userData.usedHash) updates.usedHash = [];
+                if (!userData.accountType) updates.accountType = 'free';
+                
+                // Only update if there are missing fields
+                if (Object.keys(updates).length > 0) {
+                    await updateDoc(userRef, updates);
+                    console.log('User fields initialized:', updates);
+                }
+
+                return { ...userData, ...updates };
+            } catch (error) {
+                console.error('Error initializing user fields:', error);
+                throw error;
+            }
+        }
+
+        // Add this function to update the scan limit display
+        function updateScanLimitDisplay(dailyScans, dailyScanLimit) {
+            const display = document.getElementById('scanLimitDisplay');
+            if (!display) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const usedToday = dailyScans[today] || 0;
+            const remaining = dailyScanLimit - usedToday;
+
+            display.innerHTML = `
+                <span class="scan-limit-count">${remaining}</span> DNA extractions remaining today
+                <br>
+                <small>(${usedToday}/${dailyScanLimit} used)</small>
+            `;
+        }
+
         // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initializeScanner();
+            
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    // Initialize user fields and get updated data
+                    const userData = await ensureUserFields(user.uid);
+                    
+                    // Update display with user's scan limits
+                    const today = new Date().toISOString().split('T')[0];
+                    updateScanLimitDisplay(userData.dailyScans || {}, userData.dailyScanLimit || 3);
+                    
+                    updateDebugMessage('DNA Extractor ready');
+                } catch (error) {
+                    console.error('Error initializing user data:', error);
+                    showError('Error loading user data');
+                }
+            }
             
             document.getElementById('startButton').addEventListener('click', startScanning);
             
@@ -1065,14 +1206,23 @@
         });
 
         // Auth check
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
             } else {
-                // Show debug button only for admin
-                const debugButton = document.getElementById('debugButton');
-                if (checkAdminStatus(user.uid)) {
-                    debugButton.style.display = 'block';
+                try {
+                    // Initialize user fields on auth state change
+                    const userData = await ensureUserFields(user.uid);
+                    updateScanLimitDisplay(userData.dailyScans || {}, userData.dailyScanLimit || 3);
+                    
+                    // Show debug button only for admin
+                    const debugButton = document.getElementById('debugButton');
+                    if (checkAdminStatus(user.uid)) {
+                        debugButton.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error initializing user data:', error);
+                    showError('Error loading user data');
                 }
             }
         });
