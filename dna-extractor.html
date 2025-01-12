@@ -253,10 +253,10 @@
         <div id="scanGuide" style="text-align: center; margin: 0.5rem 0; display: none;">
             <div style="background: rgba(52, 152, 219, 0.1); border-left: 3px solid #3498db; padding: 0.5rem; border-radius: 4px;">
                 <p style="margin: 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-around; gap: 0.5rem;">
-                    <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Hold Steady">📱</span> Hold steady</span>
                     <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Center Code">🎯</span> Center code</span>
-                    <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Keep 6-8 inches away">📏</span> 6-8" away</span>
-                    <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Good Lighting">💡</span> Good lighting</span>
+                    <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Hold the camera and the code VERY Steady.">📱</span> Hold steady</span>
+                    <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Keep 6-8 inches away so the code is clearly in focus.">📏</span>Keep 6-8" away</span>
+                    <span style="display: flex; align-items: center; gap: 0.25rem;"><span title="Ensure that you have good Lighting">💡</span> Ensure good lighting</span>
                 </p>
             </div>
         </div>
@@ -744,8 +744,8 @@
                         <div class="monster-image">
                             <div style="text-align: center;">
                                 <p>Synthesizing Monster DNA...</p>
-                                <p style="font-size: 0.8em;">Extracting genetic structure...</p>
-                                <p style="font-size: 0.8em;">Synthizing physical form...</p>
+                                <p style="font-size: 0.8em;">This process can take up to a few minutes...</p>
+                                <p style="font-size: 0.8em;">Stay on this page until your monster is displayed...</p>
                                 <p style="font-size: 0.8em;">Getting ready to materialize...</p>
                             </div>
                         </div>
@@ -786,13 +786,13 @@
 
                     try {
                         if (retryCount > 0) {
-                            console.log(`Backing off for ${(delay/1000).toFixed(1)} seconds before retry ${retryCount}...`);
+                            console.log(`DNA Extractor overheating, backing off for ${(delay/1000).toFixed(1)} seconds before retry ${retryCount}...`);
                             updateDebugMessage(`Cooling down... Next attempt in ${(delay/1000).toFixed(1)} seconds`);
                             await new Promise(resolve => setTimeout(resolve, delay));
                         }
 
-                        console.log(`Attempting model ${currentModel} (attempt ${retryCount + 1})`);
-                        updateDebugMessage(`Generating with ${currentModel.split('/')[1]}...`);
+                        console.log(`Attempting to synthesize appearence with model ${currentModel} (attempt ${retryCount + 1})`);
+                        updateDebugMessage(`Synthesizing appearence with ${currentModel.split('/')[1]}...`);
 
                         const response = await Promise.race([
                             fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
