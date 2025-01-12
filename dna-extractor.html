@@ -319,7 +319,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, runTransaction, collection, getDocs, deleteDoc, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         
         // Firebase configuration
@@ -1028,12 +1028,21 @@
                         <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
                             Retry DNA Synthesis
                         </button>
+                        <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                            Delete Failed Monster
+                        </button>
                     </div>
                 `;
 
                 // Add click handler for retry button
                 const retryButton = monsterImage.querySelector('#retryGenerationButton');
+                const deleteButton = monsterImage.querySelector('#deleteFailedMonster');
+
                 retryButton.addEventListener('click', async () => {
+                    retryButton.disabled = true;
+                    retryButton.style.opacity = '0.5';
+                    retryButton.textContent = 'Retrying...';
+
                     // Remove the retry button and show loading state
                     monsterImage.innerHTML = `
                         <div style="text-align: center;">
@@ -1045,29 +1054,70 @@
                     `;
 
                     try {
-                        // Regenerate the image with the same prompt
-                        const imageUrl = await generateImage();
+                        // Reset the generation attempts counter before retrying
+                        const imageUrl = await generateImage(0); // Start fresh with 0 retries
+                        if (!imageUrl) throw new Error('Failed to generate image');
+
                         monsterImage.innerHTML = `
                             <img src="${imageUrl}" alt="${monster.monsterName}" 
                                 style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
                         `;
+
+                        // Update the monster document with the successful image URL
+                        const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
+                        const monsterRef = doc(db, 'monsters', monsterInstanceId);
+                        await updateDoc(monsterRef, { 
+                            imageUrl: imageUrl,
+                            lastUpdated: new Date().toISOString()
+                        });
+
                     } catch (retryError) {
-                        // If retry fails, show the error message with retry button again
+                        console.error('Retry failed:', retryError);
                         monsterImage.innerHTML = `
                             <div style="text-align: center; padding: 2rem;">
-                                <p>DNA Synthesis Interrupted</p>
+                                <p>DNA Synthesis Failed</p>
                                 <p style="font-size: 0.8em; color: #666;">
-                                    ${retryError.message.includes('Rate limit') ? 
-                                    'The DNA Synthesizer needs time to recharge. Please wait a moment...' : 
-                                    'A DNA sequencing error occurred. Please try again.'}
+                                    All DNA synthesizers are currently busy. Please try again later or delete this failed monster.
                                 </p>
                                 <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
                                     Retry DNA Synthesis
                                 </button>
+                                <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                                    Delete Failed Monster
+                                </button>
                             </div>
                         `;
-                        // Recursively add click handler to new retry button
-                        monsterImage.querySelector('#retryGenerationButton').addEventListener('click', retryButton.onclick);
+                        
+                        // Reattach event listeners to new buttons
+                        const newRetryButton = monsterImage.querySelector('#retryGenerationButton');
+                        const newDeleteButton = monsterImage.querySelector('#deleteFailedMonster');
+                        newRetryButton.addEventListener('click', retryButton.onclick);
+                        newDeleteButton.addEventListener('click', deleteButton.onclick);
+                    }
+                });
+
+                // Add click handler for delete button
+                deleteButton.addEventListener('click', async () => {
+                    try {
+                        const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
+                        const monsterRef = doc(db, 'monsters', monsterInstanceId);
+                        await deleteDoc(monsterRef);
+
+                        // Remove the used hash from user's list
+                        const userRef = doc(db, 'users', monster.ownerId);
+                        await updateDoc(userRef, {
+                            usedHash: arrayRemove(monster.hash)
+                        });
+
+                        // Reset the monster display area
+                        monsterResult.style.display = 'none';
+                        updateDebugMessage('Failed monster deleted. You can try scanning a new code.');
+                        
+                        // Reset scan button
+                        document.getElementById('startButton').style.display = 'block';
+                    } catch (deleteError) {
+                        console.error('Error deleting failed monster:', deleteError);
+                        showError('Failed to delete monster. Please try again.');
                     }
                 });
             }
