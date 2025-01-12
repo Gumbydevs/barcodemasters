@@ -49,13 +49,22 @@
     <h2>Changelog for January 12, 2024</h2>
     <h3>Added</h3>
     <ul>
+        <li><strong>DNA Extractor Improvements:</strong>
+            <ul>
+                <li>Added retry functionality for failed monster image generation</li>
+                <li>Implemented delete option for failed monsters</li>
+                <li>Enhanced error recovery system with automatic database cleanup</li>
+                <li>Added visual feedback during retry attempts</li>
+                <li>Improved model switching logic during retries</li>
+            </ul>
+        </li>
         <li><strong>Account System Overhaul:</strong>
             <ul>
                 <li>Implemented tiered account system:
                     <ul>
-                        <li>Free accounts: 3 DNA extractions per day</li>
-                        <li>Premium accounts: 10 DNA extractions per day</li>
-                        <li>VIP accounts: 25 DNA extractions per day</li>
+                        <li>Free accounts: Limited daily DNA extractions</li>
+                        <li>Premium accounts: Increased daily DNA extractions</li>
+                        <li>VIP accounts: Maximum daily DNA extractions</li>
                     </ul>
                 </li>
                 <li>Added daily scan limit tracking and reset system</li>
