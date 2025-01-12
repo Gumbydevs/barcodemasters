@@ -650,6 +650,38 @@
                     throw new Error('User not authenticated');
                 }
 
+                // Add validation for previously used hash
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                
+                if (!userDoc.exists()) {
+                    throw new Error('User profile not found');
+                }
+
+                const userData = userDoc.data();
+                if (userData.usedHash && userData.usedHash.includes(hash)) {
+                    // Update UI to show duplicate scan error
+                    const monsterResult = document.getElementById('monsterResult');
+                    monsterResult.style.display = 'block';
+                    monsterResult.innerHTML = `
+                        <div class="monster-card">
+                            <div style="text-align: center; padding: 2rem;">
+                                <h3 style="color: #e74c3c;">DNA Code Already Extracted</h3>
+                                <p>This DNA code has already been synthesized by you.</p>
+                                <p style="font-size: 0.9em; margin-top: 1rem;">Each unique DNA code can only be extracted once per player to maintain balance.</p>
+                                <button class="scan-button" onclick="location.reload()" style="margin-top: 1rem;">
+                                    Scan New Code
+                                </button>
+                                <button class="nav-button" onclick="location.href='monster-collection.html'" style="margin-top: 1rem;">
+                                    View Your Collection
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    updateDebugMessage('DNA code already used by this player');
+                    return null;
+                }
+
                 const monsterTypes = await getMonsterTypes();
                 console.log('Fetched monster types:', monsterTypes);
 
@@ -702,7 +734,6 @@
                 const monsterRef = doc(db, 'monsters', monsterInstanceId);
                 await setDoc(monsterRef, monster);
 
-                const userRef = doc(db, 'users', user.uid);
                 await updateDoc(userRef, {
                     usedHash: arrayUnion(hash)
                 });
