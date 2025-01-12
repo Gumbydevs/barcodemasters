@@ -93,37 +93,33 @@
                 logToDebug(`Attempting to create user in Firestore (Attempt ${retryCount + 1})`);
                 const userRef = doc(db, "users", user.uid);
                 
-                // Check again if user exists (double-check)
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) {
-                    logToDebug("User already exists in Firestore (double-check)");
-                    return true;
-                }
-
                 const userData = {
-                    username: user.displayName || 'New User',
+                    username: user.displayName || user.email.split('@')[0],
                     email: user.email,
                     uid: user.uid,
                     createdAt: serverTimestamp(),
-                    lastLogin: serverTimestamp()
+                    lastLogin: serverTimestamp(),
+                    role: 'user',  // Default role
+                    status: 'active'  // Default status
                 };
 
                 await setDoc(userRef, userData);
+                logToDebug("Successfully created user in Firestore");
                 
                 // Verify the user was created
                 const verifySnap = await getDoc(userRef);
-                if (verifySnap.exists()) {
-                    logToDebug("Successfully created and verified user in Firestore");
-                    return true;
-                } else {
+                if (!verifySnap.exists()) {
                     throw new Error("User creation verification failed");
                 }
+                
+                return true;
+
             } catch (error) {
                 logToDebug(`Failed to create user in Firestore: ${error.message}`, 'error');
                 
-                // Retry logic
                 if (retryCount < 2) {
                     logToDebug(`Retrying user creation (Attempt ${retryCount + 2})`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
                     return await createUserInFirestore(user, retryCount + 1);
                 }
                 
@@ -139,25 +135,35 @@
                 const user = userCredential.user;
                 logToDebug(`Authentication successful for UID: ${user.uid}`);
 
-                // Check if user exists in Firestore
-                const userRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(userRef);
+                try {
+                    // Check if user exists in Firestore
+                    const userRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(userRef);
 
-                if (!docSnap.exists()) {
-                    logToDebug("User not found in Firestore - creating new user document");
-                    await createUserInFirestore(user);
-                } else {
-                    logToDebug("User found in Firestore");
+                    if (!docSnap.exists()) {
+                        logToDebug("User not found in Firestore - creating new user document");
+                        await createUserInFirestore(user);
+                    } else {
+                        logToDebug("User found in Firestore - updating lastLogin");
+                        // Update lastLogin for existing user
+                        await setDoc(userRef, {
+                            lastLogin: serverTimestamp()
+                        }, { merge: true });
+                    }
+
+                    // Store user info in localStorage
+                    localStorage.setItem("loggedInUser", JSON.stringify({
+                        email: user.email,
+                        uid: user.uid
+                    }));
+
+                    // Handle redirect
+                    handleRedirect();
+
+                } catch (dbError) {
+                    logToDebug(`Database operation failed: ${dbError.message}`, 'error');
+                    showError('Login successful but failed to update user data. Please try again.');
                 }
-
-                // Store user info in localStorage
-                localStorage.setItem("loggedInUser", JSON.stringify({
-                    email: user.email,
-                    uid: user.uid
-                }));
-
-                // Handle redirect
-                handleRedirect();
 
             } catch (error) {
                 let errorMessage = 'An error occurred during login.';
