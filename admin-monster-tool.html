@@ -172,7 +172,7 @@
     </div>
 
     <footer style="width: 100%; padding: 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
-        <p>Version: <span id="versionNumber">1.0.019</span></p>
+        <p>Version: <span id="versionNumber">1.0.02</span></p>
         <p>&copy; 2025 Barcode Masters - Admin Tools</p>
     </footer>
 
@@ -333,53 +333,54 @@
                     canvas.toBlob(resolve, 'image/png');
                 });
 
-                // Create unique filenames for both admin and user contexts
-                const adminPath = `monster-images/admin-${monster.hash}-${monster.ownerId}.png`;
-                const userPath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
-                
-                // Try admin upload first
-                try {
-                    const adminRef = ref(storage, adminPath);
-                    await uploadBytes(adminRef, pngBlob, {
-                        contentType: 'image/png',
-                        customMetadata: {
-                            adminUpdate: 'true',
-                            userId: monster.ownerId,
-                            monsterName: monster.monsterName,
-                            dateModified: new Date().toISOString()
-                        }
-                    });
-                    
-                    // Copy to user path using admin privileges
-                    const userRef = ref(storage, userPath);
-                    await uploadBytes(userRef, pngBlob, {
-                        contentType: 'image/png',
-                        customMetadata: {
-                            userId: monster.ownerId,
-                            monsterName: monster.monsterName,
-                            dateModified: new Date().toISOString()
-                        }
-                    });
-                    
-                    // Get the user-accessible URL
-                    const downloadURL = await getDownloadURL(userRef);
-                    
-                    // Update monster document with new URL
-                    const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
-                    await updateDoc(monsterRef, {
-                        imageUrl: downloadURL,
-                        lastUpdated: new Date().toISOString(),
-                        updatedBy: auth.currentUser.uid
-                    });
+                // Create storage reference for the monster image
+                const imagePath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
+                const storageRef = ref(storage, imagePath);
 
-                    return downloadURL;
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    throw new Error(`Upload failed: ${error.message}`);
+                // Get fresh ID token
+                const token = await auth.currentUser.getIdToken(true);
+                
+                // Upload with metadata
+                const uploadResult = await uploadBytes(storageRef, pngBlob, {
+                    contentType: 'image/png',
+                    customMetadata: {
+                        userId: monster.ownerId,
+                        monsterName: monster.monsterName,
+                        dateModified: new Date().toISOString(),
+                        updatedBy: auth.currentUser.uid,
+                        isAdminUpdate: 'true' // Add flag to indicate admin update
+                    }
+                });
+
+                // Get download URL with retries
+                let downloadURL;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        downloadURL = await getDownloadURL(uploadResult.ref);
+                        if (downloadURL) break;
+                    } catch (error) {
+                        console.warn(`Retry ${i + 1} getting download URL:`, error);
+                        if (i === 2) throw error;
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    }
                 }
+
+                if (!downloadURL) {
+                    throw new Error('Failed to get download URL after retries');
+                }
+
+                // Update monster document
+                const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
+                await updateDoc(monsterRef, {
+                    imageUrl: downloadURL,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: auth.currentUser.uid
+                });
+
+                return downloadURL;
             } catch (error) {
-                console.error('Image processing error:', error);
-                throw new Error(`Image processing failed: ${error.message}`);
+                console.error('Upload error:', error);
+                throw new Error(`Upload failed: ${error.message}`);
             }
         }
 
