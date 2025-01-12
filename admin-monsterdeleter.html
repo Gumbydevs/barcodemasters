@@ -89,6 +89,56 @@
 
         .success { background: rgba(46, 204, 113, 0.2); }
         .error { background: rgba(231, 76, 60, 0.2); }
+
+        .regenerate-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .regenerate-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        .monster-image {
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .monster-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -125,7 +175,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, doc, deleteDoc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { getStorage, ref, deleteObject, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -221,22 +271,260 @@
             }
         }
 
+        function generatePrompt(monster) {
+            const promptParts = [
+                "character illustration",
+                "award winning digital art",
+                "masterpiece",
+                "clean image",
+                "best quality",
+                "highly detailed",
+                `${monster.type.toLowerCase()} type creature`,
+                "complete full body shot",
+                "entire creature visible",
+                "fits completely in frame",
+                "subject fully centered",
+                "symmetrical front view",
+                "clear empty space around subject",
+                "proper composition"
+            ];
+
+            // Add stat-based characteristics
+            const characteristics = [];
+            if (monster.HP > 15) characteristics.push('massive, sturdy build');
+            if (monster.AP > 8) characteristics.push('visible powerful features');
+            if (monster.Speed > 5) characteristics.push('sleek, nimble, agile form');
+            if (monster.HP < 5) characteristics.push('frail, weak build');
+            if (monster.AP < 5) characteristics.push('scrawny, weak features');
+            if (monster.Speed < 5) characteristics.push('heavy, slow form');
+
+            if (characteristics.length > 0) {
+                promptParts.push(characteristics.join(', '));
+            }
+
+            promptParts.push(
+                `themed after ${monster.monsterName.toLowerCase()}`,
+                "dramatic lighting",
+                "vibrant colors",
+                "4k resolution"
+            );
+
+            return {
+                positivePrompt: promptParts.filter(Boolean).join(', '),
+                negativePrompt: "text, watermark, signature, cropped, bad anatomy, bad proportions, extra limbs, duplicate, deformed, mutation, blurry"
+            };
+        }
+
+        async function regenerateMonsterImage(monster, cardElement) {
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.className = 'loading-overlay';
+            loadingOverlay.innerHTML = `
+                <p>Regenerating image...</p>
+                <p style="font-size: 0.8em;">This may take a few moments</p>
+                <p style="font-size: 0.8em;" id="modelStatus"></p>
+            `;
+            cardElement.style.position = 'relative';
+            cardElement.appendChild(loadingOverlay);
+
+            const updateStatus = (message) => {
+                const statusEl = loadingOverlay.querySelector('#modelStatus');
+                if (statusEl) statusEl.textContent = message;
+            };
+
+            try {
+                const prompt = generatePrompt(monster);
+                console.log('Generated prompt:', prompt);
+
+                const models = [
+                    'Lykon/DreamShaper',
+                    'prompthero/openjourney-v4',
+                    'runwayml/stable-diffusion-v1-5'
+                ];
+
+                let success = false;
+                let imageBlob = null;
+                let attemptCount = 0;
+                const maxAttempts = 9;
+
+                while (!success && attemptCount < maxAttempts) {
+                    const modelIndex = Math.floor(attemptCount / 3);
+                    const currentModel = models[modelIndex];
+                    
+                    if (!currentModel) break;
+
+                    const backoffTime = Math.min(2000 * Math.pow(1.5, attemptCount), 10000);
+                    if (attemptCount > 0) {
+                        updateStatus(`Cooling down... ${(backoffTime/1000).toFixed(1)}s before next attempt`);
+                        await new Promise(resolve => setTimeout(resolve, backoffTime));
+                    }
+
+                    updateStatus(`Attempting with ${currentModel.split('/')[1]} (${attemptCount + 1}/${maxAttempts})`);
+
+                    try {
+                        const response = await fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer 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',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                inputs: prompt.positivePrompt,
+                                parameters: {
+                                    negative_prompt: prompt.negativePrompt,
+                                    width: 512,
+                                    height: 512,
+                                    num_inference_steps: 30,
+                                    guidance_scale: 8.5,
+                                    seed: Math.floor(Math.random() * 2147483647)
+                                }
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Model ${currentModel} failed: ${response.status}`);
+                        }
+
+                        imageBlob = await response.blob();
+                        if (imageBlob.size > 1000) {
+                            success = true;
+                            break;
+                        }
+                    } catch (error) {
+                        console.warn(`Attempt ${attemptCount + 1} failed:`, error);
+                        updateStatus(`${error.message}. Trying again...`);
+                    }
+
+                    attemptCount++;
+                }
+
+                if (!success || !imageBlob) {
+                    throw new Error('Failed to generate image after multiple attempts');
+                }
+
+                // Create a temporary URL for immediate display
+                const tempUrl = URL.createObjectURL(imageBlob);
+                const monsterImage = cardElement.querySelector('.monster-image');
+                monsterImage.innerHTML = `<img src="${tempUrl}" alt="${monster.monsterName}">`;
+
+                // Get user token for authenticated upload
+                const token = await auth.currentUser.getIdToken();
+
+                // Create file metadata
+                const metadata = {
+                    contentType: 'image/png',
+                    customMetadata: {
+                        monsterName: monster.monsterName,
+                        monsterType: monster.type,
+                        dateCreated: new Date().toISOString()
+                    }
+                };
+
+                // Prepare upload
+                const monsterId = `${monster.hash}-${monster.ownerId}`;
+                const storageRef = ref(storage, `monster-images/${monsterId}.png`);
+
+                try {
+                    // Delete old image first
+                    await deleteMonsterImage(monster);
+
+                    // Upload new image
+                    updateStatus('Uploading new image...');
+                    const uploadResult = await uploadBytes(storageRef, imageBlob, metadata);
+                    const downloadUrl = await getDownloadURL(uploadResult.ref);
+
+                    // Update monster document
+                    await updateDoc(doc(db, 'monsters', monsterId), {
+                        imageUrl: downloadUrl,
+                        lastUpdated: new Date().toISOString()
+                    });
+
+                    // Update display with permanent URL
+                    monsterImage.innerHTML = `<img src="${downloadUrl}?t=${Date.now()}" alt="${monster.monsterName}">`;
+                    
+                    showStatus('Monster image regenerated successfully!');
+                    return downloadUrl;
+                } catch (uploadError) {
+                    console.error('Upload failed:', uploadError);
+                    // Keep the temporary URL display if upload fails
+                    showStatus('Generated image shown but upload failed. Try again.', true);
+                    throw uploadError;
+                } finally {
+                    // Clean up temporary URL
+                    URL.revokeObjectURL(tempUrl);
+                }
+
+            } catch (error) {
+                showStatus('Error: ' + error.message, true);
+                throw error;
+            } finally {
+                loadingOverlay.remove();
+            }
+        }
+
         function createMonsterCard(hash, ownerId, monster) {
             const div = document.createElement('div');
             div.className = 'monster-card';
             div.innerHTML = `
                 <h3>${monster.monsterName}</h3>
+                <div class="monster-image">
+                    ${monster.imageUrl ? 
+                        `<img src="${monster.imageUrl}" alt="${monster.monsterName}">` :
+                        '<p>No image available</p>'
+                    }
+                </div>
                 <p>Type: ${monster.type}</p>
                 <p>Level: <input type="number" class="stat-input" data-stat="level" value="${monster.level}"></p>
                 <p>HP: <input type="number" class="stat-input" data-stat="HP" value="${monster.HP}"></p>
                 <p>AP: <input type="number" class="stat-input" data-stat="AP" value="${monster.AP}"></p>
                 <p>Speed: <input type="number" class="stat-input" data-stat="Speed" value="${monster.Speed}"></p>
                 <p>Hash: ${monster.hash}</p>
-                <button class="save-btn">Save Changes</button>
-                <button class="delete-btn">Delete Monster</button>
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                    <button class="regenerate-btn">Regenerate Image</button>
+                    <button class="save-btn">Save Changes</button>
+                    <button class="delete-btn">Delete Monster</button>
+                </div>
             `;
 
             const documentId = `${hash}-${ownerId}`;
+            const monsterImage = div.querySelector('.monster-image');
+
+            // Regenerate button handler with image update
+            div.querySelector('.regenerate-btn').addEventListener('click', async () => {
+                if (confirm('Are you sure you want to regenerate this monster\'s image?')) {
+                    const btn = div.querySelector('.regenerate-btn');
+                    btn.disabled = true;
+                    try {
+                        await regenerateMonsterImage(monster, div);
+                        // Fetch updated monster data to get new image URL
+                        const monsterDoc = await getDoc(doc(db, 'monsters', documentId));
+                        if (monsterDoc.exists()) {
+                            const updatedMonster = monsterDoc.data();
+                            if (updatedMonster.imageUrl) {
+                                monsterImage.innerHTML = `
+                                    <img src="${updatedMonster.imageUrl}?t=${Date.now()}" alt="${monster.monsterName}">
+                                `;
+                            }
+                        }
+                    } catch (error) {
+                        showStatus('Error updating image: ' + error.message, true);
+                    } finally {
+                        btn.disabled = false;
+                    }
+                }
+            });
+
+            // Add regenerate button handler
+            div.querySelector('.regenerate-btn').addEventListener('click', async () => {
+                if (confirm('Are you sure you want to regenerate this monster\'s image?')) {
+                    const btn = div.querySelector('.regenerate-btn');
+                    btn.disabled = true;
+                    try {
+                        await regenerateMonsterImage(monster, div);
+                    } finally {
+                        btn.disabled = false;
+                    }
+                }
+            });
 
             div.querySelector('.save-btn').addEventListener('click', async () => {
                 try {
