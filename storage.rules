@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Base match for monster images
+    match /monster-images/{imageId} {
+      // Allow read for authenticated users - either their own monsters or admin
+      allow read: if request.auth != null && 
+        (imageId.matches('.*-' + request.auth.uid + '.png') || 
+         request.auth.uid == 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2'); // Admin UID
+      
+      // Allow write if user is admin or it's their own monster image
+      allow write, delete: if request.auth != null && (
+        request.auth.uid == 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2' || // Admin can write/delete any image
+        imageId.matches('.*-' + request.auth.uid + '.png')      // Users can write/delete their own images
+      );
+
+      // Validate upload metadata
+      allow create: if request.resource.contentType.matches('image/.*') &&
+        request.resource.size < 5 * 1024 * 1024 && // 5MB max
+        request.resource.metadata.keys().hasAll(['monsterName', 'monsterType', 'dateCreated']);
+    }
+
+    // Profile images rules (if you have them)
+    match /profile-images/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (request.auth.uid == userId || 
+         request.auth.uid == 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2');
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

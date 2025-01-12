@@ -313,47 +313,52 @@
         }
 
         async function uploadMonsterImage(imageBlob, monster) {
-            try {
-                // Convert blob to proper PNG format with promise-based approach
-                const img = await createImageBitmap(imageBlob);
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                
-                // Get PNG blob
-                const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                
-                // Create storage reference - IMPORTANT: Match the exact path format used in DNA extractor
-                const imagePath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
-                const storageRef = ref(storage, imagePath);
+            if (!imageBlob || imageBlob.size < 1000) {
+                throw new Error('Invalid image data received');
+            }
 
-                // Upload with correct metadata
-                const uploadResult = await uploadBytes(storageRef, pngBlob, {
+            try {
+                // Create a unique ID for the monster image - EXACTLY matching DNA extractor format
+                const monsterId = `${monster.hash}-${monster.ownerId}`;
+                
+                // Create storage reference with exact same path as DNA extractor
+                const storageRef = ref(storage, `monster-images/${monsterId}.png`);
+                
+                // Create metadata matching DNA extractor
+                const metadata = {
                     contentType: 'image/png',
                     customMetadata: {
-                        userId: monster.ownerId,
                         monsterName: monster.monsterName,
-                        dateCreated: new Date().toISOString(),
-                        updatedBy: auth.currentUser.uid
+                        monsterType: monster.type,
+                        dateCreated: new Date().toISOString()
                     }
-                });
+                };
 
-                // Get download URL immediately after upload
-                const downloadURL = await getDownloadURL(uploadResult.ref);
+                // Upload the blob with metadata
+                const uploadResult = await uploadBytes(storageRef, imageBlob, metadata);
+                console.log('Image uploaded successfully:', uploadResult);
 
-                // Update monster document
-                const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
-                await updateDoc(monsterRef, {
-                    imageUrl: downloadURL,
+                // Get the download URL
+                const imageUrl = await getDownloadURL(storageRef);
+                console.log('Image URL generated:', imageUrl);
+
+                // Update monster document with image URL
+                const monsterRef = doc(db, 'monsters', monsterId);
+                await updateDoc(monsterRef, { 
+                    imageUrl: imageUrl,
                     lastUpdated: new Date().toISOString()
                 });
 
-                return downloadURL;
-
+                return imageUrl;
             } catch (error) {
                 console.error('Upload error:', error);
+                // Log more detailed error information
+                if (error.code) {
+                    console.error('Error code:', error.code);
+                }
+                if (error.serverResponse) {
+                    console.error('Server response:', error.serverResponse);
+                }
                 throw new Error(`Upload failed: ${error.message}`);
             }
         }
