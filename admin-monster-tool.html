@@ -172,7 +172,7 @@
     </div>
 
     <footer style="width: 100%; padding: 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2);">
-        <p>Version: <span id="versionNumber">1.0.018</span></p>
+        <p>Version: <span id="versionNumber">1.0.019</span></p>
         <p>&copy; 2025 Barcode Masters - Admin Tools</p>
     </footer>
 
@@ -314,80 +314,72 @@
 
         async function uploadMonsterImage(imageBlob, monster) {
             try {
-                // Convert blob to base64 for temporary storage
-                const base64Data = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(imageBlob);
+                // Convert blob to proper PNG format
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = URL.createObjectURL(imageBlob);
+                });
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const pngBlob = await new Promise(resolve => {
+                    canvas.toBlob(resolve, 'image/png');
                 });
 
-                // Create a new blob from base64 with proper MIME type
-                const response = await fetch(base64Data);
-                const properBlob = await response.blob();
-
-                // Create unique filename
-                const fileName = `monster-images/${monster.hash}-${monster.ownerId}.png`;
-                const storageRef = ref(storage, fileName);
-
-                // Create metadata with proper CORS headers
-                const metadata = {
-                    contentType: 'image/png',
-                    customMetadata: {
-                        userId: monster.ownerId,
-                        monsterName: monster.monsterName,
-                        dateCreated: new Date().toISOString(),
-                        updatedBy: auth.currentUser.uid
-                    }
-                };
-
-                // Get fresh auth token
-                const token = await auth.currentUser.getIdToken(true);
-
+                // Create unique filenames for both admin and user contexts
+                const adminPath = `monster-images/admin-${monster.hash}-${monster.ownerId}.png`;
+                const userPath = `monster-images/${monster.hash}-${monster.ownerId}.png`;
+                
+                // Try admin upload first
                 try {
-                    // Try to delete existing image first
-                    try {
-                        const existingRef = ref(storage, fileName);
-                        await deleteObject(existingRef);
-                    } catch (deleteError) {
-                        console.log('No existing image or delete failed:', deleteError);
-                    }
-
-                    // Upload new image
-                    const uploadTask = await uploadBytes(storageRef, properBlob, metadata);
-                    console.log('Upload successful:', uploadTask);
-
-                    // Get download URL with retries
-                    let downloadURL;
-                    for (let i = 0; i < 3; i++) {
-                        try {
-                            downloadURL = await getDownloadURL(uploadTask.ref);
-                            break;
-                        } catch (urlError) {
-                            if (i === 2) throw urlError;
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                    const adminRef = ref(storage, adminPath);
+                    await uploadBytes(adminRef, pngBlob, {
+                        contentType: 'image/png',
+                        customMetadata: {
+                            adminUpdate: 'true',
+                            userId: monster.ownerId,
+                            monsterName: monster.monsterName,
+                            dateModified: new Date().toISOString()
                         }
-                    }
-
-                    if (!downloadURL) {
-                        throw new Error('Failed to get download URL');
-                    }
-
+                    });
+                    
+                    // Copy to user path using admin privileges
+                    const userRef = ref(storage, userPath);
+                    await uploadBytes(userRef, pngBlob, {
+                        contentType: 'image/png',
+                        customMetadata: {
+                            userId: monster.ownerId,
+                            monsterName: monster.monsterName,
+                            dateModified: new Date().toISOString()
+                        }
+                    });
+                    
+                    // Get the user-accessible URL
+                    const downloadURL = await getDownloadURL(userRef);
+                    
                     // Update monster document with new URL
                     const monsterRef = doc(db, 'monsters', `${monster.hash}-${monster.ownerId}`);
                     await updateDoc(monsterRef, {
                         imageUrl: downloadURL,
-                        lastUpdated: new Date().toISOString()
+                        lastUpdated: new Date().toISOString(),
+                        updatedBy: auth.currentUser.uid
                     });
 
                     return downloadURL;
-                } catch (uploadError) {
-                    console.error('Upload error:', uploadError);
-                    // Create a temporary URL as fallback
-                    return URL.createObjectURL(properBlob);
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    throw new Error(`Upload failed: ${error.message}`);
                 }
             } catch (error) {
                 console.error('Image processing error:', error);
-                throw new Error(`Upload failed: ${error.message}`);
+                throw new Error(`Image processing failed: ${error.message}`);
             }
         }
 
