@@ -711,7 +711,7 @@
                 monsterName: newName.trim()
             });
             
-            showToast('Monster renamed successfully!', true); // Add true parameter here
+            showToast('Monster renamed successfully!'); // Removed refresh parameter
             
             // Refresh the display
             await fetchMonsters();
@@ -742,8 +742,7 @@
             }
 
             await deleteDoc(monsterRef);
-            // Changed order of parameters to match the function definition
-            showToast('Monster deleted successfully!', true, true); // refreshAfter=true, isError=true
+            showToast('Monster deleted successfully!', false, true); // Removed refresh parameter, kept error style
             await fetchMonsters();
         } catch (error) {
             console.error("Error deleting monster:", error);
@@ -957,12 +956,6 @@
         setTimeout(() => {
             toast.style.transform = 'translateY(100px)';
             toast.style.opacity = '0';
-            
-            if (refreshAfter) {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300);
-            }
         }, 3000);
     }
 
