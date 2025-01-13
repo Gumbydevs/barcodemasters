@@ -545,7 +545,7 @@
                 <div class="monster-preview">
                     <h3>AI Monster</h3>
                     <div class="monster-image-placeholder"></div>
-                    <p>Level 2 Robot</p>
+                    <p>Loading...</p>
                 </div>
             </div>
             <button class="nav-button start-battle-button" onclick="startBattle()">Start Battle</button>
@@ -585,17 +585,42 @@
             const [isDefending, setIsDefending] = React.useState(false);
             
             const [playerMonster, setPlayerMonster] = React.useState(null);
-            const [opponentMonster, setOpponentMonster] = React.useState({
-                monsterName: "Ai Monster",
-                type: "Robot",
-                level: 2,
-                HP: 17,
-                AP: 5,
-                Speed: 10
+            const [opponentMonster, setOpponentMonster] = React.useState(() => {
+                // Get player's level from URL params or default to 1
+                const urlParams = new URLSearchParams(window.location.search);
+                const playerLevel = parseInt(urlParams.get('level')) || 1;
+                
+                // Scale opponent level to be within +/- 2 levels of player
+                const levelVariance = Math.floor(Math.random() * 5) - 2; // Random number between -2 and +2
+                const opponentLevel = Math.max(1, playerLevel + levelVariance);
+                
+                // Increased base stats
+                const baseHP = 17; // Increased from 15
+                const baseAP = 7;  // Increased from 4
+                const baseSpeed = 5; // Increased from 8
+                
+                // Improved scaling factors
+                const hpScaling = 0.25;  // Increased from 0.2
+                const apScaling = 0.18;  // Increased from 0.15
+                const speedScaling = 0.12; // Increased from 0.1
+                
+                // Calculate scaled stats with improved formulas
+                const scaledHP = Math.round(baseHP * (1 + (opponentLevel - 1) * hpScaling));
+                const scaledAP = Math.round(baseAP * (1 + (opponentLevel - 1) * apScaling));
+                const scaledSpeed = Math.round(baseSpeed * (1 + (opponentLevel - 1) * speedScaling));
+                
+                return {
+                    monsterName: `Level ${opponentLevel} AI Monster`,
+                    type: "Robot",
+                    level: opponentLevel,
+                    HP: scaledHP,
+                    AP: scaledAP,
+                    Speed: scaledSpeed
+                };
             });
 
             const [playerHealth, setPlayerHealth] = React.useState(100);
-            const [opponentHealth, setOpponentHealth] = React.useState(17); // Also update initial health to match max HP
+            const [opponentHealth, setOpponentHealth] = React.useState(opponentMonster.HP); // Also update initial health to match max HP
             const [battleLog, setBattleLog] = React.useState([]);
             const [isBattleOver, setIsBattleOver] = React.useState(false);
             const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
@@ -798,11 +823,7 @@
                     setOpponentHealth(0);
                     setIsBattleOver(true);
                     
-                    // New XP calculation
-                    const baseXP = 25;
-                    const levelBonus = Math.floor(opponentMonster.level * 7.5); // Reduced from 10
-                    const randomFactor = (Math.random() * 10) - 5; // Random value between -5 and +5
-                    const totalExp = Math.floor(baseXP + levelBonus + randomFactor);
+                    const totalExp = calculateBattleRewards();
 
                     if (playerMonster?.id) {
                         try {
@@ -840,7 +861,7 @@
 
                             await monsterRef.update(updates);
                             showToast(`Victory! Gained ${totalExp} experience points! 🏆`);
-                            addToLog(`🏆 Victory!`);
+                            addToLog(`Victory against Level ${opponentMonster.level} opponent! +${totalExp} XP`);
                             
                             // Update UI state
                             setPlayerMonster(prev => ({
@@ -1090,6 +1111,19 @@
                 }, 3000);
             };
 
+            // Add calculateBattleRewards function
+            const calculateBattleRewards = () => {
+                const levelDifference = opponentMonster.level - playerMonster.level;
+                const baseXP = 25;
+                
+                // Bonus XP for defeating higher level opponents, reduced XP for lower level
+                const levelBonus = Math.floor(opponentMonster.level * 7.5);
+                const difficultyMultiplier = 1 + (levelDifference * 0.1); // 10% more/less XP per level difference
+                
+                const randomFactor = (Math.random() * 10) - 5;
+                return Math.max(1, Math.floor((baseXP + levelBonus) * difficultyMultiplier + randomFactor));
+            };
+
             // Update the return JSX
             return (
                 <div className="battle-container">
@@ -1181,6 +1215,26 @@
             console.log('Updating preview with monster data:', monsterData);
 
             if (monsterData) {
+                // Calculate AI opponent level based on player level
+                const playerLevel = parseInt(monsterData.level) || 1;
+                const levelVariance = Math.floor(Math.random() * 5) - 2;
+                const aiLevel = Math.max(1, playerLevel + levelVariance);
+
+                // Update player monster name and stats...
+                // ... existing player update code ...
+
+                // Update AI opponent preview
+                const aiPreviewElement = document.querySelector('.monster-preview:last-child p');
+                if (aiPreviewElement) {
+                    aiPreviewElement.textContent = `Level ${aiLevel} Robot`;
+                }
+
+                // Update AI opponent name
+                const aiNameElement = document.querySelector('.monster-preview:last-child h3');
+                if (aiNameElement) {
+                    aiNameElement.textContent = `AI Monster (Lvl ${aiLevel})`;
+                }
+
                 // Update monster name
                 const nameElement = document.getElementById('playerMonsterName');
                 if (nameElement) {
