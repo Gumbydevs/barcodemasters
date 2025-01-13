@@ -742,7 +742,8 @@
             }
 
             await deleteDoc(monsterRef);
-            showToast('Monster deleted successfully!', true, true); // Added true for refresh and true for error style
+            // Changed order of parameters to match the function definition
+            showToast('Monster deleted successfully!', true, true); // refreshAfter=true, isError=true
             await fetchMonsters();
         } catch (error) {
             console.error("Error deleting monster:", error);
