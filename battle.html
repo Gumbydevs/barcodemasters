@@ -602,31 +602,36 @@
         const db = firebase.firestore();
         const auth = firebase.auth(); // Add this line
 
+        // Update the calculateAILevel function
+        function calculateAILevel(playerLevel) {
+            // Generate a random number between 0 and 3 (inclusive)
+            const levelBonus = Math.floor(Math.random() * 4);  // 0 to 3
+            // AI will be equal to player level or up to 3 levels higher
+            return playerLevel + levelBonus;
+        }
+
         function BattleSystem() {
             // Add isDefending state
             const [isDefending, setIsDefending] = React.useState(false);
             
             const [playerMonster, setPlayerMonster] = React.useState(null);
             const [opponentMonster, setOpponentMonster] = React.useState(() => {
-                // Get player's level from URL params or default to 1
                 const urlParams = new URLSearchParams(window.location.search);
                 const playerLevel = parseInt(urlParams.get('level')) || 1;
                 
-                // Scale opponent level to be within +/- 2 levels of player
-                const levelVariance = Math.floor(Math.random() * 5) - 2; // Random number between -2 and +2
-                const opponentLevel = Math.max(1, playerLevel + levelVariance);
+                // Use the stored AI level instead of calculating a new one
+                const opponentLevel = parseInt(sessionStorage.getItem('aiOpponentLevel')) || playerLevel;
                 
-                // Increased base stats
-                const baseHP = 17; // Opponent Ai Monster Base HP
-                const baseAP = 5;  // Opponent Ai Monster Base AP
-                const baseSpeed = 5; // Opponent Ai Monster Base Speed
+                // Increased base stats for tougher battles
+                const baseHP = 20;  // Increased from 17
+                const baseAP = 7;   // Increased from 5
+                const baseSpeed = 6; // Increased from 5
                 
-                // Improved scaling factors
-                const hpScaling = 0.25;  // Increased from 0.2
-                const apScaling = 0.18;  // Increased from 0.15
-                const speedScaling = 0.12; // Increased from 0.1
+                // Keep existing scaling factors
+                const hpScaling = 0.25;
+                const apScaling = 0.18;
+                const speedScaling = 0.12;
                 
-                // Calculate scaled stats with improved formulas
                 const scaledHP = Math.round(baseHP * (1 + (opponentLevel - 1) * hpScaling));
                 const scaledAP = Math.round(baseAP * (1 + (opponentLevel - 1) * apScaling));
                 const scaledSpeed = Math.round(baseSpeed * (1 + (opponentLevel - 1) * speedScaling));
@@ -1244,33 +1249,33 @@
             ReactDOM.render(<BattleSystem />, document.getElementById('root'));
         }
 
-        // Add function to update preview with monster data
+        // Update the updatePreview function to store the AI level
         async function updatePreview() {
             const urlParams = new URLSearchParams(window.location.search);
             const monsterData = Object.fromEntries(urlParams.entries());
             console.log('Updating preview with monster data:', monsterData);
 
             if (monsterData) {
-                // Calculate AI opponent level based on player level
                 const playerLevel = parseInt(monsterData.level) || 1;
-                const levelVariance = Math.floor(Math.random() * 5) - 2;
-                const aiLevel = Math.max(1, playerLevel + levelVariance);
+                const aiLevel = calculateAILevel(playerLevel);
+                
+                // Store AI level in sessionStorage for battle
+                sessionStorage.setItem('aiOpponentLevel', aiLevel);
 
-                // Update player monster name and stats...
-                // ... existing player update code ...
+                // ... existing preview update code ...
 
-                // Update AI opponent preview
+                // Update AI opponent preview with stored level
                 const aiPreviewElement = document.querySelector('.monster-preview:last-child p');
                 if (aiPreviewElement) {
                     aiPreviewElement.textContent = `Level ${aiLevel} Robot`;
                 }
 
-                // Update AI opponent name
                 const aiNameElement = document.querySelector('.monster-preview:last-child h3');
                 if (aiNameElement) {
                     aiNameElement.textContent = `AI Monster (Lvl ${aiLevel})`;
                 }
-
+                
+                // ... rest of existing preview code ...
                 // Update monster name
                 const nameElement = document.getElementById('playerMonsterName');
                 if (nameElement) {
