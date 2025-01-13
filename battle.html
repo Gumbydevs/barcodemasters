@@ -521,6 +521,28 @@
         .toast.error {
             background: rgba(231, 76, 60, 0.9);
         }
+
+        /* Level up toast specific styles */
+        .toast.level-up {
+            background: rgba(241, 196, 15, 0.9); /* Yellow background for level up */
+            bottom: 90px; /* Position above the regular toast */
+        }
+
+        /* Update original toast styles to handle stacking */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -595,9 +617,9 @@
                 const opponentLevel = Math.max(1, playerLevel + levelVariance);
                 
                 // Increased base stats
-                const baseHP = 17; // Increased from 15
-                const baseAP = 7;  // Increased from 4
-                const baseSpeed = 5; // Increased from 8
+                const baseHP = 17; // Opponent Ai Monster Base HP
+                const baseAP = 5;  // Opponent Ai Monster Base AP
+                const baseSpeed = 5; // Opponent Ai Monster Base Speed
                 
                 // Improved scaling factors
                 const hpScaling = 0.25;  // Increased from 0.2
@@ -855,7 +877,8 @@
                                 updates.AP = Math.round(baseStats.AP * (1 + 0.15));
                                 updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
                                 
-                                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`, false);
+                                // Show level up toast BEFORE the victory toast
+                                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`, true);
                                 addToLog(`🌟 Level Up! Now level ${newLevel}!`);
                             }
 
@@ -864,14 +887,17 @@
                             addToLog(`Victory against Level ${opponentMonster.level} opponent! +${totalExp} XP`);
                             
                             // Update UI state
-                            setPlayerMonster(prev => ({
-                                ...prev,
-                                experience: newExp,
-                                level: updates.level || prev.level,
-                                HP: updates.HP || prev.HP,
-                                AP: updates.AP || prev.AP,
-                                Speed: updates.Speed || prev.Speed
-                            }));
+                            setPlayerMonster(prev => {
+                                const newLevel = updates.level || prev.level;
+                                return {
+                                    ...prev,
+                                    experience: newExp % (100 * currentLevel), // Reset XP bar for new level
+                                    level: newLevel,
+                                    HP: updates.HP || prev.HP,
+                                    AP: updates.AP || prev.AP,
+                                    Speed: updates.Speed || prev.Speed
+                                };
+                            });
 
                         } catch (error) {
                             console.error('Failed to update experience:', error);
@@ -1084,22 +1110,27 @@
             };
 
             // Add showToast function
-            const showToast = (message, isError = false) => {
-                let toast = document.getElementById('battleToast');
+            const showToast = (message, isLevelUp = false) => {
+                let toastId = isLevelUp ? 'levelUpToast' : 'battleToast';
+                let toast = document.getElementById(toastId);
+                
                 if (!toast) {
                     toast = document.createElement('div');
-                    toast.id = 'battleToast';
+                    toast.id = toastId;
                     toast.className = 'toast';
+                    if (isLevelUp) {
+                        toast.classList.add('level-up');
+                    }
                     document.body.appendChild(toast);
                 }
                 
-                if (isError) {
-                    toast.classList.add('error');
-                } else {
-                    toast.classList.remove('error');
-                }
-                
                 toast.textContent = message;
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(100px)';
+                
+                // Force a reflow before adding the visible class
+                void toast.offsetWidth;
+                
                 requestAnimationFrame(() => {
                     toast.style.transform = 'translateY(0)';
                     toast.style.opacity = '1';
@@ -1108,7 +1139,12 @@
                 setTimeout(() => {
                     toast.style.transform = 'translateY(100px)';
                     toast.style.opacity = '0';
-                }, 3000);
+                    setTimeout(() => {
+                        if (toast.parentElement) {
+                            toast.parentElement.removeChild(toast);
+                        }
+                    }, 300);
+                }, 5000);
             };
 
             // Add calculateBattleRewards function
@@ -1142,7 +1178,7 @@
                             <div className="xp-progress">
                                 <div 
                                     className="xp-progress-bar" 
-                                    style={{ width: `${((activeMonster.experience || 0) / (activeMonster.level * 100)) * 100}%` }}
+                                    style={{ width: `${((activeMonster.experience || 0) % (activeMonster.level * 100)) / (activeMonster.level * 100) * 100}%` }}
                                 ></div>
                             </div>
                         </div>
