@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional CV</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --text: #2c3e50;
+            --background: #f5f6fa;
+            --card: #ffffff;
+            --accent: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .cv-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .contact-info a {
+            color: var(--secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .contact-info a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .skill-category {
+            background: rgba(52, 152, 219, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .skill-category:hover {
+            transform: translateY(-5px);
+        }
+
+        .skill-category h3 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .project {
+            margin-bottom: 1rem;  /* Reduced from 1.5rem */
+            padding: 0.75rem;     /* Reduced from 1rem */
+            background: rgba(52, 152, 219, 0.05);
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+            font-size: 0.95rem;   /* Slightly smaller font */
+        }
+
+        .project h3 {
+            color: var(--secondary);
+            margin-bottom: 0.25rem;  /* Reduced from 0.5rem */
+            font-size: 1.1rem;       /* Slightly smaller heading */
+        }
+
+        .project ul {
+            margin: 0.5rem 0;        /* Reduced margins */
+            padding-left: 1.25rem;    /* Reduced padding */
+        }
+
+        .project li {
+            margin-bottom: 0.25rem;   /* Reduced spacing between list items */
+            line-height: 1.4;         /* Tighter line height */
+        }
+
+        .project p {
+            margin-bottom: 0.25rem;   /* Reduced paragraph spacing */
+        }
+
+        .date {
+            color: var(--accent);
+            font-size: 0.85rem;       /* Slightly smaller date text */
+            margin-bottom: 0.25rem;   /* Reduced margin */
+        }
+
+        .projects-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .cv-container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #awards ul {
+            list-style-type: none;
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        #awards li {
+            margin-bottom: 0.8rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--secondary);
+        }
+
+        #awards h3 {
+            margin-top: 1.5rem;
+            color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="cv-container">
+        <header>
+            <h1>Matt R. Sherman</h1>
+            <div class="contact-info">
+                <a href="mailto:matt@mattRsherman.com">matt@mattRsherman.com</a>
+                <span>|</span>
+                <a href="tel:+15148157865">+1 (514)-815-7865</a>
+                <span>|</span>
+                <a href="https://www.imdb.com/name/nm3520190/" target="_blank" rel="noopener noreferrer">IMDB Profile</a>
+                <span>|</span>
+                <a href="https://github.com/yourusername">GitHub</a>
+            </div>
+            <p>109 Ch des Loyalistes, Stukely-Sud, QC, J0E 2J0</p>
+        </header>
+
+        <section id="professional-summary">
+            <h2>Professional Summary</h2>
+            <p>Innovative game and software developer and audio specialist with 17 years of experience in sound design, mixing, and integration for film, TV, and video games. Expertise in AI-driven code generation, full-stack development, and game design. Skilled in leveraging AI tools to enhance development efficiency while maintaining creative control over function / mechanics, user experience, and system architecture. Proficient in Unreal Engine, including Blueprinting, animation, sequencing, and audio programming. Experienced with C# and Unity. Expert in Dolby Atmos and spatial audio design. Passionate about creating immersive experiences across multiple mediums and optimizing game and audio production pipelines. Extensive background in constructing and consulting for sound studios, overseeing multi-room facilities. Versatile with both Mac and PC environments and capable of remote work with high-end equipment and portable setups.</p>
+        </section>
+
+        <section id="technical-skills">
+            <h2>Technical Skills</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>AI & Machine Learning</h3>
+                    <p>Effective prompt engineering for AI-assisted development, experience with AI image generation tools, practical implementation of AI tools in development workflows, Local LLM deployment and basic configuration (Ollama, llama.cpp), Specialized in optimizing prompts for specific development tasks</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Languages & Frameworks</h3>
+                    <p>HTML, CSS, JavaScript, Python, Firebase, SQL, PHP, C#, React, Node.js, Express, REST APIs</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Game Development</h3>
+                    <p>Unreal Engine, Blueprinting, C++, Unity</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Audio Design & Integration</h3>
+                    <p>Sound design, mixing, integration in Unreal Engine, hands-on audio programming, spatial audio, MIDI scripting, Dolby Atmos, Surround Audio</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Audio Tools & Software</h3>
+                    <p>Pro Tools (Expert Level), Reaper, Avid Sound Designer, Wwise, FMOD, Adobe Audition, Unreal Blueprints, Unreal Audio Tools</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Audio Equipment</h3>
+                    <p>Extensive experience with a full range of low to high-end sound equipment, achieving professional-level results in sound recording, mixing, and mastering</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Web & Database</h3>
+                    <p>React, Node.js, Express, REST APIs, Firebase, MongoDB, SQL</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Tools & Platforms</h3>
+                    <p>Git, GitHub, VS Studio Code, Firebase, Unity, Unreal Engine 5.5, Pro Tools, Sound Equipment: Sound Devices, Zaxcom, Lectrosonics etc</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Video Editing & Post-Production</h3>
+                    <p>DaVinci Resolve (color grading, editing, Fusion effects), video editing workflow optimization, multi-camera editing, motion graphics, color correction and grading, timeline-based editing, audio sync and post-production integration</p>
+                </div>
+                <div class="skill-category">
+                    <h3>Virtual Production & Cinematography</h3>
+                    <p>Virtual scouting in Unreal Engine, virtual cinematography, previs and techvis workflows, LED wall virtual production techniques, real-time visualization, virtual camera systems, virtual art department workflows, virtual location scouting, virtual set design and optimization</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="key-projects">
+            <h2>Key Projects</h2>
+            <div class="projects-container">
+                <div class="project">
+                    <h3>The Sacrifice Game (Feature Film)</h3>
+                    <div class="date">2023</div>
+                    <p>Sound Supervisor & Re-Recording Mixer | Shudder Original</p>
+                    <ul>
+                        <li>Supervised complete sound editorial and performed final 5.1 surround mix at MELS Studios Montreal for this critically acclaimed horror feature</li>
+                        <li>Organized, prepared, and orchestrated remote ADR sessions across multiple countries, coordinating with talent and studios in multiple countries.</li>
+                        <li>Collaborated closely with director Jenn Wexler to craft a unique sound design that supports the film's 1970s setting and horror elements</li>
+                        <li>Film has gained significant recognition as a must-see Christmas horror film and is developing a strong cult following</li>
+                        <li>Premiered at Fantasia International Film Festival and released on Shudder streaming platform</li>
+                        <li>Worked with a talented cast including Mena Massoud (Aladdin) and Olivia Scott Welch (Fear Street)</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Barcode Masters</h3>
+                    <p>Solo Developer | Personal Hobby Project</p>
+                    <div class="date">January 2024 – Present (In Development)</div>
+                    <p>Game & Software Developer & AI Specialist</p>
+                    <ul>
+                        <li>Developed an interactive web-based game leveraging Firebase for user authentication and data storage</li>
+                        <li>Enhanced and refined code generation processes through the utilization of AI-driven tools, optimizing development efficiency and accuracy</li>
+                        <li>Leveraged AI tools for rapid prototyping and generation and monster image creation</li>
+                        <li>Designed and implemented dynamic gameplay mechanics</li>
+                        <li>Built a responsive and accessible interface with light/dark mode support</li>
+                        <li>Integrated AI image generation via Hugging Face</li>
+                        <li>Established and expanded a growing online community of playtesters, fostering engagement and gathering valuable feedback to improve game development</li>
+    
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Toss Drop Smash (Rooftops)</h3>
+                    <div class="date">2024 – Present (In Development)</div>
+                    <p>Solo Developer | Personal Hobby Project | Unreal Engine</p>
+                    <ul>
+                        <li>Designed and developed a unique, humor-filled game where players throw objects from rooftops at AI-controlled pedestrians, progressively increasing difficulty from suburban houses to skyscrapers</li>
+                        <li>Utilized Unreal Engine's Mass AI Crowd system to simulate pedestrian behavior, creating dynamic and reactive environments</li>
+                        <li>Crafted diverse levels with escalating complexity, ensuring engaging gameplay that balances challenge and humor</li>
+                        <li>Developed intuitive object-throwing mechanics with physics-based interactions, enhancing player immersion and fun</li>
+                        <li>Created fully functional prototype showcasing core gameplay mechanics and AI interactions</li>
+                        <li>Independently managed all aspects of game development, from initial concept and design to implementation and testing</li>
+                        <li>Demonstrated proficiency in Unreal Engine, Blueprint scripting, AI programming, level design, and gameplay mechanics</li>
+                        <li>Delivered a compelling solo project that showcases creativity, technical expertise, and project management skills</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Game Development & Learning Journey</h3>
+                    <div class="date">April 2024 – Present</div>
+                    <ul>
+                        <li>Actively learning and implementing game development techniques across multiple engines and platforms</li>
+                        <li>Designing and developing game mechanics, animations, and cinematic sequences using industry-standard tools</li>
+                        <li>Exploring AI integration in game development, including behavior systems and procedural content generation</li>
+                        <li>Creating modular and reusable systems for both personal and client projects</li>
+                        <li>Participating in game jams and collaborative projects to enhance skills and network with other developers</li>
+                        <li>Building a portfolio of experimental projects showcasing different aspects of game development</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Mona xx Lights</h3>
+                    <div class="date">Sound Supervisor & Audio Programmer</div>
+                    <ul>
+                        <li>Supervised and designed all aspects of sound for this immersive virtual reality experience, including sound effects, ambient audio, and dialogue</li>
+                        <li>Integrated audio assets and performed hands-on audio programming within Unreal Engine for VR synchronization</li>
+                        <li>Developed custom audio solutions, including spatial audio techniques, to enhance realism and immersion</li>
+                        <li>Managed a full sound studio setup and led a team of audio professionals</li>
+                        <li>Organized and supervised international ADR dialogue recording across multiple continents (Canada, Los Angeles, France)</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>AAA Games and Trailers</h3>
+                    <div class="date">Sound Designer & Mixer</div>
+                    <ul>
+                        <li>Worked on AAA games including Journey to the Savage Planet, Assassin's Creed, and For Honor</li>
+                        <li>Captured dialog during motion capture sessions at Beyond Capture</li>
+                        <li>Collaborated with Krafton, Capcom, Dneg, Wizards of the Coast, and Ubisoft</li>
+                        <li>Served as on-call sound tech for Beyond Capture</li>
+                        <li>Delivered high-quality audio work aligned with narrative, gameplay, and cinematic visuals</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Local LLM Development Environment</h3>
+                    <div class="date">2024-Present</div>
+                    <p>AI Infrastructure Developer</p>
+                    <ul>
+                        <li>Configured and optimized local LLM development environment using Ollama and llama.cpp</li>
+                        <li>Implemented custom model deployment workflows for CodeLlama, Mistral, and other open-source models</li>
+                        <li>Created efficient model quantization pipelines to optimize performance on consumer hardware</li>
+                        <li>Developed custom prompts and fine-tuning strategies for specific development tasks</li>
+                        <li>Built API integrations for seamless interaction between local LLMs and development tools</li>
+                        <li>Achieved significant cost reduction by moving suitable AI workloads to local infrastructure</li>
+                        <li>Technologies: Ollama, llama.cpp, Python, GGUF format, Model Quantization, REST APIs</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>AI Prompt Engineering & Development</h3>
+                    <div class="date">2023 – Present</div>
+                    <p>AI-Assisted Development Specialist</p>
+                    <ul>
+                        <li>Developed effective prompt engineering techniques for AI-assisted development and content generation</li>
+                        <li>Optimized prompts for various AI models including GPT and Stable Diffusion</li>
+                        <li>Integrated AI tools into development workflow to improve efficiency</li>
+                        <li>Successfully leveraged AI assistance for both creative and technical tasks</li>
+                        <li>Maintained consistent quality in AI-assisted outputs through careful prompt crafting</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Y2Spotify - YouTube to Spotify Playlist Converter</h3>
+                    <div class="date">Personal Python Project</div>
+                    <ul>
+                        <li>Developed a Python application that seamlessly converts YouTube playlists to Spotify playlists</li>
+                        <li>Integrated YouTube Data API v3 and Spotify Web API for automated playlist synchronization</li>
+                        <li>Implemented OAuth authentication for secure access to users' Spotify accounts</li>
+                        <li>Created efficient song matching algorithm using fuzzy string matching for accurate track identification</li>
+                        <li>Built user-friendly command-line interface for easy playlist conversion</li>
+                        <li>Technologies used: Python, YouTube Data API, Spotify Web API, OAuth2, Fuzzy String Matching</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>Don't Mess with Gamers (Unreleased)</h3>
+                    <div class="date">June 2024 – December 2024</div>
+                    <p>Independent Horror Game Project | Sound Designer & Gameplay Programmer</p>
+                    <ul>
+                        <li>Contributing to an indie horror game that explores psychological terror in gaming culture</li>
+                        <li>Handled full sound and music design, including custom dynamic sound system with state machines</li>
+                        <li>Implemented adaptive audio responses based on gameplay and environment</li>
+                        <li>Contributed as gameplay programmer for animation states, AI, and core mechanics</li>
+                        <li>Assisted with overall game development and system performance optimization</li>
+                    </ul>
+                </div>
+
+                <div class="project">
+                    <h3>0 A.D.</h3>
+                    <div class="date">2007 – 2008</div>
+                    <ul>
+                        <li>Led sound design team for indie, free-to-play real-time strategy game</li>
+                        <li>Organized and oversaw sound department operations</li>
+                        <li>Designed and implemented comprehensive in-game audio elements</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="professional-experience">
+            <h2>Professional Experience</h2>
+            <div class="project">
+                <h3>Freelance Game & Software Developer & Audio Specialist</h3>
+                <div class="date">2024 – Present</div>
+                <ul>
+                    <li>Collaborated with clients on interactive games and web applications</li>
+                    <li>Leveraged AI-assisted code generation for efficient development</li>
+                    <li>Combined AI-generated code with hands-on problem-solving</li>
+                    <li>Provided comprehensive sound design and integration services</li>
+                </ul>
+            </div>
+
+            <div class="project">
+                <h3>Sound Supervisor, Designer, and Mixer</h3>
+                <div class="date">2006 – Present</div>
+                <ul>
+                    <li>Supervised over one hundred films, TV shows, and cinematic releases</li>
+                    <li>17+ years experience overseeing sound process from concept to final mix</li>
+                    <li>Managed full sound studio operations and equipment</li>
+                    <li>Delivered high-quality audio with optimized performance across various media</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="awards">
+            <h2>Awards & Recognition</h2>
+            <div class="project">
+                <h3>Sound Design Awards</h3>
+                <p>8 Wins & 6 Nominations across international film festivals</p>
+                <ul>
+                    <li><strong>International Gold Awards (2023)</strong> - Silver Award for Best Sound Design, "Scarpedicemente"</li>
+                    <li><strong>New York Movie Awards (2022)</strong> - October Award Winner for Best Sound Design, "Scarpedicemente"</li>
+                    <li><strong>Florence Film Awards (2022)</strong> - October Award Winner for Best Sound Design, "Scarpedicemente"</li>
+                    <li><strong>Hollywood North Film Awards (2019)</strong> - Winner Best Sound Design for "King of Tears"</li>
+                    <li><strong>Independent Shorts Awards (2019)</strong> - Platinum Award Winner for Best Sound Design, "EXT"</li>
+                    <li><strong>Queen Palm International Film Festival (2019)</strong> - Bronze Award Winner for Best Sound Design, "EXT"</li>
+                    <li><strong>Indie Series Awards (2016)</strong> - Winner Best Sound Design for "LARPs"</li>
+                </ul>
+                <h3>Notable Nominations</h3>
+                <ul>
+                    <li><strong>FilmHaus: Berlin Film + New Media Competition (2023)</strong> - Best Sound Design, "Brightstar"</li>
+                    <li><strong>Lonely Wolf International Film Festival (2023)</strong> - Best Sound Design, "Brightstar"</li>
+                    <li><strong>Action on Film International Film Festival (2018)</strong> - Best Sound Design, "Past and Future Kings"</li>
+                    <li><strong>International Academy of Web Television Awards (2017)</strong> - Best Sound, "LARPs"</li>
+                    <li><strong>Indie Short Fest (2019)</strong> - April Award for Best Sound Design, "EXT"</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="education">
+            <h2>Education</h2>
+            <div class="project">
+                <h3>Centennial Academy</h3>
+                <div class="date">Graduated 2001</div>
+                <p>Lead Drummer in School Band, under the direction of Denny Christianson (Famous Jazz Trumpeter)</p>
+            </div>
+            <div class="project">
+                <h3>Audio Recording Technology</h3>
+                <div class="date">2008, Continuing Education</div>
+                <p>Certification in Audio Recording Technology</p>
+            </div>
+        </section>
+
+        <section id="additional-skills">
+            <h2>Additional Skills</h2>
+            <div class="project">
+                <ul>
+                    <li><strong>Creative Problem-Solving:</strong> Strong ability to combine AI tools with hands-on development to create unique, innovative solutions for game design, user experience, and audio integration.</li>
+                    <li><strong>Audio Programming:</strong> Expertise in audio programming, including integration of spatial audio, sound effects, and dialogue in Unreal Engine and other platforms.</li>
+                    <li><strong>AI Integration:</strong> Experienced in using AI-driven solutions for both creative (image generation) and technical (code generation) aspects of game development.</li>
+                    <li><strong>Collaboration & Communication:</strong> Skilled in working with cross-functional teams, ensuring clear communication of project goals and deliverables, and collaborating on solutions that meet client needs.</li>
+                    <li><strong>Adaptability:</strong> Continuously learning new technologies and tools, including AI and audio programming techniques, to stay ahead of industry trends and improve development processes.</li>
+                </ul>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add intersection observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        document.querySelectorAll('section').forEach((section) => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
