@@ -602,6 +602,21 @@
         const db = firebase.firestore();
         const auth = firebase.auth(); // Add this line
 
+        // Add this function before the BattleSystem component and updatePreview function
+        const getMonsterImageHTML = (monster) => {
+            if (!monster?.imageUrl) {
+                return `<div class="monster-image-placeholder"></div>`;
+            }
+            
+            return `
+                <div class="monster-image-container">
+                    <img src="${monster.imageUrl}" 
+                        alt="${monster.monsterName}" 
+                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';" 
+                    />
+                </div>`;
+        };
+
         // Update the calculateAILevel function
         function calculateAILevel(playerLevel) {
             // Generate a random number between 0 and 3 (inclusive)
@@ -657,36 +672,15 @@
             // Fetch player monster from URL
             React.useEffect(() => {
                 const urlParams = new URLSearchParams(window.location.search);
-                const monsterData = Object.fromEntries(urlParams.entries());
-                if (monsterData) {
-                    // Convert experience to number and default to 0 if not present
-                    const initialExp = parseInt(monsterData.experience) || 0;
-                    setPlayerMonster({
-                        ...monsterData,
-                        id: urlParams.get('id'),
-                        experience: initialExp // Ensure experience is set
+                const monsterId = urlParams.get('id');
+                
+                if (monsterId) {
+                    fetchMonsterData(monsterId).then(monsterData => {
+                        if (monsterData) {
+                            setPlayerMonster(monsterData);
+                            setPlayerHealth(monsterData.HP);
+                        }
                     });
-                    setPlayerHealth(monsterData.HP);
-
-                    // Update preview image
-                    const previewImage = document.getElementById('playerMonsterImage');
-                    if (previewImage) {
-                        previewImage.innerHTML = getMonsterImageHTML(monsterData);
-                    }
-
-                    // Fetch current experience from database to ensure it's up to date
-                    if (monsterData.id) {
-                        const monsterRef = db.collection('monsters').doc(monsterData.id);
-                        monsterRef.get().then(doc => {
-                            if (doc.exists) {
-                                const currentData = doc.data();
-                                setPlayerMonster(prev => ({
-                                    ...prev,
-                                    experience: currentData.experience || 0
-                                }));
-                            }
-                        });
-                    }
                 }
             }, []);
 
@@ -1089,17 +1083,26 @@
 
             // Add this function to generate monster image HTML
             const getMonsterImageHTML = (monster) => {
-                return monster?.imageUrl ? 
-                    `<div class="monster-image-container">
-                        <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
-                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
-                    </div>` : 
-                    `<div class="monster-image-placeholder"></div>`;
+                if (!monster?.imageUrl) {
+                    return `<div class="monster-image-placeholder"></div>`;
+                }
+                
+                return `
+                    <div class="monster-image-container">
+                        <img src="${monster.imageUrl}" 
+                            alt="${monster.monsterName}" 
+                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';" 
+                        />
+                    </div>`;
             };
 
             // Add helper function to generate image content
             const MonsterImage = ({ monster }) => {
-                return monster?.imageUrl ? (
+                if (!monster?.imageUrl) {
+                    return <div className="monster-image-placeholder"></div>;
+                }
+                
+                return (
                     <div className="monster-image-container">
                         <img 
                             src={monster.imageUrl} 
@@ -1109,8 +1112,6 @@
                             }}
                         />
                     </div>
-                ) : (
-                    <div className="monster-image-placeholder"></div>
                 );
             };
 
@@ -1249,65 +1250,83 @@
             ReactDOM.render(<BattleSystem />, document.getElementById('root'));
         }
 
-        // Update the updatePreview function to store the AI level
+        // Add this function before updatePreview
+        async function fetchMonsterData(monsterId) {
+            try {
+                const monsterRef = db.collection('monsters').doc(monsterId);
+                const doc = await monsterRef.get();
+                if (doc.exists) {
+                    return doc.data();
+                }
+                console.log('No monster document found');
+                return null;
+            } catch (error) {
+                console.error('Error fetching monster data:', error);
+                return null;
+            }
+        }
+
+        // Update the updatePreview function
         async function updatePreview() {
             const urlParams = new URLSearchParams(window.location.search);
-            const monsterData = Object.fromEntries(urlParams.entries());
-            console.log('Updating preview with monster data:', monsterData);
+            const monsterId = urlParams.get('id');
+            
+            if (monsterId) {
+                try {
+                    // Fetch complete monster data from Firestore
+                    const monsterData = await fetchMonsterData(monsterId);
+                    if (!monsterData) {
+                        console.error('Failed to fetch monster data');
+                        return;
+                    }
 
-            if (monsterData) {
-                const playerLevel = parseInt(monsterData.level) || 1;
-                const aiLevel = calculateAILevel(playerLevel);
-                
-                // Store AI level in sessionStorage for battle
-                sessionStorage.setItem('aiOpponentLevel', aiLevel);
+                    console.log('Fetched monster data:', monsterData); // Debug log
 
-                // ... existing preview update code ...
+                    const playerLevel = parseInt(monsterData.level) || 1;
+                    const aiLevel = calculateAILevel(playerLevel);
+                    sessionStorage.setItem('aiOpponentLevel', aiLevel);
 
-                // Update AI opponent preview with stored level
-                const aiPreviewElement = document.querySelector('.monster-preview:last-child p');
-                if (aiPreviewElement) {
-                    aiPreviewElement.textContent = `Level ${aiLevel} Robot`;
-                }
+                    // Update monster name
+                    const nameElement = document.getElementById('playerMonsterName');
+                    if (nameElement) {
+                        nameElement.textContent = monsterData.monsterName || 'Your Monster';
+                    }
 
-                const aiNameElement = document.querySelector('.monster-preview:last-child h3');
-                if (aiNameElement) {
-                    aiNameElement.textContent = `AI Monster (Lvl ${aiLevel})`;
-                }
-                
-                // ... rest of existing preview code ...
-                // Update monster name
-                const nameElement = document.getElementById('playerMonsterName');
-                if (nameElement) {
-                    nameElement.textContent = monsterData.monsterName || 'Your Monster';
-                }
+                    // Update monster image with imageUrl from Firestore
+                    const imageContainer = document.getElementById('playerMonsterImage');
+                    if (imageContainer) {
+                        console.log('Setting monster image with URL:', monsterData.imageUrl); // Debug log
+                        imageContainer.innerHTML = getMonsterImageHTML({
+                            ...monsterData,
+                            imageUrl: monsterData.imageUrl // Ensure imageUrl is included
+                        });
+                    }
 
-                // Update monster image with proper error handling
-                const imageContainer = document.getElementById('playerMonsterImage');
-                if (imageContainer && monsterData.imageUrl) {
-                    imageContainer.innerHTML = `
-                        <div class="monster-image-container">
-                            <img 
-                                src="${monsterData.imageUrl}" 
-                                alt="${monsterData.monsterName}"
-                                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'monster-image-placeholder\\'></div>';" 
-                            />
-                        </div>`;
-                } else {
-                    imageContainer.innerHTML = '<div class="monster-image-placeholder"></div>';
-                }
+                    // Update monster stats
+                    const statsElement = document.getElementById('playerMonsterStats');
+                    if (statsElement) {
+                        const stats = [
+                            `Level ${monsterData.level || '1'}`,
+                            monsterData.type || 'Unknown',
+                            `HP: ${monsterData.HP || '100'}`,
+                            `AP: ${monsterData.AP || '10'}`,
+                            `Speed: ${monsterData.Speed || '10'}`
+                        ];
+                        statsElement.textContent = stats.join(' | ');
+                    }
 
-                // Update monster stats
-                const statsElement = document.getElementById('playerMonsterStats');
-                if (statsElement) {
-                    const stats = [
-                        `Level ${monsterData.level || '1'}`,
-                        monsterData.type || 'Unknown',
-                        `HP: ${monsterData.HP || '100'}`,
-                        `AP: ${monsterData.AP || '10'}`,
-                        `Speed: ${monsterData.Speed || '10'}`
-                    ];
-                    statsElement.textContent = stats.join(' | ');
+                    // Update AI opponent preview
+                    const aiPreviewElement = document.querySelector('.monster-preview:last-child p');
+                    if (aiPreviewElement) {
+                        aiPreviewElement.textContent = `Level ${aiLevel} Robot`;
+                    }
+
+                    const aiNameElement = document.querySelector('.monster-preview:last-child h3');
+                    if (aiNameElement) {
+                        aiNameElement.textContent = `AI Monster (Lvl ${aiLevel})`;
+                    }
+                } catch (error) {
+                    console.error('Error in updatePreview:', error);
                 }
             }
         }
