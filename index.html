@@ -6,6 +6,32 @@
     <title>Barcode Masters - Login</title>
     <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        /* ...existing styles... */
+        .help-button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .help-button:hover {
+            background-color: #0056b3;
+        }
+
+        .dark-mode .help-button {
+            background-color: #4a9eff;
+        }
+
+        .dark-mode .help-button:hover {
+            background-color: #357abd;
+        }
+    </style>
 </head>
 <body>
     <!-- Dark Mode Toggle -->
@@ -39,7 +65,7 @@
 
     <!-- Version Number -->
     <footer>
-        <p><button class="nav-button" onclick="location.href='help.html'">Help</button></p>
+        <p><button class="help-button" onclick="location.href='help.html'">Help</button></p>
         <p>Version: <span id="versionNumber">1.0.03</span></p>
     </footer>
 
