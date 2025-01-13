@@ -817,7 +817,11 @@ async function updateCollectionStats(monsters) {
         }
     }
 
-    // Owner type counts - use this for unique types count
+    // Calculate global unique types first
+    const allUniqueTypes = new Set(validMonsters.map(monster => monster.type));
+    uniqueTypesElement.textContent = allUniqueTypes.size;
+
+    // Calculate per-owner type counts
     const ownerTypeMap = {};
     validMonsters.forEach(monster => {
         if (monster.ownerId && monster.type) {
@@ -828,21 +832,18 @@ async function updateCollectionStats(monsters) {
         }
     });
 
-    // Calculate total unique types from the owner with most types
+    // Show owner with most unique types in details
     if (Object.keys(ownerTypeMap).length > 0) {
         const topTypeOwnerEntry = Object.entries(ownerTypeMap)
             .reduce((a, b) => (b[1].size > a[1].size ? b : a));
         const [topOwnerId, typeSet] = topTypeOwnerEntry;
-        
-        // Set the unique types count to match the display in details
-        uniqueTypesElement.textContent = typeSet.size;
-        
         const ownerName = await getUsernameById(topOwnerId);
+        
         const detailsDiv = document.createElement('div');
         detailsDiv.className = 'monster-details';
         detailsDiv.innerHTML = `
             <span>Most types owned by: ${ownerName}</span>
-            <span>Unique types: ${typeSet.size}</span>
+            <span>Types owned: ${typeSet.size}</span>
         `;
         uniqueTypesElement.appendChild(detailsDiv);
     }
