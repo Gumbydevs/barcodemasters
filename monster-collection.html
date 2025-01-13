@@ -742,8 +742,7 @@
             }
 
             await deleteDoc(monsterRef);
-            showToast('Monster deleted successfully!');
-            // Immediately refresh the monsters display
+            showToast('Monster deleted successfully!', true, true); // Added true for refresh and true for error style
             await fetchMonsters();
         } catch (error) {
             console.error("Error deleting monster:", error);
@@ -924,7 +923,7 @@
         }, 5000);
     }
 
-    function showToast(message, refreshAfter = false) {
+    function showToast(message, refreshAfter = false, isError = false) {
         let toast = document.getElementById('toast');
         if (!toast) {
             toast = document.createElement('div');
@@ -933,7 +932,7 @@
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
-                background: rgba(46, 204, 113, 0.9);
+                background: ${isError ? 'rgba(231, 76, 60, 0.9)' : 'rgba(46, 204, 113, 0.9)'};
                 color: white;
                 padding: 1rem 2rem;
                 border-radius: 8px;
@@ -944,6 +943,8 @@
                 z-index: 1000;
             `;
             document.body.appendChild(toast);
+        } else {
+            toast.style.background = isError ? 'rgba(231, 76, 60, 0.9)' : 'rgba(46, 204, 113, 0.9)';
         }
         
         toast.textContent = message;
@@ -956,11 +957,10 @@
             toast.style.transform = 'translateY(100px)';
             toast.style.opacity = '0';
             
-            // Add page refresh after toast disappears
             if (refreshAfter) {
                 setTimeout(() => {
                     window.location.reload();
-                }, 300); // Wait for toast animation to complete
+                }, 300);
             }
         }, 3000);
     }
