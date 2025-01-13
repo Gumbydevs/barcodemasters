@@ -654,6 +654,7 @@
 
     let currentMonsters = [];
 
+    // Format date strings into a readable format
     function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { 
@@ -665,6 +666,7 @@
         });
     }
 
+    // Fetch username from users collection by ID
     async function getUsernameById(userId) {
         try {
             const userDoc = await getDoc(doc(db, 'users', userId));
@@ -679,57 +681,75 @@
         }
     }
 
+    // Rename a monster with confirmation and validation
     async function renameMonster(monsterId, currentName) {
-        if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
-            return;
-        }
-
-        const newName = prompt("Enter new name for the monster:", currentName);
-        if (!newName || newName.trim() === "") return;
-
         try {
+            if (!confirm(`Are you sure you want to rename this monster? This action cannot be undone.`)) {
+                return;
+            }
+
+            const newName = prompt("Enter new name for the monster:", currentName);
+            if (!newName || newName.trim() === "") return;
+
+            // Verify the monster exists and belongs to current user
             const monsterRef = doc(db, 'monsters', monsterId);
+            const monsterDoc = await getDoc(monsterRef);
+            
+            if (!monsterDoc.exists()) {
+                showError("Monster not found.");
+                return;
+            }
+            
+            const monsterData = monsterDoc.data();
+            if (monsterData.ownerId !== auth.currentUser.uid) {
+                showError("You don't have permission to rename this monster.");
+                return;
+            }
+
+            // Perform the rename
             await updateDoc(monsterRef, {
                 monsterName: newName.trim()
             });
-            showToast('Monster renamed successfully!');
+            
+            showToast('Monster renamed successfully!', true); // Add true parameter here
+            
+            // Refresh the display
             await fetchMonsters();
         } catch (error) {
             console.error("Error renaming monster:", error);
-            showError("Failed to rename monster. Please try again.");
+            showError("Failed to rename monster: " + error.message);
         }
     }
 
     async function deleteMonster(monsterId, monsterName) {
-    if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
-        return;
-    }
-
-    try {
-        // First verify the monster belongs to the current user
-        const monsterRef = doc(db, 'monsters', monsterId);
-        const monsterDoc = await getDoc(monsterRef);
-        
-        if (!monsterDoc.exists()) {
-            showError("Monster not found.");
-            return;
-        }
-        
-        const monsterData = monsterDoc.data();
-        if (monsterData.ownerId !== auth.currentUser.uid) {
-            showError("You don't have permission to delete this monster.");
+        if (!confirm(`Are you sure you want to delete ${monsterName}? This action cannot be undone.`)) {
             return;
         }
 
-        // Proceed with delete if verification passed
-        await deleteDoc(monsterRef);
-        showToast('Monster deleted successfully!');
-        await fetchMonsters();
-    } catch (error) {
-        console.error("Error deleting monster:", error);
-        showError("Failed to delete monster. Please try again.");
+        try {
+            const monsterRef = doc(db, 'monsters', monsterId);
+            const monsterDoc = await getDoc(monsterRef);
+            
+            if (!monsterDoc.exists()) {
+                showError("Monster not found.");
+                return;
+            }
+            
+            const monsterData = monsterDoc.data();
+            if (monsterData.ownerId !== auth.currentUser.uid) {
+                showError("You don't have permission to delete this monster.");
+                return;
+            }
+
+            await deleteDoc(monsterRef);
+            showToast('Monster deleted successfully!');
+            // Immediately refresh the monsters display
+            await fetchMonsters();
+        } catch (error) {
+            console.error("Error deleting monster:", error);
+            showError("Failed to delete monster. Please try again.");
+        }
     }
-}
 
     // Add this new function to fetch monster type description
     async function getMonsterTypeDescription(type) {
@@ -904,13 +924,12 @@
         }, 5000);
     }
 
-    function showToast(message) {
-        // Create toast element if it doesn't exist
+    function showToast(message, refreshAfter = false) {
         let toast = document.getElementById('toast');
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'toast';
-            style.cssText = `
+            toast.style.cssText = `
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
@@ -936,24 +955,37 @@
         setTimeout(() => {
             toast.style.transform = 'translateY(100px)';
             toast.style.opacity = '0';
+            
+            // Add page refresh after toast disappears
+            if (refreshAfter) {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300); // Wait for toast animation to complete
+            }
         }, 3000);
     }
 
     // Event Listeners
-    document.addEventListener('renameMonster', (e) => renameMonster(e.detail.id, e.detail.name));
-    document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
-    
-    document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
-    document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
-    document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
-
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        auth.signOut().then(() => {
-            window.location.href = 'index.html';
-        }).catch((error) => {
-            showError('Logout failed: ' + error.message);
+    function setupEventListeners() {
+        document.addEventListener('renameMonster', (e) => {
+            e.preventDefault();
+            renameMonster(e.detail.id, e.detail.name);
         });
-    });
+        
+        document.addEventListener('deleteMonster', (e) => deleteMonster(e.detail.id, e.detail.name));
+    
+        document.getElementById('typeFilter').addEventListener('change', filterAndSortMonsters);
+        document.getElementById('levelFilter').addEventListener('change', filterAndSortMonsters);
+        document.getElementById('sortBy').addEventListener('change', filterAndSortMonsters);
+    
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                showError('Logout failed: ' + error.message);
+            });
+        });
+    }
 
     // Dark mode toggle
     const darkModeToggle = document.getElementById("darkModeToggle");
@@ -971,6 +1003,7 @@
     // Check authentication state and initialize
     onAuthStateChanged(auth, (user) => {
         if (user) {
+            setupEventListeners();
             fetchMonsters();
         } else {
             window.location.href = 'index.html';
