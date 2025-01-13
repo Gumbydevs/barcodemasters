@@ -758,40 +758,54 @@ async function getMonsterTypeDescription(type) {
     }
 }
 
-    async function updateCollectionStats(monsters) {
-        // Total monsters count
-        const totalMonstersElement = document.getElementById('totalMonsters');
-        totalMonstersElement.textContent = monsters.length;
-        
-        // Find owner with most monsters
-        const ownerCounts = monsters.reduce((acc, monster) => {
-            if (monster.ownerId) {
-                acc[monster.ownerId] = (acc[monster.ownerId] || 0) + 1;
-            }
-            return acc;
-        }, {});
+// ...existing code...
+async function updateCollectionStats(monsters) {
+    // Clear previous content first
+    const totalMonstersElement = document.getElementById('totalMonsters');
+    const highestLevelElement = document.getElementById('highestLevel');
+    const uniqueTypesElement = document.getElementById('uniqueTypes');
+    
+    // Reset text content and remove existing details
+    totalMonstersElement.innerHTML = '0';
+    highestLevelElement.innerHTML = '0';
+    uniqueTypesElement.innerHTML = '0';
 
-        if (Object.keys(ownerCounts).length > 0) {
-            const [topOwnerId, monsterCount] = Object.entries(ownerCounts)
-                .reduce((a, b) => b[1] > a[1] ? b : a);
-            const ownerName = await getUsernameById(topOwnerId);
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'monster-details';
-            detailsDiv.innerHTML = `
-                <span>Most owned by: ${ownerName}</span>
-                <span>Total owned: ${monsterCount}</span>
-            `;
-            totalMonstersElement.appendChild(detailsDiv);
+    if (!monsters || monsters.length === 0) return;
+
+    // Owner counts - use this as the source of truth for total monsters
+    const ownerCounts = {};
+    monsters.forEach(monster => {
+        if (monster.ownerId && monster.monsterName && monster.type) {
+            ownerCounts[monster.ownerId] = (ownerCounts[monster.ownerId] || 0) + 1;
         }
+    });
 
-        // Highest level monster details
-        const highestLevelMonster = monsters.reduce((prev, current) => 
+    if (Object.keys(ownerCounts).length > 0) {
+        const topOwnerEntry = Object.entries(ownerCounts)
+            .reduce((a, b) => (b[1] > a[1] ? b : a));
+        const [topOwnerId, monsterCount] = topOwnerEntry;
+        // Set total monsters to match the total owned count
+        totalMonstersElement.textContent = monsterCount;
+        
+        const ownerName = await getUsernameById(topOwnerId);
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'monster-details';
+        detailsDiv.innerHTML = `
+            <span>Most owned by: ${ownerName}</span>
+            <span>Total owned: ${monsterCount}</span>
+        `;
+        totalMonstersElement.appendChild(detailsDiv);
+    }
+
+    // Highest level monster (only from valid owned monsters)
+    const validMonsters = monsters.filter(monster => 
+        monster.ownerId && monster.monsterName && monster.type && monster.level);
+    if (validMonsters.length > 0) {
+        const highestLevelMonster = validMonsters.reduce((prev, current) => 
             (prev.level > current.level) ? prev : current
         );
         
-        const highestLevelElement = document.getElementById('highestLevel');
         highestLevelElement.textContent = highestLevelMonster.level;
-        
         if (highestLevelMonster.ownerId) {
             const ownerName = await getUsernameById(highestLevelMonster.ownerId);
             const detailsDiv = document.createElement('div');
@@ -802,35 +816,39 @@ async function getMonsterTypeDescription(type) {
             `;
             highestLevelElement.appendChild(detailsDiv);
         }
-
-        // Find owner with most unique types
-        const ownerTypeMap = monsters.reduce((acc, monster) => {
-            if (monster.ownerId) {
-                if (!acc[monster.ownerId]) {
-                    acc[monster.ownerId] = new Set();
-                }
-                acc[monster.ownerId].add(monster.type);
-            }
-            return acc;
-        }, {});
-
-        const uniqueTypes = new Set(monsters.map(m => m.type)).size;
-        const uniqueTypesElement = document.getElementById('uniqueTypes');
-        uniqueTypesElement.textContent = uniqueTypes;
-
-        if (Object.keys(ownerTypeMap).length > 0) {
-            const [topOwnerId, typeSet] = Object.entries(ownerTypeMap)
-                .reduce((a, b) => b[1].size > a[1].size ? b : a);
-            const ownerName = await getUsernameById(topOwnerId);
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'monster-details';
-            detailsDiv.innerHTML = `
-                <span>Most types owned by: ${ownerName}</span>
-                <span>Unique types: ${typeSet.size}</span>
-            `;
-            uniqueTypesElement.appendChild(detailsDiv);
-        }
     }
+
+    // Owner type counts - use this for unique types count
+    const ownerTypeMap = {};
+    monsters.forEach(monster => {
+        if (monster.ownerId && monster.type) {
+            if (!ownerTypeMap[monster.ownerId]) {
+                ownerTypeMap[monster.ownerId] = new Set();
+            }
+            ownerTypeMap[monster.ownerId].add(monster.type);
+        }
+    });
+
+    // Calculate total unique types from the owner with most types
+    if (Object.keys(ownerTypeMap).length > 0) {
+        const topTypeOwnerEntry = Object.entries(ownerTypeMap)
+            .reduce((a, b) => (b[1].size > a[1].size ? b : a));
+        const [topOwnerId, typeSet] = topTypeOwnerEntry;
+        
+        // Set the unique types count to match the display in details
+        uniqueTypesElement.textContent = typeSet.size;
+        
+        const ownerName = await getUsernameById(topOwnerId);
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'monster-details';
+        detailsDiv.innerHTML = `
+            <span>Most types owned by: ${ownerName}</span>
+            <span>Unique types: ${typeSet.size}</span>
+        `;
+        uniqueTypesElement.appendChild(detailsDiv);
+    }
+}
+// ...existing code...
 
     async function filterAndSortMonsters() {
     let filtered = [...currentMonsters];
