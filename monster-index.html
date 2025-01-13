@@ -341,15 +341,15 @@
 
         <div class="collection-stats">
             <div class="stat-box">
-                <h3>Total Monsters</h3>
+                <h3>Total Monsters (Global)</h3>
                 <p id="totalMonsters">0</p>
             </div>
             <div class="stat-box">
-                <h3>Highest Level Monster</h3>
+                <h3>Highest Level Monster (Global)</h3>
                 <p id="highestLevel">0</p>
             </div>
             <div class="stat-box">
-                <h3>Total Unique Types</h3>
+                <h3>Total Unique Types (Global)</h3>
                 <p id="uniqueTypes">0</p>
             </div>
         </div>
@@ -760,46 +760,45 @@ async function getMonsterTypeDescription(type) {
 
 // ...existing code...
 async function updateCollectionStats(monsters) {
-    // Clear previous content first
     const totalMonstersElement = document.getElementById('totalMonsters');
     const highestLevelElement = document.getElementById('highestLevel');
     const uniqueTypesElement = document.getElementById('uniqueTypes');
     
-    // Reset text content and remove existing details
     totalMonstersElement.innerHTML = '0';
     highestLevelElement.innerHTML = '0';
     uniqueTypesElement.innerHTML = '0';
 
     if (!monsters || monsters.length === 0) return;
 
-    // Owner counts - use this as the source of truth for total monsters
+    // Count all valid monsters globally
+    const validMonsters = monsters.filter(monster => 
+        monster.ownerId && monster.monsterName && monster.type
+    );
+
+    // Set total global monster count
+    totalMonstersElement.textContent = validMonsters.length;
+
+    // Find owner with most monsters for the details section
     const ownerCounts = {};
-    monsters.forEach(monster => {
-        if (monster.ownerId && monster.monsterName && monster.type) {
-            ownerCounts[monster.ownerId] = (ownerCounts[monster.ownerId] || 0) + 1;
-        }
+    validMonsters.forEach(monster => {
+        ownerCounts[monster.ownerId] = (ownerCounts[monster.ownerId] || 0) + 1;
     });
 
     if (Object.keys(ownerCounts).length > 0) {
         const topOwnerEntry = Object.entries(ownerCounts)
             .reduce((a, b) => (b[1] > a[1] ? b : a));
         const [topOwnerId, monsterCount] = topOwnerEntry;
-        // Set total monsters to match the total owned count
-        totalMonstersElement.textContent = monsterCount;
-        
         const ownerName = await getUsernameById(topOwnerId);
         const detailsDiv = document.createElement('div');
         detailsDiv.className = 'monster-details';
         detailsDiv.innerHTML = `
             <span>Most owned by: ${ownerName}</span>
-            <span>Total owned: ${monsterCount}</span>
+            <span>Owns: ${monsterCount}</span>
         `;
         totalMonstersElement.appendChild(detailsDiv);
     }
 
     // Highest level monster (only from valid owned monsters)
-    const validMonsters = monsters.filter(monster => 
-        monster.ownerId && monster.monsterName && monster.type && monster.level);
     if (validMonsters.length > 0) {
         const highestLevelMonster = validMonsters.reduce((prev, current) => 
             (prev.level > current.level) ? prev : current
@@ -820,7 +819,7 @@ async function updateCollectionStats(monsters) {
 
     // Owner type counts - use this for unique types count
     const ownerTypeMap = {};
-    monsters.forEach(monster => {
+    validMonsters.forEach(monster => {
         if (monster.ownerId && monster.type) {
             if (!ownerTypeMap[monster.ownerId]) {
                 ownerTypeMap[monster.ownerId] = new Set();
