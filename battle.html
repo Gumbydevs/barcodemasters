@@ -1028,20 +1028,26 @@
                 if (isPlayerTurn && !isBattleOver) {
                     const startTime = Date.now();
                     const initialTimeRemaining = timeRemaining;
+                    let lastUpdate = 0;
                     
                     const timer = setInterval(() => {
-                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-                        const newTime = initialTimeRemaining - elapsedSeconds;
+                        const now = Date.now();
+                        const elapsedSeconds = Math.floor((now - startTime) / 1000);
                         
-                        if (newTime <= 1) {
-                            clearInterval(timer);
-                            setIsPlayerTurn(false);
-                            setTimeRemaining(6 * 60 * 60);
-                        } else {
-                            // Only update if second has changed
-                            setTimeRemaining(newTime);
+                        // Only update if a full second has passed
+                        if (elapsedSeconds > lastUpdate) {
+                            lastUpdate = elapsedSeconds;
+                            const newTime = initialTimeRemaining - elapsedSeconds;
+                            
+                            if (newTime <= 1) {
+                                clearInterval(timer);
+                                setIsPlayerTurn(false);
+                                setTimeRemaining(6 * 60 * 60);
+                            } else {
+                                setTimeRemaining(newTime);
+                            }
                         }
-                    }, 1000);
+                    }, 100); // Check more frequently but update only when needed
                     
                     return () => clearInterval(timer);
                 } else if (!isPlayerTurn && !isBattleOver && opponentHealth > 0) {
@@ -1487,6 +1493,15 @@
                     [isAI, aiImageUrl, monster?.imageUrl]
                 );
                 
+                const imageStyle = React.useMemo(() => ({
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    perspective: 1000,
+                    WebkitPerspective: 1000,
+                    willChange: 'transform'
+                }), []);
+
                 return React.useMemo(() => (
                     <div className="monster-image-container">
                         {imageUrl ? (
@@ -1495,21 +1510,17 @@
                                 alt={isAI ? "AI Opponent" : monster?.monsterName}
                                 loading="eager"
                                 decoding="sync"
-                                style={{
-                                    backfaceVisibility: 'hidden',
-                                    perspective: 1000,
-                                    transform: 'translate3d(0,0,0)'
-                                }}
+                                style={imageStyle}
                             />
                         ) : (
                             <div className="monster-image-placeholder"></div>
                         )}
                     </div>
-                ), [imageUrl, isAI, monster?.monsterName]);
+                ), [imageUrl, isAI, monster?.monsterName, imageStyle]);
             }, (prevProps, nextProps) => {
-                if (prevProps.isAI !== nextProps.isAI) return false;
-                if (prevProps.monster?.imageUrl !== nextProps.monster?.imageUrl) return false;
-                return true;
+                return prevProps.isAI === nextProps.isAI &&
+                       prevProps.monster?.imageUrl === nextProps.monster?.imageUrl &&
+                       prevProps.monster?.monsterName === nextProps.monster?.monsterName;
             });
 
             // Add showToast function
