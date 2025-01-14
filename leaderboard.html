@@ -314,50 +314,80 @@
         }
 
         async function updateTypesLeaderboard() {
-            const monstersRef = collection(db, 'monsters');
-            const snapshot = await getDocs(monstersRef);
-            const playerTypes = new Map();
+            try {
+                // First, get all monster types from the monsterTypes collection
+                const monsterTypesRef = collection(db, 'monsterTypes');
+                const typeSnapshot = await getDocs(monsterTypesRef);
+                const totalTypes = typeSnapshot.size;
 
-            // Get all possible types
-            const allTypes = new Set();
-            snapshot.docs.forEach(doc => {
-                const monster = doc.data();
-                if (monster.type) allTypes.add(monster.type);
-            });
+                if (totalTypes === 0) {
+                    console.error('No monster types found in database');
+                    return;
+                }
 
-            // Calculate type stats per player
-            snapshot.docs.forEach(doc => {
-                const monster = doc.data();
-                if (!monster.ownerId || !monster.type) return;
+                // Get all monsters
+                const monstersRef = collection(db, 'monsters');
+                const snapshot = await getDocs(monstersRef);
+                const playerTypes = new Map();
 
-                const types = playerTypes.get(monster.ownerId) || new Set();
-                types.add(monster.type);
-                playerTypes.set(monster.ownerId, types);
-            });
+                // Calculate type stats per player
+                snapshot.docs.forEach(doc => {
+                    const monster = doc.data();
+                    if (!monster.ownerId || !monster.type) return;
 
-            // Convert to array and sort
-            const rankings = await Promise.all(
-                Array.from(playerTypes.entries()).map(async ([userId, types]) => ({
-                    username: await getUsernameById(userId),
-                    typesCount: types.size,
-                    completion: ((types.size / allTypes.size) * 100).toFixed(1)
-                }))
-            );
+                    const types = playerTypes.get(monster.ownerId) || new Set();
+                    types.add(monster.type);
+                    playerTypes.set(monster.ownerId, types);
+                });
 
-            rankings.sort((a, b) => b.typesCount - a.typesCount);
+                // Convert to array and sort
+                const rankings = await Promise.all(
+                    Array.from(playerTypes.entries()).map(async ([userId, types]) => {
+                        // Calculate completion based on total types in database
+                        const completion = ((types.size / totalTypes) * 100).toFixed(1);
+                        
+                        // Find rarest type for this player
+                        const playerTypesArray = Array.from(types);
+                        let rarestType = 'None';
+                        let lowestCount = Infinity;
+                        
+                        for (const type of playerTypesArray) {
+                            const typeCount = snapshot.docs.filter(doc => 
+                                doc.data().type === type
+                            ).length;
+                            
+                            if (typeCount < lowestCount) {
+                                lowestCount = typeCount;
+                                rarestType = type;
+                            }
+                        }
 
-            const table = document.getElementById('typesLeaderboard');
-            const rows = rankings.slice(0, 10).map((player, index) => `
-                <tr>
-                    <td class="rank">${index + 1}</td>
-                    <td>${player.username}</td>
-                    <td>${player.typesCount}</td>
-                    <td>${Array.from(playerTypes.get(player.userId) || []).join(', ')}</td>
-                    <td>${player.completion}%</td>
-                </tr>
-            `).join('');
+                        return {
+                            username: await getUsernameById(userId),
+                            typesCount: types.size,
+                            completion,
+                            rarestType: rarestType !== 'None' ? `${rarestType} (${lowestCount})` : 'None'
+                        };
+                    })
+                );
 
-            table.innerHTML = table.rows[0].outerHTML + rows;
+                rankings.sort((a, b) => b.typesCount - a.typesCount);
+
+                const table = document.getElementById('typesLeaderboard');
+                const rows = rankings.slice(0, 10).map((player, index) => `
+                    <tr>
+                        <td class="rank">${index + 1}</td>
+                        <td>${player.username}</td>
+                        <td>${player.typesCount}/${totalTypes}</td>
+                        <td>${player.rarestType}</td>
+                        <td>${player.completion}%</td>
+                    </tr>
+                `).join('');
+
+                table.innerHTML = table.rows[0].outerHTML + rows;
+            } catch (error) {
+                console.error('Error updating types leaderboard:', error);
+            }
         }
 
         // Dark mode toggle
