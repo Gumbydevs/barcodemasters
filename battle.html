@@ -953,7 +953,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.043</span></p>
+            <p>Version: <span id="versionNumber">1.0.044</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1023,6 +1023,26 @@
             // AI will be equal to player level or up to 2 levels higher
             return playerLevel + levelBonus;
         }
+
+        // Add this before the BattleSystem component
+        const BattleTimer = React.memo(({ isPlayerTurn, timeRemaining, opponentTimeRemaining }) => {
+            const formatTime = (seconds) => {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            };
+
+            return (
+                <div className='timer'>
+                    {isPlayerTurn ? (
+                        <span>Your turn, time remaining: {formatTime(timeRemaining)}</span>
+                    ) : (
+                        <span>Opponent's turn, time remaining: {formatTime(opponentTimeRemaining)}</span>
+                    )}
+                </div>
+            );
+        });
 
         const BattleSystem = () => {
             // Add isDefending state
@@ -1094,14 +1114,6 @@
                     setAiImageUrl(storedUrl);
                 }
             }, []);
-
-            // Format the timer
-            const formatTime = (seconds) => {
-                const hours = Math.floor(seconds / 3600);
-                const minutes = Math.floor((seconds % 3600) / 60);
-                const secs = seconds % 60;
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            };
 
             // Main battle cycle (player turn / opponent turn)
             React.useEffect(() => {
@@ -1764,14 +1776,12 @@
                         </ul>
                     </div>
 
-                    {/* Timer */}
-                    <div className="timer">
-                        {isPlayerTurn ? (
-                            <span>Your turn, time remaining: {formatTime(timeRemaining)}</span>
-                        ) : (
-                            <span>Opponent's turn, time remaining: {formatTime(opponentTimeRemaining)}</span>
-                        )}
-                    </div>
+                    {/* Replace the existing timer with the new component */}
+                    <BattleTimer 
+                        isPlayerTurn={isPlayerTurn}
+                        timeRemaining={timeRemaining}
+                        opponentTimeRemaining={opponentTimeRemaining}
+                    />
 
                     <div className="battle-controls">
                         {!isBattleOver && isPlayerTurn ? (
