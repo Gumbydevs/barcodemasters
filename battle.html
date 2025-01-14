@@ -16,14 +16,14 @@
         body { 
             font-family: Arial, sans-serif; 
             background-color: #f3f4f6; 
-            color: #1a1a1a; /* Default text color for light mode */
+            color: #070707; /* Default text color for light mode */
             margin: 0; 
             padding: 0; 
             min-height: 100vh; 
         }
         
         body.dark-mode {
-            background: #121212;
+            background: #121212 !important;  /* Updated from any previous color to match monster-collection */
             color: #ffffff; /* Text color for dark mode */
         }
 
@@ -35,12 +35,12 @@
             padding-top: 6rem;
             box-sizing: border-box;
             color: inherit; /* Inherit text color from body */
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(12, 12, 12, 0.1);
             border-radius: 12px;
         }
 
         body.dark-mode .battle-container {
-            background: rgba(30, 41, 59, 0.7); /* Darker background for dark mode */
+            background: rgba(14, 13, 13, 0.7) !important; /* Darker background for dark mode */
         }
 
         @media (max-width: 768px) {
@@ -144,7 +144,7 @@
         }
 
         /* ...existing styles... */
-        body[data-theme="dark"] { background-color: #1f2937; color: #e5e7eb; }
+        body[data-theme="dark"] { color: #e5e7eb; }
         .battle-container { background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); width: 100%; max-width: 1200px; text-align: center; }
         .health-bar { height: 20px; border-radius: 5px; margin: 10px 0; background-color: #e5e7eb; position: relative; }
         .health-fill { height: 100%; border-radius: 5px; position: absolute; transition: width 0.3s ease; }
@@ -858,17 +858,17 @@
                 const playerLevel = parseInt(urlParams.get('level')) || 1;
                 const opponentLevel = parseInt(sessionStorage.getItem('aiOpponentLevel')) || playerLevel;
                 
-                // Improved base stats for AI
-                const baseHP = 18;  // Increased from 20
-                const baseAP = 5;   // Increased from 7
-                const baseSpeed = 5; // Increased from 6
+                // Reduced base stats for AI
+                const baseHP = 15;  // Decreased from 18
+                const baseAP = 4;   // Decreased from 5
+                const baseSpeed = 4; // Decreased from 5
                 
-                // Improved scaling factors
-                const hpScaling = 0.35;  // Increased from 0.25
-                const apScaling = 0.22;  // Increased from 0.18
-                const speedScaling = 0.15; // Increased from 0.12
+                // Keep same scaling factors
+                const hpScaling = 0.35;
+                const apScaling = 0.22;
+                const speedScaling = 0.15;
                 
-                // Add level bonus multiplier for higher levels
+                // Keep same level multiplier
                 const levelMultiplier = opponentLevel > 3 ? 1 + ((opponentLevel - 3) * 0.1) : 1;
                 
                 const scaledHP = Math.round((baseHP * (1 + (opponentLevel - 1) * hpScaling)) * levelMultiplier);
@@ -1627,9 +1627,9 @@
                         const aiStats = [
                             `Level ${aiLevel}`,
                             'Type: Robot',
-                            `HP: ${Math.round(19 * (1 + (aiLevel - 1) * 0.35))}`,
-                            `AP: ${Math.round(7 * (1 + (aiLevel - 1) * 0.22))}`,
-                            `Speed: ${Math.round(7 * (1 + (aiLevel - 1) * 0.15))}`
+                            `HP: ${Math.round(15 * (1 + (aiLevel - 1) * 0.35))}`, // Updated from 19
+                            `AP: ${Math.round(4 * (1 + (aiLevel - 1) * 0.22))}`,  // Updated from 7
+                            `Speed: ${Math.round(4 * (1 + (aiLevel - 1) * 0.15))}` // Updated from 7
                         ];
                         aiPreviewElement.textContent = aiStats.join(' | ');
                     }
