@@ -728,15 +728,15 @@
 
         /* Add logo size control */
         .logo-container {
-            width: 35%;  /* Changed from 65% to 35% */
-            max-width: 300px;  /* Changed from 400px to 300px */
-            margin: 0 auto 2rem auto;
+            width: 17.5%;  /* Changed from 35% to 17.5% */
+            max-width: 150px;  /* Changed from 300px to 150px */
+            margin: 0 auto 1rem auto; /* Reduced bottom margin from 2rem to 1rem */
         }
 
         .logo-container img {
             width: 100%;
             height: auto;
-            display: block; /* Added to prevent any spacing issues */
+            display: block;
             object-fit: contain;
         }
 
@@ -953,7 +953,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.044</span></p>
+            <p>Version: <span id="versionNumber">1.0.045</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1023,26 +1023,6 @@
             // AI will be equal to player level or up to 2 levels higher
             return playerLevel + levelBonus;
         }
-
-        // Add this before the BattleSystem component
-        const BattleTimer = React.memo(({ isPlayerTurn, timeRemaining, opponentTimeRemaining }) => {
-            const formatTime = (seconds) => {
-                const hours = Math.floor(seconds / 3600);
-                const minutes = Math.floor((seconds % 3600) / 60);
-                const secs = seconds % 60;
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            };
-
-            return (
-                <div className='timer'>
-                    {isPlayerTurn ? (
-                        <span>Your turn, time remaining: {formatTime(timeRemaining)}</span>
-                    ) : (
-                        <span>Opponent's turn, time remaining: {formatTime(opponentTimeRemaining)}</span>
-                    )}
-                </div>
-            );
-        });
 
         const BattleSystem = () => {
             // Add isDefending state
@@ -1118,67 +1098,31 @@
             // Main battle cycle (player turn / opponent turn)
             React.useEffect(() => {
                 if (isPlayerTurn && !isBattleOver) {
-                    const startTime = Date.now();
-                    const initialTimeRemaining = timeRemaining;
-                    let animationFrameId;
-                    let lastUpdate = 0;
-
-                    const updateTimer = () => {
-                        const now = Date.now();
-                        const elapsedSeconds = Math.floor((now - startTime) / 1000);
-
-                        if (elapsedSeconds > lastUpdate) {
-                            lastUpdate = elapsedSeconds;
-                            const newTime = initialTimeRemaining - elapsedSeconds;
-
-                            if (newTime <= 1) {
+                    const timer = setInterval(() => {
+                        setTimeRemaining(prev => {
+                            if (prev <= 1) {
+                                clearInterval(timer);
                                 setIsPlayerTurn(false);
-                                setTimeRemaining(6 * 60 * 60);
-                                return;
+                                return 6 * 60 * 60;
                             }
+                            return prev - 1;
+                        });
+                    }, 1000);
 
-                            setTimeRemaining(newTime);
-                        }
-
-                        animationFrameId = requestAnimationFrame(updateTimer);
-                    };
-
-                    animationFrameId = requestAnimationFrame(updateTimer);
-
-                    return () => {
-                        if (animationFrameId) {
-                            cancelAnimationFrame(animationFrameId);
-                        }
-                    };
+                    return () => clearInterval(timer);
                 } else if (!isPlayerTurn && !isBattleOver && opponentHealth > 0) {
-                    let animationFrameId;
-                    const startTime = Date.now();
-                    let lastUpdate = Date.now();
+                    const timer = setInterval(() => {
+                        setOpponentTimeRemaining(prev => prev - 1);
+                    }, 1000);
 
-                    const updateOpponentTimer = () => {
-                        const now = Date.now();
-                        if (now - lastUpdate >= 1000) {
-                            setOpponentTimeRemaining(prev => prev - 1);
-                            lastUpdate = now;
-                        }
-                        animationFrameId = requestAnimationFrame(updateOpponentTimer);
-                    };
-
-                    animationFrameId = requestAnimationFrame(updateOpponentTimer);
-
-                    const randomDelay = Math.floor(Math.random() * 4000) + 1000;
                     const actionTimer = setTimeout(() => {
-                        if (animationFrameId) {
-                            cancelAnimationFrame(animationFrameId);
-                        }
+                        clearInterval(timer);
                         setOpponentTimeRemaining(5 * 60 * 60 + 59 * 60);
                         opponentTurn();
-                    }, randomDelay);
+                    }, Math.floor(Math.random() * 4000) + 1000);
 
                     return () => {
-                        if (animationFrameId) {
-                            cancelAnimationFrame(animationFrameId);
-                        }
+                        clearInterval(timer);
                         clearTimeout(actionTimer);
                     };
                 }
@@ -1718,6 +1662,14 @@
                 }
             }, [opponentHealth, playerHealth]);
 
+            // Add formatTime function inside BattleSystem
+            const formatTime = (seconds) => {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            };
+
             // Update the return JSX
             return (
                 <div className="battle-container">
@@ -1777,11 +1729,13 @@
                     </div>
 
                     {/* Replace the existing timer with the new component */}
-                    <BattleTimer 
-                        isPlayerTurn={isPlayerTurn}
-                        timeRemaining={timeRemaining}
-                        opponentTimeRemaining={opponentTimeRemaining}
-                    />
+                    <div className="timer">
+                        {isPlayerTurn ? (
+                            <span>Your turn, time remaining: {formatTime(timeRemaining)}</span>
+                        ) : (
+                            <span>Opponent's turn, time remaining: {formatTime(opponentTimeRemaining)}</span>
+                        )}
+                    </div>
 
                     <div className="battle-controls">
                         {!isBattleOver && isPlayerTurn ? (
