@@ -942,7 +942,7 @@
             return playerLevel + levelBonus;
         }
 
-        function BattleSystem() {
+        const BattleSystem = () => {
             // Add isDefending state
             const [isDefending, setIsDefending] = React.useState(false);
             
@@ -1773,14 +1773,14 @@
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
         });
 
-        // Remove or comment out the React.useEffect outside the component
-        // React.useEffect(() => {
-        //     if (opponentHealth <= 0 && !isBattleOver) {
-        //         handleVictory();
-        //     } else if (playerHealth <= 0 && !isBattleOver) {
-        //         handleDefeat();
-        //     }
-        // }, [opponentHealth, playerHealth]);
+        // Clean up event listeners
+        window.addEventListener('load', () => {
+            updatePreview();
+            return () => {
+                // Remove event listeners
+                darkModeToggle.removeEventListener('click');
+            };
+        });
     </script>
 </body>
 </html>
