@@ -739,6 +739,33 @@
             display: block; /* Added to prevent any spacing issues */
             object-fit: contain;
         }
+
+        .monster-image-container {
+            flex: 0 0 150px;
+            width: 150px;
+            height: 150px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .monster-image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            will-change: transform;
+            transform: translateZ(0);
+        }
     </style>
 </head>
 <body>
@@ -1326,37 +1353,32 @@
             };
 
             // Add helper function to generate image content
-            const MonsterImage = ({ monster, isAI = false }) => {
-                if (isAI && aiImageUrl) {
-                    return (
-                        <div className="monster-image-container">
-                            <img 
-                                src={aiImageUrl}
-                                alt="AI Opponent"
-                                onError={(e) => {
-                                    e.target.parentElement.innerHTML = '<div class="monster-image-placeholder"></div>';
-                                }}
-                            />
-                        </div>
-                    );
-                }
-                
-                if (!monster?.imageUrl && !isAI) {
-                    return <div className="monster-image-placeholder"></div>;
-                }
+            const MonsterImage = React.memo(({ monster, isAI = false }) => {
+                const imageUrl = isAI ? aiImageUrl : monster?.imageUrl;
                 
                 return (
                     <div className="monster-image-container">
-                        <img 
-                            src={monster.imageUrl} 
-                            alt={monster.monsterName}
-                            onError={(e) => {
-                                e.target.parentElement.innerHTML = '<div className="monster-image-placeholder"></div>';
-                            }}
-                        />
+                        {imageUrl ? (
+                            <img 
+                                src={imageUrl}
+                                alt={isAI ? "AI Opponent" : monster?.monsterName}
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement.innerHTML = '<div class="monster-image-placeholder"></div>';
+                                }}
+                            />
+                        ) : (
+                            <div className="monster-image-placeholder"></div>
+                        )}
                     </div>
                 );
-            };
+            }, (prevProps, nextProps) => {
+                // Only re-render if the image URL changes
+                if (prevProps.isAI) {
+                    return prevProps.isAI === nextProps.isAI;
+                }
+                return prevProps.monster?.imageUrl === nextProps.monster?.imageUrl;
+            });
 
             // Add showToast function
             const showToast = (message, isLevelUp = false, isDefeat = false) => {
