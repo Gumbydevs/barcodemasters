@@ -662,6 +662,7 @@
             }
         }
 
+        // Modify the generateMonster function's scan limit check
         async function generateMonster(hash) {
             try {
                 const user = auth.currentUser;
@@ -669,7 +670,7 @@
                     throw new Error('User not authenticated');
                 }
 
-                // Get user document
+                // Get user document with a fresh read
                 const userRef = doc(db, 'users', user.uid);
                 const userDoc = await getDoc(userRef);
                 
@@ -682,32 +683,19 @@
                 // Check for user's daily scan limit (default to 3 if not set)
                 const dailyScanLimit = userData.dailyScanLimit || 3;
 
-                // Check for duplicate hash
-                if (userData.usedHash && userData.usedHash.includes(hash)) {
-                    const monsterResult = document.getElementById('monsterResult');
-                    monsterResult.style.display = 'block';
-                    monsterResult.innerHTML = `
-                        <div class="monster-card">
-                            <div style="text-align: center; padding: 2rem;">
-                                <h3 style="color: #e74c3c;">DNA Code Already Extracted</h3>
-                                <p>This DNA code has already been synthesized by you.</p>
-                                <p style="font-size: 0.9em; margin-top: 1rem;">Each unique DNA code can only be extracted once per player to maintain balance.</p>
-                                <button class="scan-button" onclick="location.reload()" style="margin-top: 1rem;">
-                                    Scan New Code
-                                </button>
-                                <button class="nav-button" onclick="location.href='monster-collection.html'" style="margin-top: 1rem;">
-                                    View Your Collection
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    updateDebugMessage('DNA code already used by this player');
-                    return null;
-                }
-
-                // Check daily scan limit
-                const today = new Date().toISOString().split('T')[0];
+                // Get today's date in user's local timezone
+                const today = new Date().toLocaleDateString('en-US');
+                
+                // Initialize or get daily scans
                 const dailyScans = userData.dailyScans || {};
+                
+                // Clear old dates and initialize today if needed
+                Object.keys(dailyScans).forEach(date => {
+                    if (new Date(date).toLocaleDateString('en-US') !== today) {
+                        delete dailyScans[date];
+                    }
+                });
+                
                 const todayScans = dailyScans[today] || 0;
 
                 if (todayScans >= dailyScanLimit) {
@@ -794,20 +782,18 @@
 
                 // Update user's daily scans and used hash in a transaction
                 await runTransaction(db, async (transaction) => {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userSnapshot = await transaction.get(userDocRef);
-                    
-                    if (!userSnapshot.exists()) {
+                    const freshUserDoc = await transaction.get(userRef);
+                    if (!freshUserDoc.exists()) {
                         throw new Error('User document does not exist!');
                     }
 
-                    const userData = userSnapshot.data();
-                    const newDailyScans = { ...userData.dailyScans } || {};
-                    newDailyScans[today] = (newDailyScans[today] || 0) + 1;
+                    const freshUserData = freshUserDoc.data();
+                    const updatedScans = { ...freshUserData.dailyScans } || {};
+                    updatedScans[today] = (updatedScans[today] || 0) + 1;
 
-                    transaction.update(userDocRef, {
+                    transaction.update(userRef, {
                         usedHash: arrayUnion(hash),
-                        dailyScans: newDailyScans
+                        dailyScans: updatedScans
                     });
                 });
 
@@ -1203,13 +1189,13 @@
             }
         }
 
-        // Add this function to update the scan limit display
+        // Modify the updateScanLimitDisplay function
         function updateScanLimitDisplay(dailyScans, dailyScanLimit) {
             const display = document.getElementById('scanLimitDisplay');
             if (!display) return;
 
-            const today = new Date().toISOString().split('T')[0];
-            const usedToday = dailyScans[today] || 0;
+            const today = new Date().toLocaleDateString('en-US');
+            const usedToday = (dailyScans[today] || 0);
             const remaining = dailyScanLimit - usedToday;
 
             display.innerHTML = `
@@ -1217,6 +1203,30 @@
                 <br>
                 <small>(${usedToday}/${dailyScanLimit} used)</small>
             `;
+        }
+
+        // Add a function to clean up old scan data
+        async function cleanupOldScanData(userId) {
+            const userRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const today = new Date().toLocaleDateString('en-US');
+                const dailyScans = userData.dailyScans || {};
+                
+                let needsUpdate = false;
+                Object.keys(dailyScans).forEach(date => {
+                    if (new Date(date).toLocaleDateString('en-US') !== today) {
+                        delete dailyScans[date];
+                        needsUpdate = true;
+                    }
+                });
+
+                if (needsUpdate) {
+                    await updateDoc(userRef, { dailyScans });
+                }
+            }
         }
 
         // Add a new function to refresh scan limits
@@ -1279,17 +1289,16 @@
             setInterval(refreshScanLimits, 30000);
         });
 
-        // Auth check
+        // Modify the auth state change handler
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
             } else {
                 try {
-                    // Initialize user fields on auth state change
+                    await cleanupOldScanData(user.uid);
                     const userData = await ensureUserFields(user.uid);
                     updateScanLimitDisplay(userData.dailyScans || {}, userData.dailyScanLimit || 3);
                     
-                    // Show debug button only for admin
                     const debugButton = document.getElementById('debugButton');
                     if (checkAdminStatus(user.uid)) {
                         debugButton.style.display = 'block';
