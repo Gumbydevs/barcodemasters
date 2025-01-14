@@ -404,7 +404,7 @@
             padding: 1rem;
         }
 
-        /* Update mobile styles for consistency */
+        /* Mobile adjustments */
         @media (max-width: 480px) {
             .monster-preview {
                 min-width: 140px;
@@ -543,6 +543,19 @@
             transition: all 0.3s ease;
             z-index: 1000;
         }
+
+        /* Add these new styles */
+        .victory-text {
+            color: #2ecc71;
+            font-size: 1.5em;
+            margin: 1rem 0;
+        }
+        
+        .defeat-text {
+            color: #e74c3c;
+            font-size: 1.5em;
+            margin: 1rem 0;
+        }
     </style>
 </head>
 <body>
@@ -668,6 +681,7 @@
             const [isPlayerTurn, setIsPlayerTurn] = React.useState(true);
             const [timeRemaining, setTimeRemaining] = React.useState(6 * 60 * 60); // 6 hours in seconds
             const [opponentTimeRemaining, setOpponentTimeRemaining] = React.useState(5 * 60 * 60 + 59 * 60 + 59); // 5 hours + 59 minutes + 59 seconds
+            const [battleState, setBattleState] = React.useState('ongoing'); // 'ongoing', 'victory', 'defeat'
 
             // Fetch player monster from URL
             React.useEffect(() => {
@@ -745,67 +759,12 @@
             };
 
             // Check for win/loss conditions
-            const checkBattleOutcome = async () => {
-                console.log('Processing battle outcome...');
-                
-                if (opponentHealth <= 0) {
-                    setIsBattleOver(true);
-                    // New XP calculation (same as above)
-                    const baseXP = 25;
-                    const levelBonus = Math.floor(opponentMonster.level * 7.5);
-                    const randomFactor = (Math.random() * 10) - 5;
-                    const totalExp = Math.floor(baseXP + levelBonus + randomFactor);
-                    
-                    showToast(`Victory! Gained ${totalExp} experience points! 🏆`);
-                    addToLog(`🏆 Victory!`);
-
-                    if (playerMonster?.id) {
-                        try {
-                            const monsterRef = db.collection('monsters').doc(playerMonster.id);
-                            const monsterDoc = await monsterRef.get();
-                            
-                            if (!monsterDoc.exists) {
-                                console.error('Monster document not found');
-                                return;
-                            }
-
-                            const currentExp = monsterDoc.data().experience || 0;
-                            const currentLevel = parseInt(monsterDoc.data().level) || 1;
-                            const newExp = currentExp + totalExp;
-                            
-                            // Check for level up
-                            const updates = { experience: newExp };
-                            if (newExp >= currentLevel * 100) {
-                                const newLevel = currentLevel + 1;
-                                updates.level = newLevel;
-                                
-                                // Update stats
-                                const baseStats = monsterDoc.data();
-                                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
-                                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
-                                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
-                                
-                                addToLog(`🌟 Level Up! Now level ${newLevel}!`);
-                            }
-
-                            await monsterRef.update(updates);
-                            addToLog(`✨ Gained ${totalExp} experience points!`);
-                            console.log('Experience updated successfully:', updates);
-                            
-                            // Update the display
-                            setPlayerMonster(prev => ({
-                                ...prev,
-                                experience: newExp,
-                                level: updates.level || prev.level
-                            }));
-
-                        } catch (error) {
-                            console.error('Failed to update experience:', error);
-                            addToLog('❌ Failed to update experience');
-                        }
-                    }
+            const checkBattleOutcome = () => {
+                if (opponentHealth <= 0 && !isBattleOver) {
+                    handleVictory();
+                } else if (playerHealth <= 0 && !isBattleOver) {
+                    handleDefeat();
                 }
-                // Don't set isPlayerTurn to false here anymore
             };
 
             // Player action handlers
@@ -832,79 +791,86 @@
                 return { damage, isCritical: false };
             };
 
-            // Update handleAttack function to show toast on victory
+            // Replace the handleAttack function with this version:
             const handleAttack = async () => {
+                if (isBattleOver || !isPlayerTurn || opponentHealth <= 0) return;
+    
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
                 const newHealth = Math.max(0, opponentHealth - damage);
+    
                 setOpponentHealth(newHealth);
                 addToLog(`You dealt ${damage} damage!${isCritical ? ' (Critical Hit!)' : ''}`);
-                
+    
                 if (newHealth <= 0) {
-                    console.log('Victory detected, processing outcome...');
-                    setOpponentHealth(0);
-                    setIsBattleOver(true);
+                    setIsBattleOver(true); // Set battle over immediately
+                    await handleVictory();
+                    return; // Exit early after victory
+                }
+                
+                setIsPlayerTurn(false);
+            };
+
+            // Add the victory handler
+            const handleVictory = async () => {
+                if (!playerMonster?.id || isBattleOver) return;
+
+                setBattleState('victory');
+                setIsBattleOver(true);
+                setOpponentHealth(0);
+
+                try {
+                    // Calculate XP gain
+                    const baseXP = 25;
+                    const levelBonus = Math.floor(opponentMonster.level * 7.5);
+                    const totalExp = Math.floor(baseXP + levelBonus + (Math.random() * 10 - 5));
+
+                    // Update battle log immediately
+                    addToLog(`🏆 Victory! Earned ${totalExp} XP!`);
                     
-                    const totalExp = calculateBattleRewards();
+                    // Show toast immediately
+                    showToast(`Victory! Gained ${totalExp} XP! 🏆`);
 
-                    if (playerMonster?.id) {
-                        try {
-                            const monsterRef = db.collection('monsters').doc(playerMonster.id);
-                            const user = auth.currentUser;
-                            if (!user) throw new Error('User not authenticated');
+                    const monsterRef = db.collection('monsters').doc(playerMonster.id);
+                    const doc = await monsterRef.get();
+                    
+                    if (!doc.exists) return;
 
-                            const monsterDoc = await monsterRef.get();
-                            if (!monsterDoc.exists) throw new Error('Monster not found');
-                            if (monsterDoc.data().ownerId !== user.uid) {
-                                throw new Error('Not authorized to update this monster');
-                            }
+                    const currentExp = doc.data().experience || 0;
+                    const currentLevel = parseInt(doc.data().level) || 1;
+                    const newExp = currentExp + totalExp;
 
-                            const currentExp = monsterDoc.data().experience || 0;
-                            const currentLevel = parseInt(monsterDoc.data().level) || 1;
-                            const newExp = currentExp + totalExp;
-                            
-                            // Create updates object
-                            const updates = { experience: newExp };
-                            
-                            // Check for level up
-                            if (newExp >= currentLevel * 100) {
-                                const newLevel = currentLevel + 1;
-                                updates.level = newLevel;
-                                
-                                // Update stats with level-up bonuses
-                                const baseStats = monsterDoc.data();
-                                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
-                                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
-                                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
-                                
-                                // Show level up toast BEFORE the victory toast
-                                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`, true);
-                                addToLog(`🌟 Level Up! Now level ${newLevel}!`);
-                            }
+                    const updates = { experience: newExp };
 
-                            await monsterRef.update(updates);
-                            showToast(`Victory! Gained ${totalExp} experience points! 🏆`);
-                            addToLog(`Victory against Level ${opponentMonster.level} opponent! +${totalExp} XP`);
-                            
-                            // Update UI state
-                            setPlayerMonster(prev => {
-                                const newLevel = updates.level || prev.level;
-                                return {
-                                    ...prev,
-                                    experience: newExp % (100 * currentLevel), // Reset XP bar for new level
-                                    level: newLevel,
-                                    HP: updates.HP || prev.HP,
-                                    AP: updates.AP || prev.AP,
-                                    Speed: updates.Speed || prev.Speed
-                                };
-                            });
+                    // Check for level up
+                    if (newExp >= currentLevel * 100) {
+                        const newLevel = currentLevel + 1;
+                        updates.level = newLevel;
+                        updates.HP = Math.round(doc.data().HP * 1.2);
+                        updates.AP = Math.round(doc.data().AP * 1.15);
+                        updates.Speed = Math.round(doc.data().Speed * 1.1);
 
-                        } catch (error) {
-                            console.error('Failed to update experience:', error);
-                            addToLog('❌ Failed to update experience points');
-                        }
+                        // Show level up messages
+                        setTimeout(() => {
+                            showToast(`Level Up! Your monster is now level ${newLevel}! 🌟`, true);
+                            addToLog(`🌟 Level Up! Now level ${newLevel}!`);
+                        }, 1500);
                     }
-                } else {
-                    setIsPlayerTurn(false);
+
+                    await monsterRef.update(updates);
+
+                    // Update local state after database update
+                    setPlayerMonster(prev => ({
+                        ...prev,
+                        experience: newExp,
+                        level: updates.level || prev.level,
+                        HP: updates.HP || prev.HP,
+                        AP: updates.AP || prev.AP,
+                        Speed: updates.Speed || prev.Speed
+                    }));
+
+                } catch (error) {
+                    console.error('Victory processing error:', error);
+                    addToLog('❌ Error processing victory rewards');
                 }
             };
 
@@ -928,74 +894,59 @@
             };
 
             // Opponent AI behavior
-            // Update opponent turn to handle defense
+            // Replace the opponentTurn function with this version:
             const opponentTurn = async () => {
-                if (opponentHealth <= 0 || playerHealth <= 0) {
-                    return; // Don't continue if battle is over
+                if (isBattleOver || isPlayerTurn || playerHealth <= 0) return;
+    
+                const { damage } = calculateDamage(opponentMonster, false);
+                const reducedDamage = isDefending ? Math.floor(damage / 2) : damage;
+                const newHealth = Math.max(0, playerHealth - reducedDamage);
+    
+                setPlayerHealth(newHealth);
+                addToLog(`Opponent dealt ${reducedDamage}${isDefending ? ' (reduced by defense)' : ''} damage!`);
+    
+                if (newHealth <= 0) {
+                    setIsBattleOver(true); // Set battle over immediately
+                    await handleDefeat();
+                    return; // Exit early after defeat
                 }
-
-                // Weighted action selection
-                const actions = [];
-                // 70% chance to attack (7 entries)
-                for (let i = 0; i < 7; i++) actions.push('attack');
-                // 20% chance to heal (2 entries)
-                for (let i = 0; i < 2; i++) actions.push('heal');
-                // 10% chance to defend (1 entry)
-                actions.push('defend');
-
-                const randomAction = actions[Math.floor(Math.random() * actions.length)];
-
-                 // Add heal threshold check
-                const shouldHeal = opponentHealth < (opponentMonster.HP * 0.3); // Only consider healing below 30% HP
-                const finalAction = shouldHeal ? (Math.random() < 0.6 ? 'heal' : randomAction) : randomAction;
-
-                switch(finalAction) {
-                    case 'attack':
-                        const { damage } = calculateDamage(opponentMonster, false);
-                        const reducedDamage = isDefending ? Math.floor(damage / 2) : damage; // Reduce damage if defending
-                        setPlayerHealth(prev => {
-                            const newHealth = Math.max(0, prev - reducedDamage);
-                            if (newHealth <= 0) {
-                                setIsBattleOver(true);
-                                const lostExp = Math.floor(Math.random() * 10) + 5; // Random XP loss between 5-15
-                                
-                                if (playerMonster?.id) {
-                                    const monsterRef = db.collection('monsters').doc(playerMonster.id);
-                                    monsterRef.get().then(doc => {
-                                        if (doc.exists) {
-                                            const currentExp = doc.data().experience || 0;
-                                            const newExp = Math.max(0, currentExp - lostExp);
-                                            monsterRef.update({ experience: newExp }).then(() => {
-                                                showToast(`Defeat! Lost ${lostExp} experience points! ❌`, true);
-                                                addToLog("You lost!");
-                                                setPlayerMonster(prev => ({
-                                                    ...prev,
-                                                    experience: newExp
-                                                }));
-                                            });
-                                        }
-                                    });
-                                }
-                            }
-                            return newHealth;
-                        });
-                        addToLog(`Opponent dealt ${reducedDamage}${isDefending ? ' (reduced by defense)' : ''} damage!`);
-                        setIsDefending(false); // Reset defense after attack
-                        break;
-                    case 'heal':
-                        const healPercentage = 0.2; // Heal 20% of max HP
-                        const healAmount = Math.floor(opponentMonster.HP * healPercentage);
-                        setOpponentHealth(prev => {
-                            const newHealth = Math.min(opponentMonster.HP, prev + healAmount);
-                            addToLog(`Opponent healed for ${newHealth - prev} HP!`);
-                            return newHealth;
-                        });
-                        break;
-                    case 'defend':
-                        addToLog("Opponent is defending!");
-                        break;
-                }
+    
+                setIsDefending(false);
                 setIsPlayerTurn(true);
+            };
+
+            // Add the defeat handler
+            const handleDefeat = async () => {
+                if (!playerMonster?.id || isBattleOver) return;
+
+                setBattleState('defeat');
+                setIsBattleOver(true);
+                setPlayerHealth(0);
+
+                try {
+                    const currentExp = playerMonster.experience || 0;
+                    const lostExp = Math.floor(currentExp * 0.1); // Lose 10% of current XP
+                    const newExp = Math.max(0, currentExp - lostExp);
+
+                    // Update battle log immediately
+                    addToLog(`💀 Defeat! Lost ${lostExp} XP!`);
+                    
+                    // Show toast immediately
+                    showToast(`Defeat! Lost ${lostExp} XP! ❌`, false);
+
+                    const monsterRef = db.collection('monsters').doc(playerMonster.id);
+                    await monsterRef.update({ experience: newExp });
+
+                    // Update local state after database update
+                    setPlayerMonster(prev => ({
+                        ...prev,
+                        experience: newExp
+                    }));
+
+                } catch (error) {
+                    console.error('Defeat processing error:', error);
+                    addToLog('❌ Error processing defeat penalties');
+                }
             };
 
             const activeMonster = playerMonster || {
@@ -1117,31 +1068,31 @@
 
             // Add showToast function
             const showToast = (message, isLevelUp = false) => {
-                let toastId = isLevelUp ? 'levelUpToast' : 'battleToast';
+                const toastId = isLevelUp ? 'levelUpToast' : 'battleToast';
                 let toast = document.getElementById(toastId);
                 
-                if (!toast) {
-                    toast = document.createElement('div');
-                    toast.id = toastId;
-                    toast.className = 'toast';
-                    if (isLevelUp) {
-                        toast.classList.add('level-up');
-                    }
-                    document.body.appendChild(toast);
+                // Remove existing toast if it exists
+                if (toast) {
+                    toast.remove();
                 }
                 
+                // Create new toast
+                toast = document.createElement('div');
+                toast.id = toastId;
+                toast.className = `toast${isLevelUp ? ' level-up' : ''}`;
                 toast.textContent = message;
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(100px)';
+                document.body.appendChild(toast);
                 
-                // Force a reflow before adding the visible class
+                // Force reflow
                 void toast.offsetWidth;
                 
+                // Show toast
                 requestAnimationFrame(() => {
                     toast.style.transform = 'translateY(0)';
                     toast.style.opacity = '1';
                 });
 
+                // Hide and remove toast after delay
                 setTimeout(() => {
                     toast.style.transform = 'translateY(100px)';
                     toast.style.opacity = '0';
@@ -1165,6 +1116,17 @@
                 const randomFactor = (Math.random() * 10) - 5;
                 return Math.max(1, Math.floor((baseXP + levelBonus) * difficultyMultiplier + randomFactor));
             };
+
+            // Add this useEffect inside the component
+            React.useEffect(() => {
+                if (!isBattleOver) {
+                    if (opponentHealth <= 0) {
+                        handleVictory();
+                    } else if (playerHealth <= 0) {
+                        handleDefeat();
+                    }
+                }
+            }, [opponentHealth, playerHealth]);
 
             // Update the return JSX
             return (
@@ -1230,15 +1192,40 @@
                         )}
                     </div>
 
-                    {!isBattleOver && isPlayerTurn ? (
-                        <div>
-                            <button onClick={handleAttack}>Attack</button>
-                            <button onClick={handleDefend}>Defend</button>
-                            <button onClick={handleHeal}>Heal</button>
-                        </div>
-                    ) : (
-                        <div>{isBattleOver ? "Battle Over!" : "Opponent is thinking..."}</div>
-                    )}
+                    <div className="battle-controls">
+                        {!isBattleOver && isPlayerTurn ? (
+                            <div>
+                                <button onClick={handleAttack} disabled={isBattleOver || battleState !== 'ongoing'}>
+                                    Attack
+                                </button>
+                                <button onClick={handleDefend} disabled={isBattleOver || battleState !== 'ongoing'}>
+                                    Defend
+                                </button>
+                                <button onClick={handleHeal} disabled={isBattleOver || battleState !== 'ongoing'}>
+                                    Heal
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                {isBattleOver && (
+                                    <div>
+                                        <h3 className={battleState === 'victory' ? 'victory-text' : 'defeat-text'}>
+                                            {opponentHealth <= 0 ? '🏆 Victory!' : '💀 Defeat!'}
+                                        </h3>
+                                        <button 
+                                            className="nav-button" 
+                                            onClick={() => window.location.href='monster-collection.html'}
+                                        >
+                                            Return to Collection
+                                        </button>
+                                    </div>
+                                )}
+                                {!isBattleOver && !isPlayerTurn && (
+                                    <span>Opponent is thinking...</span>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         }
@@ -1346,6 +1333,15 @@
             document.body.classList.toggle("dark-mode");
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
         });
+
+        // Remove or comment out the React.useEffect outside the component
+        // React.useEffect(() => {
+        //     if (opponentHealth <= 0 && !isBattleOver) {
+        //         handleVictory();
+        //     } else if (playerHealth <= 0 && !isBattleOver) {
+        //         handleDefeat();
+        //     }
+        // }, [opponentHealth, playerHealth]);
     </script>
 </body>
 </html>
