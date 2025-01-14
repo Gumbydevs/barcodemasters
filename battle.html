@@ -515,7 +515,8 @@
             transform: translateY(100px);
             opacity: 0;
             transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 9999; /* Ensure toasts are above everything */
+            pointer-events: none; /* Prevent toast from blocking interactions */
         }
 
         .toast.error {
@@ -526,22 +527,7 @@
         .toast.level-up {
             background: rgba(241, 196, 15, 0.9); /* Yellow background for level up */
             bottom: 90px; /* Position above the regular toast */
-        }
-
-        /* Update original toast styles to handle stacking */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(46, 204, 113, 0.9);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 10000; /* Higher than regular toast */
         }
 
         /* Add these new styles */
@@ -793,27 +779,44 @@
 
             // Replace the handleAttack function with this version:
             const handleAttack = async () => {
-                if (isBattleOver || !isPlayerTurn || opponentHealth <= 0) return;
+                if (isBattleOver || !isPlayerTurn) return;
     
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
                 const newHealth = Math.max(0, opponentHealth - damage);
     
+                if (newHealth <= 0) {
+                    // Process victory before changing any state
+                    await handleVictory();
+                    setOpponentHealth(0);
+                    setIsBattleOver(true);
+                    return;
+                }
+    
                 setOpponentHealth(newHealth);
                 addToLog(`You dealt ${damage} damage!${isCritical ? ' (Critical Hit!)' : ''}`);
-    
-                if (newHealth <= 0) {
-                    setIsBattleOver(true); // Set battle over immediately
-                    await handleVictory();
-                    return; // Exit early after victory
-                }
-                
                 setIsPlayerTurn(false);
             };
 
             // Add the victory handler
             const handleVictory = async () => {
-                if (!playerMonster?.id || isBattleOver) return;
+                console.log('Starting victory handler with:', {
+                    playerMonster,
+                    isBattleOver,
+                    opponentHealth
+                });
+                
+                // Add check for valid monster data
+                if (!playerMonster?.id) {
+                    console.log('No valid monster ID found:', playerMonster);
+                    return;
+                }
+                
+                if (isBattleOver) {
+                    console.log('Battle already over, stopping victory handler');
+                    return;
+                }
 
+                console.log('Processing victory...');
                 setBattleState('victory');
                 setIsBattleOver(true);
                 setOpponentHealth(0);
@@ -824,20 +827,31 @@
                     const levelBonus = Math.floor(opponentMonster.level * 7.5);
                     const totalExp = Math.floor(baseXP + levelBonus + (Math.random() * 10 - 5));
 
-                    // Update battle log immediately
-                    addToLog(`🏆 Victory! Earned ${totalExp} XP!`);
-                    
-                    // Show toast immediately
-                    showToast(`Victory! Gained ${totalExp} XP! 🏆`);
+                    console.log('XP calculation:', { baseXP, levelBonus, totalExp });
 
+                    // Update battle log and show toast
+                    addToLog(`🏆 Victory! Earned ${totalExp} XP!`);
+                    showToast(`Victory! Gained ${totalExp} XP! 🎉`);
+
+                    // Get current monster data
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
                     const doc = await monsterRef.get();
                     
-                    if (!doc.exists) return;
+                    if (!doc.exists) {
+                        throw new Error('Monster document not found');
+                    }
 
-                    const currentExp = doc.data().experience || 0;
+                    // Parse current values
+                    const currentExp = parseInt(doc.data().experience) || 0;
                     const currentLevel = parseInt(doc.data().level) || 1;
                     const newExp = currentExp + totalExp;
+
+                    console.log('Experience update:', { 
+                        currentExp, 
+                        totalExp, 
+                        newExp, 
+                        currentLevel 
+                    });
 
                     const updates = { experience: newExp };
 
@@ -849,16 +863,21 @@
                         updates.AP = Math.round(doc.data().AP * 1.15);
                         updates.Speed = Math.round(doc.data().Speed * 1.1);
 
-                        // Show level up messages
+                        console.log('Level up detected:', updates);
+
+                        // Show level up notifications after a delay
                         setTimeout(() => {
                             showToast(`Level Up! Your monster is now level ${newLevel}! 🌟`, true);
                             addToLog(`🌟 Level Up! Now level ${newLevel}!`);
                         }, 1500);
                     }
 
+                    // Update Firestore
+                    console.log('Updating Firestore with:', updates);
                     await monsterRef.update(updates);
+                    console.log('Firestore update successful');
 
-                    // Update local state after database update
+                    // Update local state
                     setPlayerMonster(prev => ({
                         ...prev,
                         experience: newExp,
@@ -870,6 +889,7 @@
 
                 } catch (error) {
                     console.error('Victory processing error:', error);
+                    showToast('Error processing victory rewards! ❌', false);
                     addToLog('❌ Error processing victory rewards');
                 }
             };
@@ -924,20 +944,20 @@
                 setPlayerHealth(0);
 
                 try {
-                    const currentExp = playerMonster.experience || 0;
+                    const currentExp = parseInt(playerMonster.experience) || 0;
                     const lostExp = Math.floor(currentExp * 0.1); // Lose 10% of current XP
                     const newExp = Math.max(0, currentExp - lostExp);
 
-                    // Update battle log immediately
+                    // Update battle log
                     addToLog(`💀 Defeat! Lost ${lostExp} XP!`);
                     
-                    // Show toast immediately
+                    // Show toast notification
                     showToast(`Defeat! Lost ${lostExp} XP! ❌`, false);
 
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
                     await monsterRef.update({ experience: newExp });
 
-                    // Update local state after database update
+                    // Update local state
                     setPlayerMonster(prev => ({
                         ...prev,
                         experience: newExp
@@ -1068,11 +1088,14 @@
 
             // Add showToast function
             const showToast = (message, isLevelUp = false) => {
+                console.log('showToast called:', { message, isLevelUp }); // Debug log
+                
                 const toastId = isLevelUp ? 'levelUpToast' : 'battleToast';
                 let toast = document.getElementById(toastId);
                 
-                // Remove existing toast if it exists
+                // Remove existing toast
                 if (toast) {
+                    console.log('Removing existing toast:', toastId);
                     toast.remove();
                 }
                 
@@ -1081,24 +1104,32 @@
                 toast.id = toastId;
                 toast.className = `toast${isLevelUp ? ' level-up' : ''}`;
                 toast.textContent = message;
+                
+                console.log('Creating new toast:', { id: toastId, message }); // Debug log
                 document.body.appendChild(toast);
                 
-                // Force reflow
+                // Force reflow and add debug logging
                 void toast.offsetWidth;
+                console.log('Toast element:', toast);
+                console.log('Toast styles:', window.getComputedStyle(toast));
                 
-                // Show toast
+                // Show toast with debugging
                 requestAnimationFrame(() => {
                     toast.style.transform = 'translateY(0)';
                     toast.style.opacity = '1';
+                    console.log('Toast animation started');
                 });
 
                 // Hide and remove toast after delay
                 setTimeout(() => {
+                    console.log('Starting toast removal animation');
                     toast.style.transform = 'translateY(100px)';
                     toast.style.opacity = '0';
+                    
                     setTimeout(() => {
                         if (toast.parentElement) {
                             toast.parentElement.removeChild(toast);
+                            console.log('Toast removed from DOM');
                         }
                     }, 300);
                 }, 5000);
@@ -1243,7 +1274,11 @@
                 const monsterRef = db.collection('monsters').doc(monsterId);
                 const doc = await monsterRef.get();
                 if (doc.exists) {
-                    return doc.data();
+                    // Include the document ID in the returned data
+                    return {
+                        id: doc.id,  // Add this line to preserve the ID
+                        ...doc.data()
+                    };
                 }
                 console.log('No monster document found');
                 return null;
