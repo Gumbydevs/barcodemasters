@@ -725,6 +725,20 @@
                 height: 120px;
             }
         }
+
+        /* Add logo size control */
+        .logo-container {
+            width: 35%;  /* Changed from 65% to 35% */
+            max-width: 300px;  /* Changed from 400px to 300px */
+            margin: 0 auto 2rem auto;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: auto;
+            display: block; /* Added to prevent any spacing issues */
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -828,9 +842,9 @@
 
         // Update the calculateAILevel function
         function calculateAILevel(playerLevel) {
-            // Generate a random number between 0 and 3 (inclusive)
-            const levelBonus = Math.floor(Math.random() * 4);  // 0 to 3
-            // AI will be equal to player level or up to 3 levels higher
+            // Generate a random number between 0 and 2 (inclusive) instead of 0 to 3
+            const levelBonus = Math.floor(Math.random() * 3);  // 0 to 2
+            // AI will be equal to player level or up to 2 levels higher
             return playerLevel + levelBonus;
         }
 
@@ -842,23 +856,24 @@
             const [opponentMonster, setOpponentMonster] = React.useState(() => {
                 const urlParams = new URLSearchParams(window.location.search);
                 const playerLevel = parseInt(urlParams.get('level')) || 1;
-                
-                // Use the stored AI level instead of calculating a new one
                 const opponentLevel = parseInt(sessionStorage.getItem('aiOpponentLevel')) || playerLevel;
                 
-                // Increased base stats for tougher battles
-                const baseHP = 20;  // Increased from 17
-                const baseAP = 7;   // Increased from 5
-                const baseSpeed = 6; // Increased from 5
+                // Improved base stats for AI
+                const baseHP = 19;  // Increased from 20
+                const baseAP = 7;   // Increased from 7
+                const baseSpeed = 7; // Increased from 6
                 
-                // Keep existing scaling factors
-                const hpScaling = 0.25;
-                const apScaling = 0.18;
-                const speedScaling = 0.12;
+                // Improved scaling factors
+                const hpScaling = 0.35;  // Increased from 0.25
+                const apScaling = 0.22;  // Increased from 0.18
+                const speedScaling = 0.15; // Increased from 0.12
                 
-                const scaledHP = Math.round(baseHP * (1 + (opponentLevel - 1) * hpScaling));
-                const scaledAP = Math.round(baseAP * (1 + (opponentLevel - 1) * apScaling));
-                const scaledSpeed = Math.round(baseSpeed * (1 + (opponentLevel - 1) * speedScaling));
+                // Add level bonus multiplier for higher levels
+                const levelMultiplier = opponentLevel > 3 ? 1 + ((opponentLevel - 3) * 0.1) : 1;
+                
+                const scaledHP = Math.round((baseHP * (1 + (opponentLevel - 1) * hpScaling)) * levelMultiplier);
+                const scaledAP = Math.round((baseAP * (1 + (opponentLevel - 1) * apScaling)) * levelMultiplier);
+                const scaledSpeed = Math.round((baseSpeed * (1 + (opponentLevel - 1) * speedScaling)) * levelMultiplier);
                 
                 return {
                     monsterName: `Level ${opponentLevel} AI Monster`,
@@ -976,21 +991,23 @@
             // Player action handlers
             // Update the damage calculation functions
             const calculateDamage = (attacker, isPlayer = true) => {
-                // Parse AP as integer and ensure minimum of 1
                 const baseAP = Math.max(1, parseInt(attacker.AP) || 1);
+                const variance = Math.floor((Math.random() * 0.3 - 0.15) * baseAP); // Increased variance
                 
-                // Add variance between -10% and +10% of base AP
-                const variance = Math.floor((Math.random() * 0.2 - 0.1) * baseAP);
+                // base damage for player
+                let damage = isPlayer ? 
+                    baseAP * 1.00 + variance : // Player deals 85% of AP
+                    baseAP + variance;         // AI deals full AP
                 
-                // Calculate final damage and add a fixed value to increase the range
-                let damage = baseAP + variance + 0.2; // Adding 3 to increase the overall damage range
-                
-                // Ensure minimum damage is 1
+                // Ensure minimum damage
                 damage = Math.max(1, Math.floor(damage));
                 
-                // 10% chance for critical hit (players only)
-                if (isPlayer && Math.random() < 0.1) {
-                    damage = Math.floor(damage * 1.5);
+                // Critical hit chances
+                const criticalChance = isPlayer ? 0.1 : 0.15; // AI has higher crit chance
+                const criticalMultiplier = isPlayer ? 1.5 : 1.75; // AI crits hit harder
+                
+                if (Math.random() < criticalChance) {
+                    damage = Math.floor(damage * criticalMultiplier);
                     return { damage, isCritical: true };
                 }
                 
@@ -1123,8 +1140,15 @@
 
             // Update handleHeal function with percentage-based healing
             const handleHeal = () => {
-                const healPercentage = 0.2; // Heal 20% of max HP
-                const healAmount = Math.floor(activeMonster.HP * healPercentage);
+                // Healing scales with level and gets less effective at higher HP
+                const baseHealPercent = 0.15; // Reduced from 0.2
+                const currentHPPercent = playerHealth / activeMonster.HP;
+                const healEffectiveness = 1 - (currentHPPercent * 0.5); // Reduced healing at higher HP
+                
+                const healAmount = Math.floor(
+                    activeMonster.HP * baseHealPercent * healEffectiveness
+                );
+                
                 setPlayerHealth(prev => {
                     const newHealth = Math.min(parseInt(activeMonster.HP), prev + healAmount);
                     addToLog(`You healed for ${newHealth - prev} HP!`);
@@ -1138,17 +1162,31 @@
             const opponentTurn = async () => {
                 if (isBattleOver || isPlayerTurn || playerHealth <= 0) return;
     
+                const healthPercentage = playerHealth / activeMonster.HP;
                 const { damage } = calculateDamage(opponentMonster, false);
-                const reducedDamage = isDefending ? Math.floor(damage / 2) : damage;
-                const newHealth = Math.max(0, playerHealth - reducedDamage);
+                let reducedDamage = isDefending ? Math.floor(damage / 1.75) : damage; // Defense less effective
+                
+                // Bonus damage when player is low on health
+                if (healthPercentage < 0.3) {
+                    reducedDamage = Math.floor(reducedDamage * 1.2); // 20% bonus damage on low HP targets
+                }
     
+                const newHealth = Math.max(0, playerHealth - reducedDamage);
                 setPlayerHealth(newHealth);
-                addToLog(`Opponent dealt ${reducedDamage}${isDefending ? ' (reduced by defense)' : ''} damage!`);
+                
+                // Add more detailed combat log messages
+                const message = isDefending 
+                    ? `Opponent dealt ${reducedDamage} damage! (Reduced by defense)`
+                    : healthPercentage < 0.3 
+                        ? `Opponent dealt ${reducedDamage} damage! (Execution bonus)`
+                        : `Opponent dealt ${reducedDamage} damage!`;
+                        
+                addToLog(message);
     
                 if (newHealth <= 0) {
-                    setIsBattleOver(true); // Set battle over immediately
+                    setIsBattleOver(true);
                     await handleDefeat();
-                    return; // Exit early after defeat
+                    return;
                 }
     
                 setIsDefending(false);
