@@ -923,6 +923,14 @@
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
         }
+
+        /* Fix iOS flicker on player's monster image */
+        .battle-container .monster .monster-image-container img {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
     </style>
 </head>
 <body>
