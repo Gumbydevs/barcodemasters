@@ -953,7 +953,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.045</span></p>
+            <p>Version: <span id="versionNumber">1.0.046</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1697,7 +1697,12 @@
                     <h2>{username} vs AI Opponent</h2>
                     
                     <div className="monster">
-                        <MonsterImage monster={playerMonster} />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div className="monster-name" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                                {activeMonster.monsterName}
+                            </div>
+                            <MonsterImage monster={playerMonster} />
+                        </div>
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {activeMonster.type}</li>
@@ -1723,7 +1728,12 @@
                     </div>
 
                     <div className="monster">
-                        <MonsterImage monster={opponentMonster} isAI={true} />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div className="monster-name" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                                Level {opponentMonster.level} Robot
+                            </div>
+                            <MonsterImage monster={opponentMonster} isAI={true} />
+                        </div>
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {opponentMonster.type}</li>
