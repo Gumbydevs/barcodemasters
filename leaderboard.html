@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
+    <title>Barcode Masters - Leaderboards</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+        }
+
+        body.dark-mode {
+            background: #121212;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 80px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-container img {
+            max-height: 100px;
+        }
+
+        .leaderboard-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .leaderboard-section h2 {
+            margin: 0 0 20px 0;
+            color: #3498db;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-table th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            color: #a8b3cf;
+        }
+
+        .leaderboard-table tr:nth-child(1) {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .leaderboard-table tr:nth-child(2) {
+            background: rgba(192, 192, 192, 0.1);
+        }
+
+        .leaderboard-table tr:nth-child(3) {
+            background: rgba(205, 127, 50, 0.1);
+        }
+
+        .rank {
+            font-weight: bold;
+            width: 40px;
+            text-align: center;
+        }
+
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .nav-button {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+        }
+
+        #darkModeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        #logoutButton {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #a8b3cf;
+        }
+    </style>
+</head>
+<body>
+    <button id="darkModeToggle">🌙</button>
+
+    <div class="container">
+        <div class="logo-container">
+            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+            <h1>Global Leaderboards</h1>
+        </div>
+
+        <div class="navigation-grid">
+            <button class="nav-button" onclick="location.href='monster-collection.html'">My Collection</button>
+            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
+            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
+            <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
+            <button class="nav-button" onclick="location.href='select-monster.html'">Battle</button>
+            <button class="nav-button" onclick="location.href='profile.html'">Profile</button>
+            <button class="nav-button" onclick="location.href='help.html'">Help</button>
+            <button class="nav-button" id="logoutButton">Logout</button>
+        </div>
+
+        <div class="leaderboard-section">
+            <h2>Most Monsters Collected</h2>
+            <table class="leaderboard-table" id="monstersLeaderboard">
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Total Monsters</th>
+                    <th>Highest Level</th>
+                    <th>Unique Types</th>
+                </tr>
+            </table>
+        </div>
+
+        <div class="leaderboard-section">
+            <h2>Highest Level Monsters</h2>
+            <table class="leaderboard-table" id="levelsLeaderboard">
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Monster Name</th>
+                    <th>Level</th>
+                    <th>Type</th>
+                </tr>
+            </table>
+        </div>
+
+        <div class="leaderboard-section">
+            <h2>Type Masters</h2>
+            <table class="leaderboard-table" id="typesLeaderboard">
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Types Collected</th>
+                    <th>Rarest Type</th>
+                    <th>Completion %</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>Rankings update hourly • Version 1.0.02</p>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, query, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const usernameCache = new Map();
+
+        async function getUsernameById(userId) {
+            if (usernameCache.has(userId)) return usernameCache.get(userId);
+            
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                    const username = userDoc.data().username;
+                    usernameCache.set(userId, username);
+                    return username;
+                }
+                return 'Unknown User';
+            } catch (error) {
+                console.error('Error fetching username:', error);
+                return 'Unknown User';
+            }
+        }
+
+        async function updateMonstersLeaderboard() {
+            const monstersRef = collection(db, 'monsters');
+            const snapshot = await getDocs(monstersRef);
+            const playerStats = new Map();
+
+            // Calculate stats per player
+            snapshot.docs.forEach(doc => {
+                const monster = doc.data();
+                if (!monster.ownerId) return;
+
+                const stats = playerStats.get(monster.ownerId) || {
+                    totalMonsters: 0,
+                    highestLevel: 0,
+                    types: new Set()
+                };
+
+                stats.totalMonsters++;
+                stats.highestLevel = Math.max(stats.highestLevel, monster.level || 0);
+                stats.types.add(monster.type);
+                playerStats.set(monster.ownerId, stats);
+            });
+
+            // Convert to array and sort
+            const rankings = await Promise.all(
+                Array.from(playerStats.entries()).map(async ([userId, stats]) => ({
+                    username: await getUsernameById(userId),
+                    ...stats,
+                    uniqueTypes: stats.types.size
+                }))
+            );
+
+            rankings.sort((a, b) => b.totalMonsters - a.totalMonsters);
+
+            // Update table
+            const table = document.getElementById('monstersLeaderboard');
+            const rows = rankings.slice(0, 10).map((player, index) => `
+                <tr>
+                    <td class="rank">${index + 1}</td>
+                    <td>${player.username}</td>
+                    <td>${player.totalMonsters}</td>
+                    <td>${player.highestLevel}</td>
+                    <td>${player.uniqueTypes}</td>
+                </tr>
+            `).join('');
+
+            // Keep the header row and add new rows
+            table.innerHTML = table.rows[0].outerHTML + rows;
+        }
+
+        async function updateLevelsLeaderboard() {
+            const monstersRef = collection(db, 'monsters');
+            const snapshot = await getDocs(monstersRef);
+            
+            const monsters = await Promise.all(snapshot.docs.map(async doc => {
+                const data = doc.data();
+                return {
+                    name: data.monsterName,
+                    level: data.level || 0,
+                    type: data.type,
+                    username: await getUsernameById(data.ownerId)
+                };
+            }));
+
+            monsters.sort((a, b) => b.level - a.level);
+
+            const table = document.getElementById('levelsLeaderboard');
+            const rows = monsters.slice(0, 10).map((monster, index) => `
+                <tr>
+                    <td class="rank">${index + 1}</td>
+                    <td>${monster.username}</td>
+                    <td>${monster.name}</td>
+                    <td>${monster.level}</td>
+                    <td>${monster.type}</td>
+                </tr>
+            `).join('');
+
+            table.innerHTML = table.rows[0].outerHTML + rows;
+        }
+
+        async function updateTypesLeaderboard() {
+            const monstersRef = collection(db, 'monsters');
+            const snapshot = await getDocs(monstersRef);
+            const playerTypes = new Map();
+
+            // Get all possible types
+            const allTypes = new Set();
+            snapshot.docs.forEach(doc => {
+                const monster = doc.data();
+                if (monster.type) allTypes.add(monster.type);
+            });
+
+            // Calculate type stats per player
+            snapshot.docs.forEach(doc => {
+                const monster = doc.data();
+                if (!monster.ownerId || !monster.type) return;
+
+                const types = playerTypes.get(monster.ownerId) || new Set();
+                types.add(monster.type);
+                playerTypes.set(monster.ownerId, types);
+            });
+
+            // Convert to array and sort
+            const rankings = await Promise.all(
+                Array.from(playerTypes.entries()).map(async ([userId, types]) => ({
+                    username: await getUsernameById(userId),
+                    typesCount: types.size,
+                    completion: ((types.size / allTypes.size) * 100).toFixed(1)
+                }))
+            );
+
+            rankings.sort((a, b) => b.typesCount - a.typesCount);
+
+            const table = document.getElementById('typesLeaderboard');
+            const rows = rankings.slice(0, 10).map((player, index) => `
+                <tr>
+                    <td class="rank">${index + 1}</td>
+                    <td>${player.username}</td>
+                    <td>${player.typesCount}</td>
+                    <td>${Array.from(playerTypes.get(player.userId) || []).join(', ')}</td>
+                    <td>${player.completion}%</td>
+                </tr>
+            `).join('');
+
+            table.innerHTML = table.rows[0].outerHTML + rows;
+        }
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const savedTheme = localStorage.getItem('theme');
+        
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        });
+
+        // Logout button
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        });
+
+        // Check authentication and initialize
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                updateMonstersLeaderboard();
+                updateLevelsLeaderboard();
+                updateTypesLeaderboard();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
