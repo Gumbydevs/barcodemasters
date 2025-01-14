@@ -74,9 +74,16 @@
         }
 
         .leaderboard-table th {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3); /* Darker background */
             font-weight: bold;
-            color: #a8b3cf;
+            color: #ffffff; /* Brighter text color */
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Add subtle shadow for better contrast */
+        }
+
+        /* Add dark mode specific styles */
+        body.dark-mode .leaderboard-table th {
+            background: rgba(0, 0, 0, 0.4);
+            color: #e5e7eb;
         }
 
         .leaderboard-table tr:nth-child(1) {
