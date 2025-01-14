@@ -955,7 +955,7 @@
                 const opponentLevel = parseInt(sessionStorage.getItem('aiOpponentLevel')) || playerLevel;
                 
                 // Balanced base stats for AI
-                const baseHP = 20;  // Decreased from 25 to 20
+                const baseHP = 25;  // Decreased from 25 to 20
                 const baseAP = 5;   // Decreased from 6 to 5
                 const baseSpeed = 5; // Decreased from 6 to 5
                 
@@ -1261,37 +1261,89 @@
             };
 
             // Opponent AI behavior
-            // Replace the opponentTurn function with this version:
+            // Update opponentTurn with smarter AI behavior
             const opponentTurn = async () => {
                 if (isBattleOver || isPlayerTurn || playerHealth <= 0) return;
-    
-                const healthPercentage = playerHealth / activeMonster.HP;
-                const { damage } = calculateDamage(opponentMonster, false);
-                let reducedDamage = isDefending ? Math.floor(damage / 1.75) : damage; // Defense less effective
-                
-                // Bonus damage when player is low on health
-                if (healthPercentage < 0.3) {
-                    reducedDamage = Math.floor(reducedDamage * 1.2); // 20% bonus damage on low HP targets
+
+                // AI decision making based on health percentage
+                const aiHealthPercentage = opponentHealth / opponentMonster.HP;
+                const playerHealthPercentage = playerHealth / activeMonster.HP;
+
+                // Choose action based on situation
+                let action = 'attack'; // Default action
+
+                if (aiHealthPercentage < 0.3) {
+                    // When critically low on health
+                    const random = Math.random();
+                    if (random < 0.6) { // 60% chance to heal when critical
+                        action = 'heal';
+                    } else if (random < 0.9) { // 30% chance to defend
+                        action = 'defend';
+                    }
+                    // 10% chance to still attack
+                } else if (aiHealthPercentage < 0.5) {
+                    // When moderately low on health
+                    const random = Math.random();
+                    if (random < 0.4) { // 40% chance to heal
+                        action = 'heal';
+                    } else if (random < 0.7) { // 30% chance to defend
+                        action = 'defend';
+                    }
+                    // 30% chance to attack
+                } else if (playerHealthPercentage < 0.3 && aiHealthPercentage > 0.6) {
+                    // Aggressive when player is low and AI is healthy
+                    const random = Math.random();
+                    if (random < 0.8) { // 80% chance to attack
+                        action = 'attack';
+                    } else { // 20% chance to defend
+                        action = 'defend';
+                    }
                 }
-    
-                const newHealth = Math.max(0, playerHealth - reducedDamage);
-                setPlayerHealth(newHealth);
-                
-                // Add more detailed combat log messages
-                const message = isDefending 
-                    ? `Opponent dealt ${reducedDamage} damage! (Reduced by defense)`
-                    : healthPercentage < 0.3 
-                        ? `Opponent dealt ${reducedDamage} damage! (Execution bonus)`
-                        : `Opponent dealt ${reducedDamage} damage!`;
+
+                // Execute the chosen action
+                switch (action) {
+                    case 'heal':
+                        const healPercent = 0.3; // Heal 30% of max HP
+                        const healAmount = Math.floor(opponentMonster.HP * healPercent);
+                        const newHealth = Math.min(opponentMonster.HP, opponentHealth + healAmount);
+                        setOpponentHealth(newHealth);
+                        addToLog(`Opponent healed for ${newHealth - opponentHealth} HP!`);
+                        break;
+
+                    case 'defend':
+                        addToLog("Opponent is defending against the next attack!");
+                        // Add a temporary defense buff for the next player's attack
+                        window.aiDefending = true;
+                        setTimeout(() => { window.aiDefending = false; }, 100);
+                        break;
+
+                    default: // Attack
+                        const { damage } = calculateDamage(opponentMonster, false);
+                        let finalDamage = isDefending ? Math.floor(damage / 1.75) : damage;
                         
-                addToLog(message);
-    
-                if (newHealth <= 0) {
-                    setIsBattleOver(true);
-                    await handleDefeat();
-                    return;
+                        if (playerHealthPercentage < 0.3) {
+                            finalDamage = Math.floor(finalDamage * 1.2); // 20% bonus damage on low HP targets
+                        }
+
+                        const newPlayerHealth = Math.max(0, playerHealth - finalDamage);
+                        setPlayerHealth(newPlayerHealth);
+                        
+                        const message = isDefending 
+                            ? `Opponent dealt ${finalDamage} damage! (Reduced by defense)`
+                            : playerHealthPercentage < 0.3 
+                                ? `Opponent dealt ${finalDamage} damage! (Execution bonus)`
+                                : `Opponent dealt ${finalDamage} damage!`;
+                        
+                        addToLog(message);
+
+                        if (newPlayerHealth <= 0) {
+                            setIsBattleOver(true);
+                            await handleDefeat();
+                            return;
+                        }
+                        break;
                 }
-    
+
                 setIsDefending(false);
                 setIsPlayerTurn(true);
             };
