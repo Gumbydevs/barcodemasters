@@ -859,9 +859,9 @@
                 const opponentLevel = parseInt(sessionStorage.getItem('aiOpponentLevel')) || playerLevel;
                 
                 // Improved base stats for AI
-                const baseHP = 19;  // Increased from 20
-                const baseAP = 7;   // Increased from 7
-                const baseSpeed = 7; // Increased from 6
+                const baseHP = 18;  // Increased from 20
+                const baseAP = 5;   // Increased from 7
+                const baseSpeed = 5; // Increased from 6
                 
                 // Improved scaling factors
                 const hpScaling = 0.35;  // Increased from 0.25
@@ -1141,7 +1141,7 @@
             // Update handleHeal function with percentage-based healing
             const handleHeal = () => {
                 // Healing scales with level and gets less effective at higher HP
-                const baseHealPercent = 0.15; // Reduced from 0.2
+                const baseHealPercent = 0.42; // Heal player amount
                 const currentHPPercent = playerHealth / activeMonster.HP;
                 const healEffectiveness = 1 - (currentHPPercent * 0.5); // Reduced healing at higher HP
                 
@@ -1444,6 +1444,7 @@
                                 <li>Level: {activeMonster.level}</li>
                                 <li>HP: {playerHealth}/{activeMonster.HP}</li>
                                 <li>AP: {activeMonster.AP}</li>
+                                <li>Speed: {activeMonster.Speed}</li>
                                 <li className="xp-text">XP: {activeMonster.experience || 0}/{activeMonster.level * 100}</li>
                             </ul>
                             <div className="xp-progress">
@@ -1468,6 +1469,8 @@
                                 <li>Type: {opponentMonster.type}</li>
                                 <li>Level: {opponentMonster.level}</li>
                                 <li>HP: {opponentHealth}/{opponentMonster.HP}</li>
+                                <li>AP: {opponentMonster.AP}</li>
+                                <li>Speed: {opponentMonster.Speed}</li>
                             </ul>
                         </div>
                     </div>
@@ -1621,7 +1624,14 @@
                     // Update AI opponent preview
                     const aiPreviewElement = document.querySelector('.monster-preview:last-child p');
                     if (aiPreviewElement) {
-                        aiPreviewElement.textContent = `Level ${aiLevel} Robot`;
+                        const aiStats = [
+                            `Level ${aiLevel}`,
+                            'Type: Robot',
+                            `HP: ${Math.round(19 * (1 + (aiLevel - 1) * 0.35))}`,
+                            `AP: ${Math.round(7 * (1 + (aiLevel - 1) * 0.22))}`,
+                            `Speed: ${Math.round(7 * (1 + (aiLevel - 1) * 0.15))}`
+                        ];
+                        aiPreviewElement.textContent = aiStats.join(' | ');
                     }
 
                     const aiNameElement = document.querySelector('.monster-preview:last-child h3');
