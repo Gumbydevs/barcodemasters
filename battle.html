@@ -953,7 +953,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.044</span></p>
+            <p>Version: <span id="versionNumber">1.0.043</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1592,16 +1592,39 @@
             // Add helper function to generate image content
             const MonsterImage = React.memo(({ monster, isAI = false }) => {
                 const imageUrl = React.useMemo(() => isAI ? aiImageUrl : monster?.imageUrl, [isAI, aiImageUrl, monster?.imageUrl]);
+                const containerRef = React.useRef(null);
                 
+                React.useEffect(() => {
+                    if (containerRef.current) {
+                        containerRef.current.style.transform = 'translateZ(0)';
+                    }
+                }, []);
+
                 return (
-                    <div className="monster-image-container">
+                    <div 
+                        ref={containerRef}
+                        className="monster-image-container"
+                        style={{
+                            contain: 'strict',
+                            willChange: 'transform',
+                            transform: 'translateZ(0)',
+                            WebkitTransform: 'translateZ(0)'
+                        }}
+                    >
                         {imageUrl ? (
                             <img 
                                 src={imageUrl}
                                 alt={isAI ? 'AI Opponent' : monster?.monsterName}
                                 loading="eager"
                                 decoding="sync"
-                                className="monster-image"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain',
+                                    transform: 'translateZ(0)',
+                                    WebkitTransform: 'translateZ(0)',
+                                    willChange: 'transform'
+                                }}
                             />
                         ) : (
                             <div className="monster-image-placeholder" />
