@@ -530,6 +530,10 @@
             z-index: 10000; /* Higher than regular toast */
         }
 
+        .toast.defeat {
+            background: rgba(231, 76, 60, 0.95) !important; /* Red background for defeat */
+        }
+
         /* Add these new styles */
         .victory-text {
             color: #2ecc71;
@@ -952,7 +956,7 @@
                     addToLog(`💀 Defeat! Lost ${lostExp} XP!`);
                     
                     // Show toast notification
-                    showToast(`Defeat! Lost ${lostExp} XP! ❌`, false);
+                    showToast(`Defeat! Lost ${lostExp} XP! ❌`, false, true);
 
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
                     await monsterRef.update({ experience: newExp });
@@ -1087,8 +1091,8 @@
             };
 
             // Add showToast function
-            const showToast = (message, isLevelUp = false) => {
-                console.log('showToast called:', { message, isLevelUp }); // Debug log
+            const showToast = (message, isLevelUp = false, isDefeat = false) => {
+                console.log('showToast called:', { message, isLevelUp, isDefeat }); // Debug log
                 
                 const toastId = isLevelUp ? 'levelUpToast' : 'battleToast';
                 let toast = document.getElementById(toastId);
@@ -1102,7 +1106,7 @@
                 // Create new toast
                 toast = document.createElement('div');
                 toast.id = toastId;
-                toast.className = `toast${isLevelUp ? ' level-up' : ''}`;
+                toast.className = `toast${isLevelUp ? ' level-up' : ''}${isDefeat ? ' defeat' : ''}`;
                 toast.textContent = message;
                 
                 console.log('Creating new toast:', { id: toastId, message }); // Debug log
@@ -1248,6 +1252,13 @@
                                             onClick={() => window.location.href='monster-collection.html'}
                                         >
                                             Return to Collection
+                                        </button>
+                                        <button 
+                                            className="nav-button" 
+                                            onClick={() => window.location.reload()}
+                                            style={{marginLeft: '10px'}}
+                                        >
+                                            Start New Battle
                                         </button>
                                     </div>
                                 )}
