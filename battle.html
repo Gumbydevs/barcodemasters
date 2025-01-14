@@ -835,6 +835,44 @@
                 flex: 0 0 100px;
             }
         }
+
+        /* Add optimized GPU acceleration styles */
+        .monster-image-container {
+            /* ...existing styles... */
+            transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+            isolation: isolate;
+            contain: content;
+        }
+
+        .monster-image-container img {
+            /* ...existing styles... */
+            transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            -webkit-perspective: 1000;
+            perspective: 1000;
+        }
+
+        /* iOS specific optimizations */
+        @supports (-webkit-overflow-scrolling: touch) {
+            .monster-image-container {
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+            }
+            
+            .monster-image-container img {
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1028,43 +1066,66 @@
                 if (isPlayerTurn && !isBattleOver) {
                     const startTime = Date.now();
                     const initialTimeRemaining = timeRemaining;
+                    let animationFrameId;
                     let lastUpdate = 0;
-                    
-                    const timer = setInterval(() => {
+
+                    const updateTimer = () => {
                         const now = Date.now();
                         const elapsedSeconds = Math.floor((now - startTime) / 1000);
-                        
-                        // Only update if a full second has passed
+
                         if (elapsedSeconds > lastUpdate) {
                             lastUpdate = elapsedSeconds;
                             const newTime = initialTimeRemaining - elapsedSeconds;
-                            
+
                             if (newTime <= 1) {
-                                clearInterval(timer);
                                 setIsPlayerTurn(false);
                                 setTimeRemaining(6 * 60 * 60);
-                            } else {
-                                setTimeRemaining(newTime);
+                                return;
                             }
+
+                            setTimeRemaining(newTime);
                         }
-                    }, 100); // Check more frequently but update only when needed
-                    
-                    return () => clearInterval(timer);
+
+                        animationFrameId = requestAnimationFrame(updateTimer);
+                    };
+
+                    animationFrameId = requestAnimationFrame(updateTimer);
+
+                    return () => {
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                        }
+                    };
                 } else if (!isPlayerTurn && !isBattleOver && opponentHealth > 0) {
-                    const opponentTimer = setInterval(() => {
-                        setOpponentTimeRemaining(prev => prev - 1);
-                    }, 1000);
-                    
+                    let animationFrameId;
+                    const startTime = Date.now();
+                    let lastUpdate = Date.now();
+
+                    const updateOpponentTimer = () => {
+                        const now = Date.now();
+                        if (now - lastUpdate >= 1000) {
+                            setOpponentTimeRemaining(prev => prev - 1);
+                            lastUpdate = now;
+                        }
+                        animationFrameId = requestAnimationFrame(updateOpponentTimer);
+                    };
+
+                    animationFrameId = requestAnimationFrame(updateOpponentTimer);
+
                     const randomDelay = Math.floor(Math.random() * 4000) + 1000;
                     const actionTimer = setTimeout(() => {
-                        clearInterval(opponentTimer);
-                        setOpponentTimeRemaining(5 * 60 * 60 + 59 * 60); // Reset time for opponent
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                        }
+                        setOpponentTimeRemaining(5 * 60 * 60 + 59 * 60);
                         opponentTurn();
                     }, randomDelay);
-                    
+
                     return () => {
+                        if (animationFrameId) {
+                            cancelAnimationFrame(animationFrameId);
+                        }
                         clearTimeout(actionTimer);
-                        clearInterval(opponentTimer);
                     };
                 }
             }, [isPlayerTurn, isBattleOver, opponentHealth]);
@@ -1494,16 +1555,24 @@
                 );
                 
                 const imageStyle = React.useMemo(() => ({
-                    transform: 'translateZ(0)',
+                    transform: 'translate3d(0,0,0)',
+                    WebkitTransform: 'translate3d(0,0,0)',
+                    willChange: 'transform',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     perspective: 1000,
-                    WebkitPerspective: 1000,
-                    willChange: 'transform'
+                    WebkitPerspective: 1000
+                }), []);
+
+                const containerStyle = React.useMemo(() => ({
+                    transform: 'translate3d(0,0,0)',
+                    WebkitTransform: 'translate3d(0,0,0)',
+                    willChange: 'transform',
+                    isolation: 'isolate'
                 }), []);
 
                 return React.useMemo(() => (
-                    <div className="monster-image-container">
+                    <div className="monster-image-container" style={containerStyle}>
                         {imageUrl ? (
                             <img 
                                 src={imageUrl}
@@ -1516,7 +1585,7 @@
                             <div className="monster-image-placeholder"></div>
                         )}
                     </div>
-                ), [imageUrl, isAI, monster?.monsterName, imageStyle]);
+                ), [imageUrl, isAI, monster?.monsterName, imageStyle, containerStyle]);
             }, (prevProps, nextProps) => {
                 return prevProps.isAI === nextProps.isAI &&
                        prevProps.monster?.imageUrl === nextProps.monster?.imageUrl &&
