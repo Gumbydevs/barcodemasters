@@ -23,6 +23,8 @@
             margin: 0 auto;
             padding: 20px;
             padding-top: 80px;
+            padding-bottom: 80px;
+            min-height: calc(100vh - 180px); /* Ensure content fills viewport minus footer and bottom nav */
         }
 
         .logo-container {
@@ -138,6 +140,7 @@
             text-align: center;
             padding: 20px;
             color: #a8b3cf;
+            margin-bottom: 0; /* Remove bottom margin */
         }
 
         /* Update container padding for mobile */
@@ -219,6 +222,39 @@
                 font-size: 0.9em;
             }
         }
+
+        /* Add bottom navigation styles */
+        .bottom-nav {
+            position: relative; /* Change from fixed to relative */
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            margin-top: 2rem; /* Add spacing from content above */
+        }
+
+        .bottom-nav .nav-button {
+            margin: 0;
+            min-width: 100px;
+        }
+
+        @media screen and (max-width: 480px) {
+            .bottom-nav {
+                padding: 10px;
+            }
+            
+            .bottom-nav .nav-button {
+                min-width: 80px;
+                font-size: 0.9em;
+            }
+
+            .container {
+                min-height: calc(100vh - 160px); /* Adjust for smaller elements on mobile */
+            }
+        }
     </style>
 </head>
 <body>
@@ -231,19 +267,17 @@
         </div>
 
         <div class="navigation-grid">
-            <button class="nav-button" onclick="location.href='monster-collection.html'">My Collection</button>
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
             <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
             <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
             <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
-            <button class="nav-button" onclick="location.href='select-monster.html'">Battle</button>
-            <button class="nav-button" onclick="location.href='profile.html'">Profile</button>
-            <button class="nav-button" onclick="location.href='help.html'">Help</button>
-            <button class="nav-button" id="logoutButton">Logout</button>
+            <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
+            <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
         </div>
 
         <div class="leaderboard-section">
             <h2>Monster Masters</h2>
-            <h6>Players with the most monsters Collected</h6>
+            <h6>Players with the most monsters collected</h6>
             <table class="leaderboard-table" id="monstersLeaderboard">
                 <tr>
                     <th>Rank</th>
@@ -287,6 +321,11 @@
     <footer>
         <p>Rankings update hourly • Version 1.0.02</p>
     </footer>
+
+    <div class="bottom-nav">
+        <button class="nav-button" onclick="location.href='help.html'">Help</button>
+        <button class="nav-button" id="logoutButton">Logout</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
