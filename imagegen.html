@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monster Image Generator</title>
+    <title>Monster Image Generator - Admin Tool</title>
     <style>
         .container {
             max-width: 800px;
@@ -37,156 +37,274 @@
         .status-message.visible {
             display: block;
         }
+        .admin-only {
+            display: none;
+            padding: 10px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Monster Image Generator</h1>
+        <h1>Monster Image Generator - Admin Tool</h1>
         
-        <div class="input-group">
-            <label for="prompt">Describe your monster:</label><br>
-            <textarea id="prompt" rows="4" cols="50"></textarea>
+        <div id="adminAuth" class="admin-only">
+            <p>Admin Authentication Required</p>
+            <button id="loginBtn">Login with Firebase</button>
         </div>
 
-        <div class="input-group">
-            <button id="generateBtn">Generate Monster</button>
-            <button id="saveBtn" disabled>Save to Firebase</button>
-            <div id="statusMessage" class="status-message"></div>
-        </div>
+        <div id="generatorControls" style="display: none;">
+            <div class="input-group">
+                <label for="monsterId">Monster ID or Custom Prefix:</label>
+                <input type="text" id="monsterId" placeholder="Enter monster ID or custom prefix">
+            </div>
 
-        <div class="image-container">
-            <img id="generatedImage" style="display: none;">
+            <div class="input-group">
+                <label for="prompt">Monster Description:</label>
+                <textarea id="prompt" rows="4" cols="50" placeholder="Describe the monster's appearance..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="negativePrompt">Negative Prompt (Optional):</label>
+                <textarea id="negativePrompt" rows="2" cols="50" placeholder="Things to avoid in the generation..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <button id="generateBtn">Generate Monster</button>
+                <button id="saveBtn" disabled>Save to Database</button>
+                <button id="logoutBtn">Logout</button>
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+
+            <div class="image-container">
+                <img id="generatedImage" style="display: none;">
+            </div>
         </div>
     </div>
 
     <script type="module">
-        // Import Firebase functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Firebase configuration - replace with your config
         const firebaseConfig = {
-            // Your Firebase config here
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.appspot.com",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const storage = getStorage(app);
+        const db = getFirestore(app);
+        
+        const ADMIN_UID = 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2'; // Your admin UID
+
+        function checkAdminStatus(user) {
+            return user && user.uid === ADMIN_UID;
+        }
+
+        function updateUI(user) {
+            const isAdmin = checkAdminStatus(user);
+            document.getElementById('adminAuth').style.display = isAdmin ? 'none' : 'block';
+            document.getElementById('generatorControls').style.display = isAdmin ? 'block' : 'none';
+        }
+
+        async function handleLogin() {
+            try {
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
+                if (!checkAdminStatus(result.user)) {
+                    await signOut(auth);
+                    showStatus('Unauthorized access', true);
+                }
+            } catch (error) {
+                showStatus('Login failed: ' + error.message, true);
+            }
+        }
+
+        function showStatus(message, isError = false) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message visible ' + (isError ? 'error' : 'success');
+        }
 
         async function generateImage() {
-            const userPrompt = document.getElementById('prompt').value;
+            const prompt = document.getElementById('prompt').value;
+            const negativePrompt = document.getElementById('negativePrompt').value;
             const generateBtn = document.getElementById('generateBtn');
             const saveBtn = document.getElementById('saveBtn');
-            const statusMessage = document.getElementById('statusMessage');
-            
-            function updateStatus(message, isError = false) {
-                statusMessage.textContent = message;
-                statusMessage.style.backgroundColor = isError ? '#ffebee' : '#f0f0f0';
-                statusMessage.classList.add('visible');
+
+            if (!prompt) {
+                showStatus('Please enter a monster description', true);
+                return;
             }
 
             generateBtn.disabled = true;
-            updateStatus('Generating image...');
+            showStatus('Initializing model...');
 
-            try {
-                let retries = 0;
-                const maxRetries = 10;
-                let response;
+            // Array of model options to try
+            const models = [
+                'Lykon/DreamShaper',
+                'prompthero/openjourney-v4',
+                'stabilityai/stable-diffusion-2-1',
+                'runwayml/stable-diffusion-v1-5'
+            ];
+
+            let currentAttempt = 0;
+            const maxAttempts = models.length * 2; // Try each model up to twice
+
+            async function attemptGeneration() {
+                const modelIndex = currentAttempt % models.length;
+                const currentModel = models[modelIndex];
                 
-                while (retries < maxRetries) {
-                    response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+                showStatus(`Attempting generation with ${currentModel.split('/')[1]}...`);
+
+                try {
+                    const response = await fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
                         method: 'POST',
                         headers: {
                             'Authorization': 'Bearer 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',
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            inputs: userPrompt + ", high quality, detailed fantasy art style, game asset",
+                            inputs: prompt,
+                            parameters: {
+                                negative_prompt: negativePrompt || "text, watermark, signature, cropped, bad anatomy, extra limbs",
+                                width: 512,
+                                height: 512,
+                                num_inference_steps: 30,
+                                guidance_scale: 7.5
+                            }
                         })
                     });
 
-                    if (response.status === 429) {
-                        updateStatus('Rate limit reached. Waiting 60 seconds...', true);
-                        await new Promise(resolve => setTimeout(resolve, 60000));
-                        retries++;
-                        continue;
-                    }
-
                     if (response.status === 503) {
                         const errorData = await response.json();
-                        const waitTime = Math.min(errorData.estimated_time || 5, 20);
-                        updateStatus('Model is loading, please wait...');
+                        const waitTime = Math.min(errorData.estimated_time || 10, 30);
+                        showStatus(`Model loading (${waitTime}s), please wait...`);
                         await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
-                        retries++;
-                        continue;
+                        throw new Error('Model loading');
+                    }
+
+                    if (response.status === 429) {
+                        showStatus('Rate limit reached, trying another model...');
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        throw new Error('Rate limit');
                     }
 
                     if (!response.ok) {
                         throw new Error(`API error: ${response.status}`);
                     }
 
-                    // If we get here, we have a successful response
-                    break;
-                }
-
-                if (retries >= maxRetries) {
-                    throw new Error('Maximum retries reached. Please try again later.');
-                }
-
-                const blob = await response.blob();
-                if (blob.type.startsWith('image/')) {
+                    const blob = await response.blob();
                     const imageUrl = URL.createObjectURL(blob);
                     const img = document.getElementById('generatedImage');
                     img.src = imageUrl;
                     img.style.display = 'block';
                     saveBtn.disabled = false;
-                    updateStatus('Image generated successfully!');
-                } else {
-                    throw new Error('Received invalid response from API');
-                }
+                    showStatus('Image generated successfully!');
+                    return true;
 
+                } catch (error) {
+                    console.error(`Attempt ${currentAttempt + 1} failed:`, error);
+                    currentAttempt++;
+                    
+                    if (currentAttempt < maxAttempts) {
+                        showStatus(`Retrying with different model (attempt ${currentAttempt + 1}/${maxAttempts})...`);
+                        return attemptGeneration();
+                    } else {
+                        throw new Error('All generation attempts failed');
+                    }
+                }
+            }
+
+            try {
+                await attemptGeneration();
             } catch (error) {
-                console.error('Error:', error);
-                updateStatus(`Error: ${error.message}`, true);
+                showStatus('Generation failed: ' + error.message, true);
             } finally {
                 generateBtn.disabled = false;
             }
         }
 
-        async function saveToFirebase() {
+        async function saveToDatabase() {
+            const monsterId = document.getElementById('monsterId').value.trim();
+            if (!monsterId) {
+                showStatus('Please enter a Monster ID or prefix', true);
+                return;
+            }
+
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
+            showStatus('Saving to database...');
 
             try {
                 const img = document.getElementById('generatedImage');
                 const response = await fetch(img.src);
                 const blob = await response.blob();
-                
-                // Create a unique filename
-                const filename = `monsters/${Date.now()}.png`;
+
+                // Create storage reference with custom ID
+                const filename = `monster-images/${monsterId}.png`;
                 const storageRef = ref(storage, filename);
                 
-                // Upload to Firebase Storage
+                // Upload image
                 await uploadBytes(storageRef, blob);
-                
-                // Get the download URL
-                const downloadURL = await getDownloadURL(storageRef);
-                console.log('Image saved:', downloadURL);
-                alert('Image saved successfully!');
+                const imageUrl = await getDownloadURL(storageRef);
+
+                // If it's a monster update
+                if (monsterId.includes('-')) {
+                    const monsterRef = doc(db, 'monsters', monsterId);
+                    await updateDoc(monsterRef, {
+                        imageUrl: imageUrl,
+                        lastUpdated: new Date().toISOString()
+                    });
+                }
+
+                showStatus('Image saved successfully!');
+                console.log('Saved image URL:', imageUrl);
             } catch (error) {
-                console.error('Error saving to Firebase:', error);
-                alert('Error saving image. Please try again.');
+                showStatus('Save failed: ' + error.message, true);
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.textContent = 'Save to Firebase';
             }
         }
 
-        // Add event listeners after DOM loads
+        // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
             document.getElementById('generateBtn').addEventListener('click', generateImage);
-            document.getElementById('saveBtn').addEventListener('click', saveToFirebase);
+            document.getElementById('saveBtn').addEventListener('click', saveToDatabase);
+            document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+            onAuthStateChanged(auth, updateUI);
         });
     </script>
 </body>
