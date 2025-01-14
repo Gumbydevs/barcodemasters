@@ -657,7 +657,7 @@ function showToast(message, isLevelUp = false) {
                 toast.parentElement.removeChild(toast);
             }
         }, 300);
-    }, 5000); // Changed from 3000 to 5000 (5 seconds)
+    }, 5000);
 }
 
 // Add this function before startTraining
@@ -833,8 +833,8 @@ async function completeTraining() {
                 updates.AP = Math.round(baseStats.AP * (1 + 0.15));
                 updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
                 
-                // Show level up toast first (will appear above the training completion toast)
-                showToast(`🌟 Level Up! Your monster is now level ${newLevel}!`, true);
+                // Show level up toast first with monster name
+                showToast(`🌟 ${monsterData.monsterName} has reached level ${newLevel}!`, true);
             }
 
             await updateDoc(monsterRef, updates);
@@ -849,7 +849,8 @@ async function completeTraining() {
             const selectedMonsterDiv = document.getElementById('selectedMonster');
             selectedMonsterDiv.innerHTML = await createMonsterCard(updatedMonsterData);
             
-            showToast(`Training completed! ${stat} increased by ${statIncrease}. Gained ${xpIncrease} XP.`);
+            // Show training completion toast with monster name
+            showToast(`🎯 Training completed! ${monsterData.monsterName} gained ${xpIncrease} XP and increased ${stat} by ${statIncrease}!`);
             
             // Update monster in currentMonsters array
             const monsterIndex = currentMonsters.findIndex(m => m.id === monsterId);
