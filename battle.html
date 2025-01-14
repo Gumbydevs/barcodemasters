@@ -10,6 +10,7 @@
     <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
         /* Collection-style layout */
         body { 
@@ -604,6 +605,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth(); // Add this line
+        const storage = firebase.storage(); // Add this line
 
         // Add this function before the BattleSystem component and updatePreview function
         const getMonsterImageHTML = (monster) => {
@@ -619,6 +621,24 @@
                     />
                 </div>`;
         };
+
+        // Add this function after firebase initialization
+        async function getRandomAIOpponentImage() {
+            try {
+                // We'll assume there are 10 images (adjust this number based on your actual count)
+                const totalImages = 12;
+                const randomNumber = Math.floor(Math.random() * totalImages) + 1;
+                const paddedNumber = String(randomNumber).padStart(2, '0');
+                const imagePath = `robotAiOpponent-images/robotAiOpponent_${paddedNumber}.png`;
+                
+                const imageRef = storage.ref().child(imagePath);
+                const url = await imageRef.getDownloadURL();
+                return url;
+            } catch (error) {
+                console.error('Error getting AI opponent image:', error);
+                return null;
+            }
+        }
 
         // Update the calculateAILevel function
         function calculateAILevel(playerLevel) {
@@ -672,6 +692,7 @@
             const [timeRemaining, setTimeRemaining] = React.useState(6 * 60 * 60); // 6 hours in seconds
             const [opponentTimeRemaining, setOpponentTimeRemaining] = React.useState(5 * 60 * 60 + 59 * 60 + 59); // 5 hours + 59 minutes + 59 seconds
             const [battleState, setBattleState] = React.useState('ongoing'); // 'ongoing', 'victory', 'defeat'
+            const [aiImageUrl, setAiImageUrl] = React.useState(null); // Add state for AI image
 
             // Fetch player monster from URL
             React.useEffect(() => {
@@ -686,6 +707,13 @@
                         }
                     });
                 }
+            }, []);
+
+            // Add this useEffect to load AI image when component mounts
+            React.useEffect(() => {
+                getRandomAIOpponentImage().then(url => {
+                    if (url) setAiImageUrl(url);
+                });
             }, []);
 
             // Format the timer
@@ -1072,8 +1100,22 @@
             };
 
             // Add helper function to generate image content
-            const MonsterImage = ({ monster }) => {
-                if (!monster?.imageUrl) {
+            const MonsterImage = ({ monster, isAI = false }) => {
+                if (isAI && aiImageUrl) {
+                    return (
+                        <div className="monster-image-container">
+                            <img 
+                                src={aiImageUrl}
+                                alt="AI Opponent"
+                                onError={(e) => {
+                                    e.target.parentElement.innerHTML = '<div class="monster-image-placeholder"></div>';
+                                }}
+                            />
+                        </div>
+                    );
+                }
+                
+                if (!monster?.imageUrl && !isAI) {
                     return <div className="monster-image-placeholder"></div>;
                 }
                 
@@ -1083,7 +1125,7 @@
                             src={monster.imageUrl} 
                             alt={monster.monsterName}
                             onError={(e) => {
-                                e.target.parentElement.innerHTML = '<div class="monster-image-placeholder"></div>';
+                                e.target.parentElement.innerHTML = '<div className="monster-image-placeholder"></div>';
                             }}
                         />
                     </div>
@@ -1194,7 +1236,7 @@
                     </div>
 
                     <div className="monster">
-                        <MonsterImage monster={opponentMonster} />
+                        <MonsterImage monster={opponentMonster} isAI={true} />
                         <div className="monster-info">
                             <ul>
                                 <li>Type: {opponentMonster.type}</li>
@@ -1359,6 +1401,19 @@
                     const aiNameElement = document.querySelector('.monster-preview:last-child h3');
                     if (aiNameElement) {
                         aiNameElement.textContent = `AI Monster (Lvl ${aiLevel})`;
+                    }
+
+                    // Add AI opponent image to preview
+                    const aiImageUrl = await getRandomAIOpponentImage();
+                    const aiPreviewImage = document.querySelector('.monster-preview:last-child .monster-image-placeholder');
+                    if (aiPreviewImage && aiImageUrl) {
+                        aiPreviewImage.outerHTML = `
+                            <div class="monster-image-container">
+                                <img src="${aiImageUrl}" 
+                                    alt="AI Opponent" 
+                                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class="monster-image-placeholder"></div>';" 
+                                />
+                            </div>`;
                     }
                 } catch (error) {
                     console.error('Error in updatePreview:', error);
