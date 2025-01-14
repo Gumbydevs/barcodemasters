@@ -326,6 +326,91 @@
                 height: 200px;
             }
         }
+
+        /* Update monsters grid for smaller cards */
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); /* Reduced from 280px by 30% */
+            gap: 0.8rem;
+            width: 100%;
+        }
+
+        /* Update monster card styles */
+        .monster-card {
+            padding: 0.8rem; /* Reduced from 1rem */
+            font-size: 0.9em; /* Slightly reduce base font size */
+        }
+
+        .monster-name {
+            font-size: 1.2rem; /* Reduced from 1.4rem */
+            margin-bottom: 0.4rem;
+        }
+
+        .monster-image-container,
+        .monster-image-placeholder {
+            height: 224px; /* Reduced from 280px */
+            margin: 0.8rem 0;
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Reduced from 100px */
+            gap: 0.8rem;
+            margin: 0.8rem 0;
+        }
+
+        .stat-item {
+            padding: 0.4rem;
+            font-size: 0.85em;
+        }
+
+        .type-description {
+            font-size: 0.8rem;
+            padding: 0.4rem;
+            margin-top: 0.4rem;
+        }
+
+        .monster-type-badge {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 480px) {
+            .monsters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Reduced from 200px */
+                gap: 0.5rem;
+            }
+
+            .monster-card {
+                padding: 0.5rem;
+            }
+
+            .monster-image-container,
+            .monster-image-placeholder {
+                height: 140px; /* Reduced from 200px by 30% */
+                margin: 0.5rem 0;
+            }
+
+            .monster-name {
+                font-size: 1rem;
+            }
+
+            .monster-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.3rem;
+            }
+
+            .stat-item {
+                padding: 0.3rem;
+                font-size: 0.75em;
+            }
+
+            .type-description {
+                font-size: 0.7rem;
+                padding: 0.3rem;
+            }
+        }
     </style>
 </head>
 <body>
