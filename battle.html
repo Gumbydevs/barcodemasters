@@ -790,6 +790,49 @@
                 pointer-events: none;
             }
         }
+
+        /* Update monster image container styles for better performance */
+        .monster-image-container {
+            contain: layout size;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            isolation: isolate;
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0;
+            flex: 0 0 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .monster-image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            pointer-events: none;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            -webkit-perspective: 1000;
+            -webkit-transform-style: preserve-3d;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            .battle-container .monster .monster-image-container {
+                width: 100px;
+                height: 100px;
+                flex: 0 0 100px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -981,16 +1024,23 @@
             // Main battle cycle (player turn / opponent turn)
             React.useEffect(() => {
                 if (isPlayerTurn && !isBattleOver) {
+                    const startTime = Date.now();
+                    const initialTimeRemaining = timeRemaining;
+                    
                     const timer = setInterval(() => {
-                        setTimeRemaining(prev => {
-                            if (prev <= 1) {
-                                clearInterval(timer);
-                                setIsPlayerTurn(false);
-                                return 6 * 60 * 60; // Reset time for the next player turn
-                            }
-                            return prev - 1;
-                        });
+                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        const newTime = initialTimeRemaining - elapsedSeconds;
+                        
+                        if (newTime <= 1) {
+                            clearInterval(timer);
+                            setIsPlayerTurn(false);
+                            setTimeRemaining(6 * 60 * 60);
+                        } else {
+                            // Only update if second has changed
+                            setTimeRemaining(newTime);
+                        }
                     }, 1000);
+                    
                     return () => clearInterval(timer);
                 } else if (!isPlayerTurn && !isBattleOver && opponentHealth > 0) {
                     const opponentTimer = setInterval(() => {
