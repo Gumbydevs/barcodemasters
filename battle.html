@@ -873,6 +873,48 @@
                 -webkit-transform: translateZ(0);
             }
         }
+
+        /* Add new stable image classes */
+        .monster-image-stable {
+            contain: layout size;
+            transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
+            will-change: transform;
+            isolation: isolate;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .monster-image-stable img {
+            transform: translate3d(0,0,0);
+            -webkit-transform: translate3d(0,0,0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        /* Add iOS-specific optimizations */
+        @supports (-webkit-overflow-scrolling: touch) {
+            .monster-image-stable {
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+                contain: strict;
+            }
+            
+            .monster-image-stable img {
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+                contain: strict;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1549,43 +1591,43 @@
 
             // Add helper function to generate image content
             const MonsterImage = React.memo(({ monster, isAI = false }) => {
+                const containerRef = React.useRef(null);
+                const imageRef = React.useRef(null);
+                
                 const imageUrl = React.useMemo(() => 
                     isAI ? aiImageUrl : monster?.imageUrl,
                     [isAI, aiImageUrl, monster?.imageUrl]
                 );
-                
-                const imageStyle = React.useMemo(() => ({
-                    transform: 'translate3d(0,0,0)',
-                    WebkitTransform: 'translate3d(0,0,0)',
-                    willChange: 'transform',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    perspective: 1000,
-                    WebkitPerspective: 1000
-                }), []);
 
-                const containerStyle = React.useMemo(() => ({
-                    transform: 'translate3d(0,0,0)',
-                    WebkitTransform: 'translate3d(0,0,0)',
-                    willChange: 'transform',
-                    isolation: 'isolate'
-                }), []);
+                React.useEffect(() => {
+                    if (containerRef.current) {
+                        // Force hardware acceleration
+                        containerRef.current.style.transform = 'translate3d(0,0,0)';
+                    }
+                    if (imageRef.current) {
+                        // Ensure image is hardware accelerated
+                        imageRef.current.style.transform = 'translate3d(0,0,0)';
+                    }
+                }, []);
 
                 return React.useMemo(() => (
-                    <div className="monster-image-container" style={containerStyle}>
+                    <div 
+                        ref={containerRef}
+                        className="monster-image-container monster-image-stable"
+                    >
                         {imageUrl ? (
                             <img 
+                                ref={imageRef}
                                 src={imageUrl}
                                 alt={isAI ? "AI Opponent" : monster?.monsterName}
                                 loading="eager"
                                 decoding="sync"
-                                style={imageStyle}
                             />
                         ) : (
                             <div className="monster-image-placeholder"></div>
                         )}
                     </div>
-                ), [imageUrl, isAI, monster?.monsterName, imageStyle, containerStyle]);
+                ), [imageUrl, isAI, monster?.monsterName]);
             }, (prevProps, nextProps) => {
                 return prevProps.isAI === nextProps.isAI &&
                        prevProps.monster?.imageUrl === nextProps.monster?.imageUrl &&
