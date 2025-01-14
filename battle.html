@@ -766,6 +766,30 @@
             will-change: transform;
             transform: translateZ(0);
         }
+
+        /* Enhanced mobile image stability */
+        @media (max-width: 480px) {
+            .battle-container .monster .monster-image-container {
+                contain: strict;
+                isolation: isolate;
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                perspective: 1000;
+                -webkit-transform: translateZ(0);
+                -webkit-backface-visibility: hidden;
+                -webkit-perspective: 1000;
+            }
+
+            .battle-container .monster .monster-image-container img {
+                contain: strict;
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                -webkit-transform: translateZ(0);
+                -webkit-backface-visibility: hidden;
+                image-rendering: -webkit-optimize-contrast;
+                pointer-events: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1354,30 +1378,34 @@
 
             // Add helper function to generate image content
             const MonsterImage = React.memo(({ monster, isAI = false }) => {
-                const imageUrl = isAI ? aiImageUrl : monster?.imageUrl;
+                const imageUrl = React.useMemo(() => 
+                    isAI ? aiImageUrl : monster?.imageUrl,
+                    [isAI, aiImageUrl, monster?.imageUrl]
+                );
                 
-                return (
+                return React.useMemo(() => (
                     <div className="monster-image-container">
                         {imageUrl ? (
                             <img 
                                 src={imageUrl}
                                 alt={isAI ? "AI Opponent" : monster?.monsterName}
-                                onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.parentElement.innerHTML = '<div class="monster-image-placeholder"></div>';
+                                loading="eager"
+                                decoding="sync"
+                                style={{
+                                    backfaceVisibility: 'hidden',
+                                    perspective: 1000,
+                                    transform: 'translate3d(0,0,0)'
                                 }}
                             />
                         ) : (
                             <div className="monster-image-placeholder"></div>
                         )}
                     </div>
-                );
+                ), [imageUrl, isAI, monster?.monsterName]);
             }, (prevProps, nextProps) => {
-                // Only re-render if the image URL changes
-                if (prevProps.isAI) {
-                    return prevProps.isAI === nextProps.isAI;
-                }
-                return prevProps.monster?.imageUrl === nextProps.monster?.imageUrl;
+                if (prevProps.isAI !== nextProps.isAI) return false;
+                if (prevProps.monster?.imageUrl !== nextProps.monster?.imageUrl) return false;
+                return true;
             });
 
             // Add showToast function
