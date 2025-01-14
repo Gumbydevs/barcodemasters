@@ -1591,48 +1591,27 @@
 
             // Add helper function to generate image content
             const MonsterImage = React.memo(({ monster, isAI = false }) => {
-                const containerRef = React.useRef(null);
-                const imageRef = React.useRef(null);
+                const imageUrl = React.useMemo(() => isAI ? aiImageUrl : monster?.imageUrl, [isAI, aiImageUrl, monster?.imageUrl]);
                 
-                const imageUrl = React.useMemo(() => 
-                    isAI ? aiImageUrl : monster?.imageUrl,
-                    [isAI, aiImageUrl, monster?.imageUrl]
-                );
-
-                React.useEffect(() => {
-                    if (containerRef.current) {
-                        // Force hardware acceleration
-                        containerRef.current.style.transform = 'translate3d(0,0,0)';
-                    }
-                    if (imageRef.current) {
-                        // Ensure image is hardware accelerated
-                        imageRef.current.style.transform = 'translate3d(0,0,0)';
-                    }
-                }, []);
-
-                return React.useMemo(() => (
-                    <div 
-                        ref={containerRef}
-                        className="monster-image-container monster-image-stable"
-                    >
+                return (
+                    <div className="monster-image-stable">
                         {imageUrl ? (
-                            <img 
-                                ref={imageRef}
-                                src={imageUrl}
-                                alt={isAI ? "AI Opponent" : monster?.monsterName}
-                                loading="eager"
-                                decoding="sync"
-                            />
+                            <div className="monster-image-container">
+                                <div className="image-wrapper">
+                                    <img 
+                                        src={imageUrl}
+                                        alt={isAI ? 'AI Opponent' : monster?.monsterName}
+                                        loading="eager"
+                                        decoding="sync"
+                                    />
+                                </div>
+                            </div>
                         ) : (
-                            <div className="monster-image-placeholder"></div>
+                            <div className="monster-image-placeholder" />
                         )}
                     </div>
-                ), [imageUrl, isAI, monster?.monsterName]);
-            }, (prevProps, nextProps) => {
-                return prevProps.isAI === nextProps.isAI &&
-                       prevProps.monster?.imageUrl === nextProps.monster?.imageUrl &&
-                       prevProps.monster?.monsterName === nextProps.monster?.monsterName;
-            });
+                );
+            }, (prev, next) => prev.monster?.imageUrl === next.monster?.imageUrl && prev.isAI === next.isAI);
 
             // Add showToast function
             const showToast = (message, isLevelUp = false, isDefeat = false) => {
