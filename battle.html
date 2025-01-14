@@ -858,15 +858,15 @@
                 const playerLevel = parseInt(urlParams.get('level')) || 1;
                 const opponentLevel = parseInt(sessionStorage.getItem('aiOpponentLevel')) || playerLevel;
                 
-                // Reduced base stats for AI
-                const baseHP = 15;  // Decreased from 18
-                const baseAP = 4;   // Decreased from 5
-                const baseSpeed = 4; // Decreased from 5
+                // Balanced base stats for AI
+                const baseHP = 20;  // Decreased from 25 to 20
+                const baseAP = 5;   // Decreased from 6 to 5
+                const baseSpeed = 5; // Decreased from 6 to 5
                 
-                // Keep same scaling factors
-                const hpScaling = 0.35;
-                const apScaling = 0.22;
-                const speedScaling = 0.15;
+                // Slightly reduced scaling factors
+                const hpScaling = 0.40;  // Decreased from 0.45 to 0.40
+                const apScaling = 0.20;  // Decreased from 0.25 to 0.20
+                const speedScaling = 0.15; // Decreased from 0.20 to 0.15
                 
                 // Keep same level multiplier
                 const levelMultiplier = opponentLevel > 3 ? 1 + ((opponentLevel - 3) * 0.1) : 1;
@@ -1627,9 +1627,9 @@
                         const aiStats = [
                             `Level ${aiLevel}`,
                             'Type: Robot',
-                            `HP: ${Math.round(15 * (1 + (aiLevel - 1) * 0.35))}`, // Updated from 19
-                            `AP: ${Math.round(4 * (1 + (aiLevel - 1) * 0.22))}`,  // Updated from 7
-                            `Speed: ${Math.round(4 * (1 + (aiLevel - 1) * 0.15))}` // Updated from 7
+                            `HP: ${Math.round(20 * (1 + (aiLevel - 1) * 0.40))}`, // Updated values
+                            `AP: ${Math.round(5 * (1 + (aiLevel - 1) * 0.20))}`,  // Updated values
+                            `Speed: ${Math.round(5 * (1 + (aiLevel - 1) * 0.15))}` // Updated values
                         ];
                         aiPreviewElement.textContent = aiStats.join(' | ');
                     }
