@@ -1655,17 +1655,20 @@
             };
 
             // Add calculateBattleRewards function
-            const calculateBattleRewards = () => {
+            function calculateBattleRewards() {
+                // Lower base XP from 15 to 8 for slower progression
+                const baseXP = 8;
+                // Keep mild level bonus but reduce it to prevent exponential growth
                 const levelDifference = opponentMonster.level - playerMonster.level;
-                const baseXP = 15;
-                
-                // Bonus XP for defeating higher level opponents, reduced XP for lower level
-                const levelBonus = Math.floor(opponentMonster.level * 7.5);
-                const difficultyMultiplier = 1 + (levelDifference * 0.1); // 10% more/less XP per level difference
-                
-                const randomFactor = (Math.random() * 10) - 5;
-                return Math.max(1, Math.floor((baseXP + levelBonus) * difficultyMultiplier + randomFactor));
-            };
+                let levelBonus = 0;
+                if (levelDifference > 0) {
+                    // Reduced from 0.5 to 0.25
+                    levelBonus = levelDifference * 0.25;
+                }
+                const totalExp = Math.floor(baseXP + (baseXP * levelBonus));
+
+                // ...existing code that handles awarding totalExp...
+            }
 
             // Add this useEffect inside the component
             React.useEffect(() => {
