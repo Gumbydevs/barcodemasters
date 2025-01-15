@@ -1431,7 +1431,7 @@
                         break;
 
                     default: // Attack
-                        const { damage } = calculateDamage(opponentMonster, false);
+                        const { damage, isCritical } = calculateDamage(opponentMonster, false);
                         let finalDamage = isDefending ? Math.floor(damage / 1.75) : damage;
                         
                         if (playerHealthPercentage < 0.3) {
@@ -1442,10 +1442,10 @@
                         setPlayerHealth(newPlayerHealth);
                         
                         const message = isDefending 
-                            ? `Opponent dealt ${finalDamage} damage! (Reduced by defense)`
+                            ? `Opponent dealt ${finalDamage} damage! (Reduced by defense)` 
                             : playerHealthPercentage < 0.3 
                                 ? `Opponent dealt ${finalDamage} damage! (Execution bonus)`
-                                : `Opponent dealt ${finalDamage} damage!`;
+                                : `Opponent dealt ${finalDamage} damage!${isCritical ? ' (Critical Hit!)' : ''}`;
                         
                         addToLog(message);
 
