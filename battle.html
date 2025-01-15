@@ -932,6 +932,17 @@
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
         }
+
+        .start-battle-button, .nav-button.start-new-battle {
+            background: linear-gradient(135deg, #3498db, #e74c3c); /* Blue to red gradient */
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-battle-button:hover, .nav-button.start-new-battle:hover {
+            background: linear-gradient(135deg, #2980b9, #c0392b); /* Darker gradient on hover */
+        }
     </style>
 </head>
 <body>
@@ -1828,7 +1839,7 @@
                                             {opponentHealth <= 0 ? '🏆 Victory!' : '💀 Defeat!'}
                                         </h3>
                                         <button 
-                                            className="nav-button" 
+                                            className="nav-button start-new-battle" 
                                             onClick={() => window.location.reload()}
                                             style={{marginBottom: '10px'}}
                                         >
