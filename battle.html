@@ -1261,12 +1261,20 @@
                 setOpponentHealth(0);
 
                 try {
-                    // Calculate XP gain
-                    const baseXP = 15;
-                    const levelBonus = Math.floor(opponentMonster.level * 7.5);
-                    const totalExp = Math.floor(baseXP + levelBonus + (Math.random() * 10 - 5));
+                    // Calculate XP gain with better balancing
+                    const baseXP = 20;
+                    const levelDifference = opponentMonster.level - playerMonster.level;
+                    const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.5 : 0));
+                    const randomBonus = Math.floor(Math.random() * 10); // 0-9 random bonus
+                    const totalExp = baseXP + levelBonus + randomBonus;
 
-                    console.log('XP calculation:', { baseXP, levelBonus, totalExp });
+                    console.log('Victory XP calculation:', {
+                        baseXP,
+                        levelDifference,
+                        levelBonus,
+                        randomBonus,
+                        totalExp
+                    });
 
                     // Update battle log and show toast
                     addToLog(`🏆 Victory! Earned ${totalExp} XP!`);
@@ -1289,13 +1297,14 @@
                         currentExp, 
                         totalExp, 
                         newExp, 
-                        currentLevel 
+                        currentLevel,
+                        nextLevelRequirement: monsterStats.calculateTotalXPToLevel(currentLevel + 1)
                     });
 
                     const updates = { experience: newExp };
 
-                    // Check for level up
-                    if (newExp >= currentLevel * 100) {
+                    // Check for level up using monsterStats function
+                    if (monsterStats.canLevelUp(currentLevel, newExp)) {
                         const newLevel = currentLevel + 1;
                         updates.level = newLevel;
                         updates.HP = Math.round(doc.data().HP * 1.2);
@@ -1304,7 +1313,6 @@
 
                         console.log('Level up detected:', updates);
 
-                        // Show level up notifications after a delay
                         setTimeout(() => {
                             showToast(`Level Up! Your monster is now level ${newLevel}! 🌟`, true);
                             addToLog(`🌟 Level Up! Now level ${newLevel}!`);
