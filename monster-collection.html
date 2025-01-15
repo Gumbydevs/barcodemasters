@@ -205,6 +205,43 @@
             overflow: hidden;
             height: fit-content;
         }
+
+        /* Update image container styles for tighter wrapping */
+        .monster-image-container {
+            display: inline-flex; /* Changed to inline-flex */
+            align-items: center;
+            justify-content: center;
+            max-width: fit-content; /* Added to wrap container around content */
+            margin: 1rem auto; /* Center horizontally */
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(128, 128, 128, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-image-container img {
+            display: block;
+            width: 280px; /* Fixed width */
+            height: 280px; /* Fixed height */
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        /* Update placeholder to match new container size */
+        .monster-image-placeholder {
+            display: inline-flex;
+            width: 280px; /* Match image dimensions */
+            height: 280px;
+            /* ...rest of placeholder styles remain the same... */
+        }
+
+        @media (max-width: 480px) {
+            .monster-image-container img,
+            .monster-image-placeholder {
+                width: 200px;
+                height: 200px;
+            }
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -770,17 +807,6 @@
         const ownerUsername = await getUsernameById(monster.ownerId);
         const typeDescription = await getMonsterTypeDescription(monster.type);
         
-        // Fix XP calculation using monsterStats
-        const currentExp = monster.experience || 0;
-        const currentLevel = monster.level || 1;
-        const totalXPForCurrentLevel = monsterStats.calculateTotalXPToLevel(currentLevel);
-        const nextLevelXP = monsterStats.calculateXPForNextLevel(currentLevel);
-        const currentLevelXP = currentExp - totalXPForCurrentLevel;
-        const xpProgress = (currentLevelXP / nextLevelXP) * 100;
-        
-        // Ensure currentLevelXP is not negative
-        const displayCurrentLevelXP = Math.max(0, currentLevelXP);
-        
         // Create image HTML based on whether the monster has an imageUrl
         const imageHTML = monster.imageUrl ? 
             `<div class="monster-image-container">
@@ -788,6 +814,23 @@
                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
             </div>` : 
             `<div class="monster-image-placeholder"></div>`;
+        
+        // Calculate only next level XP requirement
+        const nextLevelXP = monsterStats.calculateXPForNextLevel(monster.level);
+        
+        // Use raw experience value directly from monster data for current XP
+        const currentXP = parseInt(monster.experience) || 0;
+        
+        // Calculate progress percentage for XP bar
+        const xpProgress = Math.min(100, Math.max(0, (currentXP / nextLevelXP) * 100));
+
+        // Update XP display to use raw database values
+        const xpDisplay = `
+            <div class="stat-item">
+                <span>XP</span>
+                <span>${currentXP}/${nextLevelXP}</span>
+            </div>
+        `;
 
         return `
             <div class="monster-card" data-id="${monster.id}">
@@ -816,17 +859,14 @@
                             <span>Speed</span>
                             <span>${monster.Speed}</span>
                         </div>
-                        <div class="stat-item">
-                            <span>XP Progress</span>
-                            <span>${displayCurrentLevelXP}/${nextLevelXP}</span>
-                        </div>
+                        ${xpDisplay}
                         <div class="stat-item">
                             <span>Owner</span>
                             <span>${ownerUsername}</span>
                         </div>
                     </div>
                     <div class="xp-progress">
-                        <div class="xp-progress-bar" style="width: ${Math.max(0, Math.min(100, xpProgress))}%"></div>
+                        <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
                     </div>
                     <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
                     <div class="created-date">Created by: ${ownerUsername}</div>
