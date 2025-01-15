@@ -980,7 +980,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.050</span></p>
+            <p>Version: <span id="versionNumber">1.0.05</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1754,7 +1754,25 @@
                                 <li>HP: {playerHealth}/{activeMonster.HP}</li>
                                 <li>AP: {activeMonster.AP}</li>
                                 <li>Speed: {activeMonster.Speed}</li>
-                                <li className="xp-text">XP: {(activeMonster.experience || 0)} / {monsterStats.calculateXPForNextLevel(activeMonster.level)}</li>
+                                <li className="xp-text">
+                                    XP: {(() => {
+                                        try {
+                                            const totalExp = activeMonster.experience || 0;
+                                            const level = activeMonster.level || 1;
+                                            const totalXPForCurrentLevel = Array.from({length: level - 1})
+                                                .reduce((sum, _, i) => Math.floor(100 * Math.pow(1.5, i)), 0);
+                                            const currentLevelXP = Math.max(0, totalExp - totalXPForCurrentLevel);
+                                            const nextLevelXP = Math.floor(100 * Math.pow(1.5, level - 1));
+                                            // Removed the total XP display, just showing current level progress
+                                            return `${currentLevelXP}/${nextLevelXP}`;
+                                            // Commented out total XP display for future reference
+                                            // return `${currentLevelXP}/${nextLevelXP} (Total: ${totalExp})`;
+                                        } catch (e) {
+                                            console.error('XP calculation error:', e);
+                                            return `0/${Math.floor(100 * Math.pow(1.5, (activeMonster.level || 1) - 1))}`;
+                                        }
+                                    })()}
+                                </li>
                             </ul>
                             <div className="xp-progress">
                                 <div 
