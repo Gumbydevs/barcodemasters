@@ -294,6 +294,8 @@
         </footer>
     </div>
 
+    <script src="monsterStats.js"></script>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -356,8 +358,12 @@
             for (const doc of querySnapshot.docs) {
                 const monster = doc.data();
                 const ownerUsername = await getUsernameById(monster.ownerId);
-                const xpToNextLevel = monster.level * 100;
-                const xpProgress = (monster.experience / xpToNextLevel) * 100;
+                
+                // Get XP info using monsterStats utility
+                const xpInfo = window.monsterStats.getXPInfo(monster);
+                const xpProgress = xpInfo ? xpInfo.progress : 0;
+                const currentXP = xpInfo ? xpInfo.currentLevelXP : 0;
+                const nextLevelXP = xpInfo ? xpInfo.nextLevelXP : 0;
 
                 const card = document.createElement('div');
                 card.className = 'monster-card';
@@ -379,7 +385,7 @@
                             </div>
                             <div class="stat-item">
                                 <span>HP</span>
-                                <span>${monster.HP}</span>
+                                <span>${monster.currentHP || monster.HP}/${monster.HP}</span>
                             </div>
                             <div class="stat-item">
                                 <span>AP</span>
@@ -391,7 +397,7 @@
                             </div>
                             <div class="stat-item">
                                 <span>XP</span>
-                                <span>${monster.experience}/${xpToNextLevel}</span>
+                                <span>${monster.experience || 0}/${nextLevelXP}</span>
                             </div>
                             <div class="stat-item">
                                 <span>Owner</span>
