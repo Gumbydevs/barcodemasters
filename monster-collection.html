@@ -120,7 +120,6 @@
             margin-top: 0.5rem;
             text-align: right;
             display: inline-block; /* Changed from block to inline-block */
-            float: right; /* Float to the right */
         }
 
         /* Add these new styles */
@@ -954,8 +953,8 @@
                             <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
                         </div>
                         <div>
-                            <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
-                            <div class="created-date">By: ${ownerUsername}</div>
+                            <div class="created-date">${formatDate(monster.dateCreated)}</div>
+                            <div class="created-date">Created By: ${ownerUsername}</div>
                         </div>
                     </div>
                 </div>
