@@ -980,7 +980,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.052</span></p>
+            <p>Version: <span id="versionNumber">1.0.053</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1771,24 +1771,16 @@
                                 <li className="xp-text">
                                     XP: {(() => {
                                         try {
-                                            if (!monsterStats) {
-                                                throw new Error('monsterStats not available');
-                                            }
-                                            const totalExp = activeMonster.experience || 0;
-                                            const level = activeMonster.level || 1;
-                                            const prevLevelTotalXP = monsterStats.calculateTotalXPToLevel(level);
-                                            const nextLevelXP = monsterStats.calculateXPForNextLevel(level);
-                                            const currentLevelXP = totalExp - prevLevelTotalXP;
+                                            if (!activeMonster?.experience) return '0/' + monsterStats.calculateXPForNextLevel(1);
                                             
-                                            // Add safety checks
-                                            if (isNaN(currentLevelXP) || currentLevelXP < 0) {
-                                                console.warn('Invalid XP calculation:', { totalExp, level, prevLevelTotalXP });
-                                                return '0/' + nextLevelXP;
-                                            }
+                                            // Simply use the raw experience value from database
+                                            const totalExp = activeMonster.experience;
+                                            const nextLevelXP = monsterStats.calculateXPForNextLevel(activeMonster.level);
                                             
-                                            return `${currentLevelXP}/${nextLevelXP}`;
+                                            return `${totalExp}/${nextLevelXP}`;
+                                            
                                         } catch (e) {
-                                            console.error('XP calculation error:', e);
+                                            console.error('XP display error:', e);
                                             return '0/150';
                                         }
                                     })()}
