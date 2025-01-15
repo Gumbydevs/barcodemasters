@@ -969,7 +969,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.047</span></p>
+            <p>Version: <span id="versionNumber">1.0.048</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1001,7 +1001,7 @@
                 <div class="monster-image-container">
                     <img src="${monster.imageUrl}" 
                         alt="${monster.monsterName}" 
-                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';" 
+                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"monster-image-placeholder\"></div>';" 
                     />
                 </div>`;
         };
@@ -1556,7 +1556,7 @@
                     <div class="monster-image-container">
                         <img src="${monster.imageUrl}" 
                             alt="${monster.monsterName}" 
-                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';" 
+                            onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"monster-image-placeholder\"></div>';" 
                         />
                     </div>`;
             };
@@ -1893,9 +1893,10 @@
                     if (aiPreviewImage && aiImageUrl) {
                         aiPreviewImage.outerHTML = `
                             <div class="monster-image-container">
-                                <img src="${aiImageUrl}" 
-                                    alt="AI Opponent" 
-                                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class="monster-image-placeholder"></div>';" 
+                                <img 
+                                    src="${aiImageUrl}"
+                                    alt="AI Opponent"
+                                    onerror='this.onerror=null;this.parentElement.innerHTML="<div class=\\"monster-image-placeholder\\"></div>"'
                                 />
                             </div>`;
                     }
