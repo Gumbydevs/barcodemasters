@@ -352,6 +352,14 @@
         z-index: 1000;
         background: rgba(46, 204, 113, 0.9); /* Default green background */
     }
+
+    .monster-type-badge {
+        display: block;  /* Change from default inline/inline-block */
+        text-align: left;  /* Align text to the left */
+        margin: 0.5rem 0;  /* Add some vertical spacing */
+        font-weight: 500;  /* Make it slightly bold */
+        color: #3498db;    /* Match the monster name color */
+    }
     </style>
     <script src="monsterStats.js"></script>
     <script type="module">
@@ -678,10 +686,25 @@ async function startTraining() {
 
     const monsterRef = doc(db, 'monsters', selectedMonsterId);
     const monsterDoc = await getDoc(monsterRef);
-    const currentStatValue = monsterDoc.data()[selectedStat];
     
+    // Check if monster is occupied
+    if (monsterDoc.data().isOccupied) {
+        showError('This monster is busy with another activity.');
+        return;
+    }
+
+    const currentStatValue = monsterDoc.data()[selectedStat];
     const trainingDuration = calculateTrainingDuration(currentStatValue);
     const endTime = Date.now() + trainingDuration;
+
+    // Set monster as occupied in database
+    try {
+        await updateDoc(monsterRef, { isOccupied: true });
+    } catch (error) {
+        console.error('Error setting monster as occupied:', error);
+        showError('Failed to start training. Please try again.');
+        return;
+    }
 
     // Save training state
     saveTrainingState({
@@ -762,7 +785,8 @@ async function completeTraining() {
             // Create updates object
             const updates = {
                 [stat]: monsterData[stat] + statIncrease,
-                experience: newExp
+                experience: newExp,
+                isOccupied: false  // Set monster as not occupied when training completes
             };
 
             // Use monsterStats to check for level up
@@ -802,6 +826,13 @@ async function completeTraining() {
     } catch (error) {
         console.error('Error updating monster:', error);
         showError('Training failed. Please try again.');
+        
+        // Ensure monster is unmarked as occupied even if there's an error
+        try {
+            await updateDoc(doc(db, 'monsters', monsterId), { isOccupied: false });
+        } catch (e) {
+            console.error('Error unsetting monster occupied status:', e);
+        }
     }
 
     resetTrainingUI();
