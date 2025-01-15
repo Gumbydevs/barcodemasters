@@ -1261,17 +1261,23 @@
                 setOpponentHealth(0);
 
                 try {
-                    // Calculate XP gain with better balancing
+                    // Calculate XP gain with subtle exponential scaling
                     const baseXP = 20;
                     const levelDifference = opponentMonster.level - playerMonster.level;
+                    
+                    // Exponential bonus based on opponent level (subtle scaling)
+                    const levelScaling = Math.pow(1.1, opponentMonster.level - 1);
                     const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.5 : 0));
+                    const scaledBaseXP = Math.floor(baseXP * levelScaling);
                     const randomBonus = Math.floor(Math.random() * 10); // 0-9 random bonus
-                    const totalExp = baseXP + levelBonus + randomBonus;
+                    const totalExp = scaledBaseXP + levelBonus + randomBonus;
 
                     console.log('Victory XP calculation:', {
                         baseXP,
                         levelDifference,
+                        levelScaling,
                         levelBonus,
+                        scaledBaseXP,
                         randomBonus,
                         totalExp
                     });
