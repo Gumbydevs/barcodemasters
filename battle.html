@@ -943,6 +943,71 @@
         .start-battle-button:hover, .nav-button.start-new-battle:hover {
             background: linear-gradient(135deg, #2980b9, #c0392b); /* Darker gradient on hover */
         }
+
+        /* Add new animation keyframes */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-1deg); }
+            75% { transform: translateX(5px) rotate(1deg); }
+        }
+
+        @keyframes heal-pulse {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.5) drop-shadow(0 0 10px #2ecc71); }
+            100% { filter: brightness(1); }
+        }
+
+        @keyframes damage-flash {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.5) drop-shadow(0 0 10px #e74c3c); }
+            100% { filter: brightness(1); }
+        }
+
+        @keyframes special-attack-glow {
+            0% { filter: brightness(1); }
+            50% { 
+                filter: brightness(1.8) drop-shadow(0 0 15px #f39c12) 
+                       drop-shadow(0 0 25px #e67e22);
+            }
+            100% { filter: brightness(1); }
+        }
+
+        /* Add these new utility classes */
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .heal-animation {
+            animation: heal-pulse 0.8s ease-in-out;
+        }
+
+        .damage-animation {
+            animation: damage-flash 0.5s ease-in-out;
+        }
+
+        .special-attack-animation {
+            animation: special-attack-glow 1s ease-in-out;
+        }
+
+        /* Ensure animations work on mobile */
+        @media (prefers-reduced-motion: reduce) {
+            .shake-animation,
+            .heal-animation,
+            .damage-animation,
+            .special-attack-animation {
+                animation: none;
+            }
+        }
+
+        @keyframes defense-glow {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
+            50% { box-shadow: 0 0 20px 10px rgba(52, 152, 219, 0.6); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
+        }
+
+        .defending {
+            animation: defense-glow 2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -1223,17 +1288,23 @@
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
                 const newHealth = Math.max(0, opponentHealth - damage);
     
-                if (newHealth <= 0) {
-                    // Process victory before changing any state
-                    await handleVictory();
-                    setOpponentHealth(0);
-                    setIsBattleOver(true);
-                    return;
+                // Add visual effect
+                const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                if (opponentElement) {
+                    opponentElement.classList.add('shake-animation', 'damage-animation');
+                    setTimeout(() => {
+                        opponentElement.classList.remove('shake-animation', 'damage-animation');
+                    }, 500);
                 }
     
                 setOpponentHealth(newHealth);
                 addToLog(`You dealt ${damage} damage!${isCritical ? ' (Critical Hit!)' : ''}`);
                 setIsPlayerTurn(false);
+    
+                if (newHealth <= 0) {
+                    await handleVictory();
+                    setIsBattleOver(true);
+                }
             };
 
             // Add the victory handler
@@ -1351,6 +1422,16 @@
             const handleDefend = () => {
                 setIsDefending(true);
                 addToLog("You're defending against the next attack! (Damage will be halved)");
+                
+                const playerElement = document.querySelector('.battle-container .monster:first-of-type');
+                if (playerElement) {
+                    playerElement.classList.add('defending');
+                    // Remove defense animation when turn ends
+                    setTimeout(() => {
+                        playerElement.classList.remove('defending');
+                    }, 2000);
+                }
+                
                 setIsPlayerTurn(false);
             };
 
@@ -1365,6 +1446,15 @@
                     activeMonster.HP * baseHealPercent * healEffectiveness
                 );
                 
+                // Add visual effect
+                const playerElement = document.querySelector('.battle-container .monster:first-of-type');
+                if (playerElement) {
+                    playerElement.classList.add('heal-animation');
+                    setTimeout(() => {
+                        playerElement.classList.remove('heal-animation');
+                    }, 800);
+                }
+                
                 setPlayerHealth(prev => {
                     const newHealth = Math.min(parseInt(activeMonster.HP), prev + healAmount);
                     addToLog(`You healed for ${newHealth - prev} HP!`);
@@ -1377,6 +1467,9 @@
             // Update opponentTurn with smarter AI behavior
             const opponentTurn = async () => {
                 if (isBattleOver || isPlayerTurn || playerHealth <= 0) return;
+
+                // Add delay before opponent's action
+                await new Promise(resolve => setTimeout(resolve, 1000));
 
                 // AI decision making based on health percentage
                 const aiHealthPercentage = opponentHealth / opponentMonster.HP;
@@ -1421,9 +1514,26 @@
                         const newHealth = Math.min(opponentMonster.HP, opponentHealth + healAmount);
                         setOpponentHealth(newHealth);
                         addToLog(`Opponent healed for ${newHealth - opponentHealth} HP!`);
+                        
+                        // Add visual effect
+                        const healOpponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                        if (healOpponentElement) {
+                            healOpponentElement.classList.add('heal-animation');
+                            setTimeout(() => {
+                                healOpponentElement.classList.remove('heal-animation');
+                            }, 800);
+                        }
                         break;
 
                     case 'defend':
+                        const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                        if (opponentElement) {
+                            opponentElement.classList.add('defending');
+                            setTimeout(() => {
+                                opponentElement.classList.remove('defending');
+                            }, 2000);
+                        }
+                        
                         addToLog("Opponent is defending against the next attack!");
                         // Add a temporary defense buff for the next player's attack
                         window.aiDefending = true;
@@ -1449,6 +1559,15 @@
                         
                         addToLog(message);
 
+                        // Add visual effect for opponent attacks
+                        const playerElement = document.querySelector('.battle-container .monster:first-of-type');
+                        if (playerElement) {
+                            playerElement.classList.add('shake-animation', 'damage-animation');
+                            setTimeout(() => {
+                                playerElement.classList.remove('shake-animation', 'damage-animation');
+                            }, 500);
+                        }
+
                         if (newPlayerHealth <= 0) {
                             setIsBattleOver(true);
                             await handleDefeat();
@@ -1458,7 +1577,10 @@
                 }
 
                 setIsDefending(false);
-                setIsPlayerTurn(true);
+                // Add small delay before setting player turn
+                setTimeout(() => {
+                    setIsPlayerTurn(true);
+                }, 500);
             };
 
             // Add the defeat handler
@@ -1722,6 +1844,15 @@
 
                 const specialDamage = Math.floor(calculateDamage(activeMonster, true).damage * 2.5);
                 const newHealth = Math.max(0, opponentHealth - specialDamage);
+
+                // Add visual effect
+                const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                if (opponentElement) {
+                    opponentElement.classList.add('shake-animation', 'special-attack-animation');
+                    setTimeout(() => {
+                        opponentElement.classList.remove('shake-animation', 'special-attack-animation');
+                    }, 1000);
+                }
 
                 setSpecialCooldown(3); // Reset cooldown
                 setOpponentHealth(newHealth);

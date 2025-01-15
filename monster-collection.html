@@ -792,7 +792,7 @@
     // Add this new profanity filter function
     function containsProfanity(text) {
         // Basic list of words to filter - expand as needed
-        const profanityList = ["ass", "bitch", "damn", "fuck", "shit", "bastard", "crap", "dick", "piss", "pussy", "slut", "whore", "fag", "cunt", "hell", "moron", "idiot", "retard", "wanker", "twat"];
+        const profanityList = ["ass", "bitch", "damn", "fuck", "shit", "bastard", "crap", "dick", "piss", "pussy", "slut", "whore", "fag", "cunt", "hell", "moron", "idiot", "retard", "wanker","twat","penis","cock"];
         const regex = new RegExp(profanityList.join("|"), "i");
         return regex.test(text);
     }
