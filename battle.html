@@ -1079,6 +1079,103 @@
         .battle-container .monster:last-child .monster-image-container.special-attack-animation {
             animation: special-attack-glow 1s ease-in-out;
         }
+
+        /* Update button colors */
+        .battle-controls button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Attack button - Red */
+        .battle-controls button:nth-child(1) {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        .battle-controls button:nth-child(1):hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+        }
+
+        /* Defend button - Blue (unchanged) */
+        .battle-controls button:nth-child(2) {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+        .battle-controls button:nth-child(2):hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        /* Heal button - Green */
+        .battle-controls button:nth-child(3) {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        .battle-controls button:nth-child(3):hover {
+            background: linear-gradient(135deg, #219a52, #25a25a);
+        }
+
+        /* Fix iOS image flicker once and for all */
+        @supports (-webkit-touch-callout: none) {
+            .monster .monster-image-container {
+                transform: translate3d(0,0,0);
+                -webkit-transform: translate3d(0,0,0);
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
+                perspective: 1000px;
+                -webkit-perspective: 1000px;
+                contain: strict;
+                will-change: transform;
+                isolation: isolate;
+            }
+
+            .monster .monster-image-container img {
+                transform: translate3d(0,0,0);
+                -webkit-transform: translate3d(0,0,0);
+                backface-visibility: hidden;
+                -webkit-backface-visibility: hidden;
+                contain: strict;
+                will-change: transform;
+                pointer-events: none;
+            }
+
+            /* Prevent any transition/animation on the image itself */
+            .monster .monster-image-container img {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+
+        /* Ensure VFX work on both player and opponent */
+        .monster-image-container {
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        /* Update animation selectors to target containers properly */
+        .shake-animation, .opponent-shake-animation {
+            animation: shake 0.5s ease-in-out !important;
+        }
+
+        .damage-animation, .opponent-damage-animation {
+            animation: damage-flash 0.5s ease-in-out !important;
+        }
+
+        .heal-animation {
+            animation: heal-pulse 0.8s ease-in-out !important;
+        }
+
+        .special-attack-animation {
+            animation: special-attack-glow 1s ease-in-out !important;
+        }
+
+        /* Ensure animations work on both player and opponent containers */
+        .battle-container .monster:last-child .monster-image-container.opponent-damage-animation,
+        .battle-container .monster:last-child .monster-image-container.opponent-shake-animation,
+        .battle-container .monster:last-child .monster-image-container.special-attack-animation {
+            animation-play-state: running !important;
+            animation-fill-mode: both !important;
+        }
     </style>
 </head>
 <body>
