@@ -361,17 +361,9 @@
                 
                 // Get XP info using monsterStats utility
                 const xpInfo = window.monsterStats.getXPInfo(monster);
-                const xpProgress = xpInfo ? xpInfo.progress : 0;
-                const currentXP = xpInfo ? xpInfo.currentLevelXP : 0;
-                const nextLevelXP = xpInfo ? xpInfo.nextLevelXP : 0;
-
+                
                 const card = document.createElement('div');
                 card.className = 'monster-card';
-                
-                // Calculate XP progress percentage based on current experience
-                const currentExp = parseInt(monster.experience) || 0;
-                const maxExp = window.monsterStats.calculateXPForNextLevel(monster.level);
-                const xpProgressPercent = Math.min(100, (currentExp / maxExp) * 100);
                 
                 card.innerHTML = `
                     <div class="monster-info">
@@ -403,7 +395,7 @@
                             </div>
                             <div class="stat-item">
                                 <span>XP</span>
-                                <span>${monster.experience || 0}/${nextLevelXP}</span>
+                                <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
                             </div>
                             <div class="stat-item">
                                 <span>Owner</span>
@@ -411,7 +403,7 @@
                             </div>
                         </div>
                         <div class="xp-progress">
-                            <div class="xp-progress-bar" style="width: ${xpProgressPercent}%"></div>
+                            <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
                         </div>
                         <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
                         <div class="created-date">Creator: ${ownerUsername}</div>
