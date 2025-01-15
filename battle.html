@@ -1709,6 +1709,14 @@
                 }
             }, [isPlayerTurn]);
 
+            // Update XP progress calculation
+            const calculateXPProgress = (currentExp, level) => {
+                const currentLevelTotalXP = monsterStats.calculateTotalXPToLevel(level);
+                const nextLevelTotalXP = currentLevelTotalXP + monsterStats.calculateXPForNextLevel(level);
+                const progress = ((currentExp - currentLevelTotalXP) / (nextLevelTotalXP - currentLevelTotalXP)) * 100;
+                return Math.min(100, Math.max(0, progress));
+            };
+
             // Update the return JSX
             return (
                 <div className="battle-container">
@@ -1728,12 +1736,15 @@
                                 <li>HP: {playerHealth}/{activeMonster.HP}</li>
                                 <li>AP: {activeMonster.AP}</li>
                                 <li>Speed: {activeMonster.Speed}</li>
-                                <li className="xp-text">XP: {activeMonster.experience || 0}/{activeMonster.level * 100}</li>
+                                <li className="xp-text">XP: {(activeMonster.experience || 0)} / {monsterStats.calculateXPForNextLevel(activeMonster.level)}</li>
                             </ul>
                             <div className="xp-progress">
                                 <div 
                                     className="xp-progress-bar" 
-                                    style={{ width: `${((activeMonster.experience || 0) % (activeMonster.level * 100)) / (activeMonster.level * 100) * 100}%` }}
+                                    style={{ width: `${calculateXPProgress(
+                                        activeMonster.experience || 0, 
+                                        activeMonster.level
+                                    )}%` }}
                                 ></div>
                             </div>
                         </div>
