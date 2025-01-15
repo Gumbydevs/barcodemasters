@@ -487,21 +487,51 @@
             border-radius: 8px;
             padding: 10px;
             margin: 20px 0;
-            max-height: 150px;
+            height: 120px; /* Reduced fixed height */
             overflow-y: auto;
             color: inherit;
-            text-align: center; /* Center the text */
+            text-align: center;
+            display: flex;
+            flex-direction: column-reverse;
+            position: relative;
+            margin-bottom: 10px; /* Add space between log and buttons */
         }
 
         .battle-log ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            display: flex;
+            flex-direction: column-reverse; /* Reverse the list order */
         }
 
         .battle-log li {
             margin: 5px 0;
             line-height: 1.4;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Battle container modifications */
+        .battle-container {
+            /* ...existing styles... */
+            display: flex;
+            flex-direction: column;
+            min-height: auto; /* Remove vh-based height */
+            gap: 10px; /* Add consistent spacing */
+        }
+
+        /* Battle controls positioning */
+        .battle-controls {
+            margin-top: 0; /* Remove auto margin */
+            padding: 1rem;
+            background: inherit;
+            z-index: 10;
+            position: relative; /* Change from sticky to relative */
         }
 
         /* Toast notification styles */
@@ -1239,7 +1269,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.0543</span></p>
+            <p>Version: <span id="versionNumber">1.0.0544</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1492,8 +1522,23 @@
                 } else if (message.includes('defending')) {
                     emoji = '🛡️ ';
                 }
-                setBattleLog(prevLog => [...prevLog, `${emoji}${message}`].slice(-5));
+                // Keep more messages in the log (increased from 5 to 8)
+                setBattleLog(prevLog => {
+                    const newLog = [`${emoji}${message}`, ...prevLog].slice(0, 8);
+                    return newLog;
+                });
             };
+
+            // Add an effect to show turn indicators
+            React.useEffect(() => {
+                if (!isBattleOver) {
+                    // Clear previous turn messages when turn changes
+                    const turnMessage = isPlayerTurn ? 
+                        "🎯 Your turn..." : 
+                        "🤖 Opponent's turn...";
+                    addToLog(turnMessage);
+                }
+            }, [isPlayerTurn, isBattleOver]);
 
             // Check for win/loss conditions
             const checkBattleOutcome = () => {
@@ -2265,7 +2310,7 @@
                     <div className="battle-log">
                         <ul>
                             {battleLog.map((entry, index) => (
-                                <li key={index}>{entry}</li>
+                                <li key={Date.now() + index}>{entry}</li>
                             ))}
                         </ul>
                     </div>
@@ -2316,9 +2361,6 @@
                                             Return to Collection
                                         </button>
                                     </div>
-                                )}
-                                {!isBattleOver && !isPlayerTurn && (
-                                    <span>Opponent is thinking...</span>
                                 )}
                             </div>
                         )}
