@@ -437,69 +437,59 @@ async function getMonsterTypeDescription(type) {
 async function createMonsterCard(monster) {
     const ownerUsername = await getUsernameById(monster.ownerId);
     const typeDescription = await getMonsterTypeDescription(monster.type);
-
-    // Keep complex XP calculations for next level and progress
-    const nextLevelXP = monsterStats.calculateXPForNextLevel(monster.level);
-    const xpProgress = Math.min(100, Math.max(0, (monster.experience / nextLevelXP) * 100));
-
-    // Create image HTML
-    const imageHTML = monster.imageUrl ? 
-        `<div class="monster-image-container">
-            <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
-                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
-        </div>` : 
-        `<div class="monster-image-placeholder"></div>`;
-
-    // Use raw experience value from database for display
-    const xpDisplay = `
-        <div class="stat-item">
-            <span>XP</span>
-            <span>${monster.experience || 0}/${nextLevelXP}</span>
-        </div>
-    `;
-
-    // Rest of the monster card template
-    return `
-        <div class="monster-card" data-id="${monster.id}">
-            <div class="monster-info">
-                <div class="monster-name">${monster.monsterName}</div>
-                ${imageHTML}
-                <div class="monster-type-container">
-                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                    <div class="type-description">${typeDescription}</div>
+    
+    // Get XP info using monsterStats utility
+    const xpInfo = window.monsterStats.getXPInfo(monster);
+    
+    const card = document.createElement('div');
+    card.className = 'monster-card';
+    
+    card.innerHTML = `
+        <div class="monster-info">
+            <div class="monster-name">${monster.monsterName}</div>
+            ${monster.imageUrl ? 
+                `<div class="monster-image-container">
+                    <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
+                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
+                </div>` : 
+                `<div class="monster-image-placeholder"></div>`}
+            <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+            
+            <div class="monster-stats">
+                <div class="stat-item">
+                    <span>Level</span>
+                    <span>${monster.level}</span>
                 </div>
-                
-                <div class="monster-stats">
-                    <div class="stat-item">
-                        <span>Level</span>
-                        <span>${monster.level}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>HP</span>
-                        <span>${monster.HP}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>AP</span>
-                        <span>${monster.AP}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Speed</span>
-                        <span>${monster.Speed}</span>
-                    </div>
-                    ${xpDisplay}
-                    <div class="stat-item">
-                        <span>Owner</span>
-                        <span>${ownerUsername}</span>
-                    </div>
+                <div class="stat-item">
+                    <span>HP</span>
+                    <span>${monster.currentHP || monster.HP}/${monster.HP}</span>
                 </div>
-                <div class="xp-progress">
-                    <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                <div class="stat-item">
+                    <span>AP</span>
+                    <span>${monster.AP}</span>
                 </div>
-                <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
-                <div class="created-date">Created by: ${ownerUsername}</div>
+                <div class="stat-item">
+                    <span>Speed</span>
+                    <span>${monster.Speed}</span>
+                </div>
+                <div class="stat-item">
+                    <span>XP</span>
+                    <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
+                </div>
+                <div class="stat-item">
+                    <span>Owner</span>
+                    <span>${ownerUsername}</span>
+                </div>
             </div>
+            <div class="xp-progress">
+                <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
+            </div>
+            <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
+            <div class="created-date">Created by: ${ownerUsername}</div>
         </div>
     `;
+
+    return card.innerHTML; // Return the HTML string
 }
 
 async function fetchMonsters() {
@@ -553,15 +543,23 @@ async function fetchMonsters() {
 
 async function filterAndSortMonsters() {
     const selectedMonsterId = document.getElementById('monsterSelect').value;
-    const filtered = selectedMonsterId ? currentMonsters.filter(m => m.id === selectedMonsterId) : currentMonsters;
-
+    
     if (selectedMonsterId) {
-        const selectedMonster = filtered[0];
-        const selectedMonsterDiv = document.getElementById('selectedMonster');
-        selectedMonsterDiv.innerHTML = await createMonsterCard(selectedMonster);
-        selectedMonsterDiv.style.display = 'block';
+        const selectedMonster = currentMonsters.find(m => m.id === selectedMonsterId);
+        if (selectedMonster) {
+            // Get monster's current data
+            const monsterRef = doc(db, 'monsters', selectedMonsterId);
+            const monsterDoc = await getDoc(monsterRef);
+            const currentData = monsterDoc.exists() ? { id: selectedMonsterId, ...monsterDoc.data() } : selectedMonster;
+            
+            const selectedMonsterDiv = document.getElementById('selectedMonster');
+            selectedMonsterDiv.innerHTML = await createMonsterCard(currentData);
+            selectedMonsterDiv.style.display = 'block';
+            document.getElementById('trainingSection').style.display = 'block';
+        }
     } else {
         document.getElementById('selectedMonster').style.display = 'none';
+        document.getElementById('trainingSection').style.display = 'none';
     }
 }
 
@@ -757,7 +755,7 @@ async function completeTraining() {
         
         if (monsterDoc.exists()) {
             const monsterData = monsterDoc.data();
-            const currentExp = monsterData.experience || 0;
+            const currentExp = parseInt(monsterData.experience) || 0;
             const currentLevel = parseInt(monsterData.level) || 1;
             const newExp = currentExp + xpIncrease;
             
@@ -767,8 +765,8 @@ async function completeTraining() {
                 experience: newExp
             };
 
-            // Check for level up using monsterStats functions
-            if (monsterStats.canLevelUp(currentLevel, newExp)) {
+            // Use monsterStats to check for level up
+            if (window.monsterStats.canLevelUp(currentLevel, newExp)) {
                 const newLevel = currentLevel + 1;
                 updates.level = newLevel;
                 
@@ -777,7 +775,6 @@ async function completeTraining() {
                 updates.AP = Math.round(monsterData.AP * 1.15);
                 updates.Speed = Math.round(monsterData.Speed * 1.1);
                 
-                // Show level up toast first with monster name
                 showToast(`🌟 ${monsterData.monsterName} has reached level ${newLevel}!`, true);
             }
 
@@ -789,11 +786,10 @@ async function completeTraining() {
                 ...updates
             };
             
-            // Update UI
+            // Update UI with correct XP display
             const selectedMonsterDiv = document.getElementById('selectedMonster');
             selectedMonsterDiv.innerHTML = await createMonsterCard(updatedMonsterData);
             
-            // Show training completion toast with monster name
             showToast(`🎯 Training completed! ${monsterData.monsterName} gained ${xpIncrease} XP and increased ${stat} by ${statIncrease}!`);
             
             // Update monster in currentMonsters array
@@ -801,7 +797,6 @@ async function completeTraining() {
             if (monsterIndex !== -1) {
                 currentMonsters[monsterIndex] = updatedMonsterData;
             }
-            // Immediately refresh the list to re-render card
             await filterAndSortMonsters();
         }
     } catch (error) {
@@ -809,7 +804,6 @@ async function completeTraining() {
         showError('Training failed. Please try again.');
     }
 
-    // Reset UI and clear training state
     resetTrainingUI();
     clearTrainingState();
 }
@@ -916,7 +910,7 @@ darkModeToggle.addEventListener("click", function() {
         </div>
 
         <div class="filters">
-            <select id="monsterSelect" class="filter-select">
+            <select id="monsterSelect" class="filter-select"></select>
                 <option value="">Select a Monster</option>
                 <!-- Monster options will be dynamically added here -->
             </select>
@@ -965,4 +959,5 @@ darkModeToggle.addEventListener("click", function() {
     </footer>
 
 </body>
+</html>
 </html>
