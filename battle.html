@@ -1008,6 +1008,64 @@
         .defending .monster-image-container {
             animation: defense-glow 2s ease-in-out infinite;
         }
+
+        /* Add opponent-specific animation classes */
+        .opponent-damage-animation {
+            animation: damage-flash 0.5s ease-in-out;
+        }
+
+        .opponent-shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Add hardware acceleration for opponent container */
+        .battle-container .monster:last-of-type {
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+        }
+
+        /* Update opponent-specific animation classes */
+        .battle-container .monster:last-child.opponent-damage-animation {
+            animation: damage-flash 0.5s ease-in-out;
+        }
+
+        .battle-container .monster:last-child.opponent-shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Add iOS-specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .battle-container .monster .monster-image-container {
+                -webkit-transform: translate3d(0,0,0);
+                transform: translate3d(0,0,0);
+                -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+                -webkit-perspective: 1000;
+                perspective: 1000;
+                contain: paint;
+            }
+
+            .battle-container .monster .monster-image-container img {
+                transform: none !important;
+                -webkit-transform: none !important;
+                animation: none !important;
+                will-change: auto;
+            }
+
+            /* Move animations to the parent container instead */
+            .battle-container .monster.shake-animation .monster-image-container,
+            .battle-container .monster.opponent-shake-animation .monster-image-container {
+                animation: shake 0.5s ease-in-out;
+            }
+
+            .battle-container .monster.damage-animation .monster-image-container,
+            .battle-container .monster.opponent-damage-animation .monster-image-container {
+                animation: damage-flash 0.5s ease-in-out;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1045,7 +1103,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.0541</span></p>
+            <p>Version: <span id="versionNumber">1.0.0542</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1288,13 +1346,23 @@
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
                 const newHealth = Math.max(0, opponentHealth - damage);
     
-                const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                // Update selector and animation handling
+                const opponentElement = document.querySelector('.battle-container .monster:last-child');
                 if (opponentElement) {
-                    opponentElement.classList.add('shake-animation');
-                    opponentElement.classList.add(isCritical ? 'special-attack-animation' : 'damage-animation');
+                    // Remove existing animations
+                    opponentElement.classList.remove('shake-animation', 'damage-animation', 
+                        'opponent-shake-animation', 'opponent-damage-animation');
+                    
+                    // Force reflow
+                    void opponentElement.offsetWidth;
+                    
+                    // Add new animations
+                    opponentElement.classList.add('opponent-shake-animation');
+                    opponentElement.classList.add(isCritical ? 'special-attack-animation' : 'opponent-damage-animation');
+                    
                     setTimeout(() => {
-                        opponentElement.classList.remove('shake-animation');
-                        opponentElement.classList.remove(isCritical ? 'special-attack-animation' : 'damage-animation');
+                        opponentElement.classList.remove('opponent-shake-animation');
+                        opponentElement.classList.remove(isCritical ? 'special-attack-animation' : 'opponent-damage-animation');
                     }, isCritical ? 1000 : 500);
                 }
     
@@ -1514,8 +1582,10 @@
                         addToLog(`Opponent healed for ${newHealth - opponentHealth} HP!`);
                         
                         // Add visual effect
-                        const healOpponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                        const healOpponentElement = document.querySelector('.battle-container .monster:last-child');
                         if (healOpponentElement) {
+                            healOpponentElement.classList.remove('heal-animation');
+                            void healOpponentElement.offsetWidth;
                             healOpponentElement.classList.add('heal-animation');
                             setTimeout(() => {
                                 healOpponentElement.classList.remove('heal-animation');
@@ -1524,7 +1594,7 @@
                         break;
 
                     case 'defend':
-                        const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                        const opponentElement = document.querySelector('.battle-container .monster:last-child');
                         if (opponentElement) {
                             opponentElement.classList.add('defending');
                         }
@@ -1566,8 +1636,10 @@
                         addToLog(message);
 
                         // Add visual effect for opponent attacks
-                        const playerElement = document.querySelector('.battle-container .monster:first-of-type');
+                        const playerElement = document.querySelector('.battle-container .monster:first-child');
                         if (playerElement) {
+                            playerElement.classList.remove('shake-animation', 'damage-animation');
+                            void playerElement.offsetWidth;
                             playerElement.classList.add('shake-animation', 'damage-animation');
                             setTimeout(() => {
                                 playerElement.classList.remove('shake-animation', 'damage-animation');
@@ -1857,11 +1929,13 @@
                 const specialDamage = Math.floor(calculateDamage(activeMonster, true).damage * 2.5);
                 const newHealth = Math.max(0, opponentHealth - specialDamage);
 
-                const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                const opponentElement = document.querySelector('.battle-container .monster:last-child');
                 if (opponentElement) {
-                    opponentElement.classList.add('shake-animation', 'special-attack-animation');
+                    opponentElement.classList.remove('opponent-shake-animation', 'special-attack-animation');
+                    void opponentElement.offsetWidth;
+                    opponentElement.classList.add('opponent-shake-animation', 'special-attack-animation');
                     setTimeout(() => {
-                        opponentElement.classList.remove('shake-animation', 'special-attack-animation');
+                        opponentElement.classList.remove('opponent-shake-animation', 'special-attack-animation');
                     }, 1000);
                 }
 
