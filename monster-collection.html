@@ -304,6 +304,12 @@
             display: table;
             clear: both;
         }
+
+        /* Update the stat-box dark mode colors */
+        body.dark-mode .stat-box p {
+            color: #ecf0f1; /* Changed from #ffffff to a slightly softer white */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Added subtle text shadow for better contrast */
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -619,7 +625,8 @@
         }
 
         body.dark-mode .stat-box p {
-            color: #ffffff; /* Explicitly set color for dark mode */
+            color: #ecf0f1; /* Changed from #ffffff to a slightly softer white */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Added subtle text shadow for better contrast */
         }
 
         /* Responsive Adjustments */
