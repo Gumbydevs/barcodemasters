@@ -980,7 +980,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.053</span></p>
+            <p>Version: <span id="versionNumber">1.0.054</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1773,11 +1773,8 @@
                                         try {
                                             if (!activeMonster?.experience) return '0/' + monsterStats.calculateXPForNextLevel(1);
                                             
-                                            // Simply use the raw experience value from database
-                                            const totalExp = activeMonster.experience;
-                                            const nextLevelXP = monsterStats.calculateXPForNextLevel(activeMonster.level);
-                                            
-                                            return `${totalExp}/${nextLevelXP}`;
+                                            const xpInfo = monsterStats.getXPInfo(activeMonster);
+                                            return `${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}`;
                                             
                                         } catch (e) {
                                             console.error('XP display error:', e);
@@ -1791,18 +1788,8 @@
                                     className="xp-progress-bar" 
                                     style={{ width: `${(() => {
                                         try {
-                                            const totalExp = activeMonster.experience || 0;
-                                            const level = activeMonster.level || 1;
-                                            const prevLevelTotalXP = monsterStats.calculateTotalXPToLevel(level);
-                                            const nextLevelXP = monsterStats.calculateXPForNextLevel(level);
-                                            const currentLevelXP = totalExp - prevLevelTotalXP;
-                                            
-                                            // Add safety check for progress calculation
-                                            if (isNaN(currentLevelXP) || currentLevelXP < 0) {
-                                                return 0;
-                                            }
-                                            
-                                            return Math.min(100, Math.max(0, (currentLevelXP / nextLevelXP) * 100));
+                                            const xpInfo = monsterStats.getXPInfo(activeMonster);
+                                            return xpInfo.progress;
                                         } catch (e) {
                                             console.error('Progress calculation error:', e);
                                             return 0;
