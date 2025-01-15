@@ -816,19 +816,13 @@
             `<div class="monster-image-placeholder"></div>`;
         
         // Calculate only next level XP requirement
-        const nextLevelXP = monsterStats.calculateXPForNextLevel(monster.level);
+        const xpInfo = monsterStats.getXPInfo(monster);
         
         // Use raw experience value directly from monster data for current XP
-        const currentXP = parseInt(monster.experience) || 0;
-        
-        // Calculate progress percentage for XP bar
-        const xpProgress = Math.min(100, Math.max(0, (currentXP / nextLevelXP) * 100));
-
-        // Update XP display to use raw database values
         const xpDisplay = `
             <div class="stat-item">
                 <span>XP</span>
-                <span>${currentXP}/${nextLevelXP}</span>
+                <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
             </div>
         `;
 
@@ -866,7 +860,7 @@
                         </div>
                     </div>
                     <div class="xp-progress">
-                        <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                        <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
                     </div>
                     <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
                     <div class="created-date">Created by: ${ownerUsername}</div>
