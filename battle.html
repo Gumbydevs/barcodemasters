@@ -1000,12 +1000,12 @@
         }
 
         @keyframes defense-glow {
-            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
-            50% { box-shadow: 0 0 20px 10px rgba(52, 152, 219, 0.6); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
+            0% { box-shadow: 0 0 5px 2px rgba(52, 152, 219, 0.4); }
+            50% { box-shadow: 0 0 15px 5px rgba(52, 152, 219, 0.6); }
+            100% { box-shadow: 0 0 5px 2px rgba(52, 152, 219, 0.4); }
         }
 
-        .defending {
+        .defending .monster-image-container {
             animation: defense-glow 2s ease-in-out infinite;
         }
     </style>
@@ -1288,13 +1288,14 @@
                 const { damage, isCritical } = calculateDamage(activeMonster, true);
                 const newHealth = Math.max(0, opponentHealth - damage);
     
-                // Add visual effect
                 const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
                 if (opponentElement) {
-                    opponentElement.classList.add('shake-animation', 'damage-animation');
+                    opponentElement.classList.add('shake-animation');
+                    opponentElement.classList.add(isCritical ? 'special-attack-animation' : 'damage-animation');
                     setTimeout(() => {
-                        opponentElement.classList.remove('shake-animation', 'damage-animation');
-                    }, 500);
+                        opponentElement.classList.remove('shake-animation');
+                        opponentElement.classList.remove(isCritical ? 'special-attack-animation' : 'damage-animation');
+                    }, isCritical ? 1000 : 500);
                 }
     
                 setOpponentHealth(newHealth);
@@ -1426,10 +1427,7 @@
                 const playerElement = document.querySelector('.battle-container .monster:first-of-type');
                 if (playerElement) {
                     playerElement.classList.add('defending');
-                    // Remove defense animation when turn ends
-                    setTimeout(() => {
-                        playerElement.classList.remove('defending');
-                    }, 2000);
+                    // Don't remove the defense animation here - it will be removed after the next attack or turn
                 }
                 
                 setIsPlayerTurn(false);
@@ -1529,20 +1527,28 @@
                         const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
                         if (opponentElement) {
                             opponentElement.classList.add('defending');
-                            setTimeout(() => {
-                                opponentElement.classList.remove('defending');
-                            }, 2000);
                         }
-                        
                         addToLog("Opponent is defending against the next attack!");
-                        // Add a temporary defense buff for the next player's attack
                         window.aiDefending = true;
-                        setTimeout(() => { window.aiDefending = false; }, 100);
                         break;
 
                     default: // Attack
                         const { damage, isCritical } = calculateDamage(opponentMonster, false);
                         let finalDamage = isDefending ? Math.floor(damage / 1.75) : damage;
+                        
+                        // Remove defense effect after taking damage
+                        const defendingPlayer = document.querySelector('.battle-container .monster:first-of-type');
+                        if (defendingPlayer) {
+                            defendingPlayer.classList.remove('defending');
+                        }
+                        
+                        // Apply visual effects to player monster
+                        if (defendingPlayer) {
+                            defendingPlayer.classList.add('shake-animation', 'damage-animation');
+                            setTimeout(() => {
+                                defendingPlayer.classList.remove('shake-animation', 'damage-animation');
+                            }, 500);
+                        }
                         
                         if (playerHealthPercentage < 0.3) {
                             finalDamage = Math.floor(finalDamage * 1.2); // 20% bonus damage on low HP targets
@@ -1581,6 +1587,12 @@
                 setTimeout(() => {
                     setIsPlayerTurn(true);
                 }, 500);
+
+                // Remove opponent defense at end of their turn
+                const defendingOpponent = document.querySelector('.battle-container .monster:nth-of-type(2)');
+                if (defendingOpponent && defendingOpponent.classList.contains('defending')) {
+                    defendingOpponent.classList.remove('defending');
+                }
             };
 
             // Add the defeat handler
@@ -1845,7 +1857,6 @@
                 const specialDamage = Math.floor(calculateDamage(activeMonster, true).damage * 2.5);
                 const newHealth = Math.max(0, opponentHealth - specialDamage);
 
-                // Add visual effect
                 const opponentElement = document.querySelector('.battle-container .monster:nth-of-type(2)');
                 if (opponentElement) {
                     opponentElement.classList.add('shake-animation', 'special-attack-animation');
