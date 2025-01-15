@@ -119,6 +119,8 @@
             color: #a8b3cf;
             margin-top: 0.5rem;
             text-align: right;
+            display: inline-block; /* Changed from block to inline-block */
+            float: right; /* Float to the right */
         }
 
         /* Add these new styles */
@@ -242,6 +244,66 @@
                 height: 200px;
             }
         }
+
+        /* Update monster action buttons */
+        .monster-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem; /* Reduced from 1rem */
+            justify-content: flex-start; /* Align to the left */
+            padding: 0; /* Remove padding */
+        }
+
+        .action-button {
+            flex: 0 1 auto; /* Don't force expand, allow shrinking, size to content */
+            min-width: 70px; /* Slightly reduced from 80px */
+            padding: 0.25rem 0.5rem; /* Horizontal padding reduced */
+            border: none;
+            border-radius: 4px; /* Reduced from 6px */
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 0.85rem; /* Added to make text smaller */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        @media (max-width: 480px) {
+            .action-button {
+                min-width: 70px;
+                padding: 0.25rem 0.5rem; /* Even smaller on mobile */
+                font-size: 0.8rem;
+            }
+        }
+
+        .rename-button {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+
+        .rename-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .regen-button {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .delete-button {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        .delete-button:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+        }
+
+        /* Clear float after the actions and dates */
+        .monster-info::after {
+            content: '';
+            display: table;
+            clear: both;
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -317,7 +379,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.03</span></p>
+        <p>Version: <span id="versionNumber">1.0.05</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
     </footer>
     <style>
@@ -471,6 +533,8 @@
             display: flex;
             gap: 0.5rem;
             margin-top: 1rem;
+            justify-content: center; /* Center the buttons */
+            padding: 0 1rem; /* Add some padding on the sides */
         }
 
         .action-button {
@@ -862,11 +926,16 @@
                     <div class="xp-progress">
                         <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
                     </div>
-                    <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
-                    <div class="created-date">Created by: ${ownerUsername}</div>
-                    <div class="monster-actions">
-                        <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
-                        <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="monster-actions">
+                            <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
+                            <button class="action-button regen-button" disabled>Regen</button>
+                            <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
+                        </div>
+                        <div>
+                            <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
+                            <div class="created-date">By: ${ownerUsername}</div>
+                        </div>
                     </div>
                 </div>
             </div>
