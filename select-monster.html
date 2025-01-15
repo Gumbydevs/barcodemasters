@@ -264,6 +264,24 @@
                 height: 200px;
             }
         }
+
+        .monster-card.occupied {
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .occupied-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
@@ -364,8 +382,15 @@
                 
                 const card = document.createElement('div');
                 card.className = 'monster-card';
+                if (monster.isOccupied) {
+                    card.classList.add('occupied');
+                }
+                
+                // Add occupied badge if monster is busy
+                const occupiedBadge = monster.isOccupied ? `<div class="occupied-badge">Busy</div>` : '';
                 
                 card.innerHTML = `
+                    ${occupiedBadge}
                     <div class="monster-info">
                         <div class="monster-name">${monster.monsterName}</div>
                         ${monster.imageUrl ? 
@@ -411,6 +436,11 @@
                 `;
                 
                 card.addEventListener('click', () => {
+                    if (monster.isOccupied) {
+                        showError('This monster is currently busy and cannot be selected for battle.');
+                        return;
+                    }
+                    
                     document.querySelectorAll('.monster-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
                     selectedMonsterId = doc.id;
@@ -422,6 +452,28 @@
 
                 grid.appendChild(card);
             }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(255, 0, 0, 0.9);
+                color: white;
+                padding: 1rem;
+                border-radius: 8px;
+                z-index: 1000;
+                text-align: center;
+            `;
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 3000);
         }
 
         // Update the battle button click handler

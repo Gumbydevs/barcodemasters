@@ -69,6 +69,32 @@
                 </li>
             </ul>
         </li>
+        <li><strong>Training System Update:</strong>
+            <ul>
+                <li>Added monster occupation tracking:
+                    <ul>
+                        <li>New isOccupied field in database for each monster</li>
+                        <li>Monsters are marked as occupied during training</li>
+                        <li>System prevents training of already occupied monsters</li>
+                        <li>Clear feedback when monster is busy with another activity</li>
+                        <li>Automatic status reset when training completes</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Battle System Enhancement:</strong>
+            <ul>
+                <li>Added monster occupation check to battle selection:
+                    <ul>
+                        <li>Monsters that are busy training cannot be selected for battle</li>
+                        <li>Visual indicator shows occupied status with reduced opacity</li>
+                        <li>Added red "Busy" badge to occupied monsters</li>
+                        <li>Clear error message when attempting to select busy monster</li>
+                        <li>Prevents selection of monsters engaged in other activities</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
     </ul>
 
     <h3>Fixed</h3>
