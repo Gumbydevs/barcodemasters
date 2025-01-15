@@ -11,6 +11,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="monsterStats.js"></script>
     <style>
         /* Collection-style layout */
         body { 
@@ -938,7 +939,6 @@
 
     <div class="battle-container">
         <div class="logo-container">
-            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
         </div>
 
         <!-- Add battle preview section -->
@@ -1681,6 +1681,34 @@
                 }
             }, [opponentHealth, playerHealth]);
 
+            // Add new state for special attack cooldown
+            const [specialCooldown, setSpecialCooldown] = React.useState(3);
+
+            // Add special attack handler
+            const handleSpecialAttack = async () => {
+                if (isBattleOver || !isPlayerTurn || specialCooldown > 0) return;
+
+                const specialDamage = Math.floor(calculateDamage(activeMonster, true).damage * 2.5);
+                const newHealth = Math.max(0, opponentHealth - specialDamage);
+
+                setSpecialCooldown(3); // Reset cooldown
+                setOpponentHealth(newHealth);
+                addToLog(`💫 Special Attack dealt ${specialDamage} massive damage!`);
+                setIsPlayerTurn(false);
+
+                if (newHealth <= 0) {
+                    await handleVictory();
+                    setIsBattleOver(true);
+                }
+            };
+
+            // Add cooldown effect
+            React.useEffect(() => {
+                if (isPlayerTurn && specialCooldown > 0) {
+                    setSpecialCooldown(prev => prev - 1);
+                }
+            }, [isPlayerTurn]);
+
             // Update the return JSX
             return (
                 <div className="battle-container">
@@ -1760,6 +1788,18 @@
                                 </button>
                                 <button onClick={handleHeal} disabled={isBattleOver || battleState !== 'ongoing'}>
                                     Heal
+                                </button>
+                                <button 
+                                    onClick={handleSpecialAttack} 
+                                    disabled={isBattleOver || battleState !== 'ongoing' || specialCooldown > 0}
+                                    style={{
+                                        background: specialCooldown > 0 ? 
+                                            'linear-gradient(135deg, #666, #999)' : 
+                                            'linear-gradient(135deg, #c0392b, #e74c3c)',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
                                 </button>
                             </div>
                         ) : (
