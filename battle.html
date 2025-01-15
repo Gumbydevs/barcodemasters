@@ -1269,7 +1269,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.0544</span></p>
+            <p>Version: <span id="versionNumber">1.0.055</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1349,18 +1349,30 @@
 
         // Add this optimized MonsterImage component before the BattleSystem component
         const MonsterImage = React.memo(({ monster, isAI = false }) => {
-            const imageUrl = React.useMemo(() => isAI ? aiImageUrl : monster?.imageUrl, [isAI, aiImageUrl, monster?.imageUrl]);
-            const imageKey = React.useMemo(() => `${isAI ? 'ai' : 'player'}-${imageUrl}`, [isAI, imageUrl]);
+            // Create refs to maintain stable values
+            const stableUrl = React.useRef(isAI ? aiImageUrl : monster?.imageUrl);
+            const stableKey = React.useRef(`${isAI ? 'ai' : 'player'}-${stableUrl.current}`);
             const containerRef = React.useRef(null);
+            
+            // Only update refs if URL actually changes
+            React.useEffect(() => {
+                const newUrl = isAI ? aiImageUrl : monster?.imageUrl;
+                if (newUrl !== stableUrl.current) {
+                    stableUrl.current = newUrl;
+                    stableKey.current = `${isAI ? 'ai' : 'player'}-${newUrl}`;
+                }
+            }, [isAI, aiImageUrl, monster?.imageUrl]);
 
-            // Add effect to ensure transform properties are applied
+            // Ensure transform properties are applied once
             React.useEffect(() => {
                 if (containerRef.current) {
                     containerRef.current.style.transform = 'translateZ(0)';
-                    containerRef.current.style.willChange = 'transform';
+                    containerRef.current.style.webkitTransform = 'translateZ(0)';
+                    containerRef.current.style.backfaceVisibility = 'hidden';
+                    containerRef.current.style.webkitBackfaceVisibility = 'hidden';
                 }
             }, []);
-
+            
             return (
                 <div 
                     ref={containerRef}
@@ -1371,13 +1383,15 @@
                         transform: 'translateZ(0)',
                         WebkitTransform: 'translateZ(0)',
                         backfaceVisibility: 'hidden',
-                        WebkitBackfaceVisibility: 'hidden'
+                        WebkitBackfaceVisibility: 'hidden',
+                        perspective: '1000px',
+                        WebkitPerspective: '1000px'
                     }}
                 >
-                    {imageUrl ? (
+                    {stableUrl.current ? (
                         <img 
-                            key={imageKey}
-                            src={imageUrl}
+                            key={stableKey.current}
+                            src={stableUrl.current}
                             alt={isAI ? 'AI Opponent' : monster?.monsterName}
                             loading="eager"
                             decoding="sync"
@@ -1387,9 +1401,9 @@
                                 objectFit: 'contain',
                                 transform: 'translateZ(0)',
                                 WebkitTransform: 'translateZ(0)',
-                                willChange: 'transform',
                                 backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden'
+                                WebkitBackfaceVisibility: 'hidden',
+                                willChange: 'transform'
                             }}
                         />
                     ) : (
@@ -1398,8 +1412,10 @@
                 </div>
             );
         }, (prev, next) => {
-            return prev.monster?.imageUrl === next.monster?.imageUrl && 
-                   prev.isAI === next.isAI;
+            // Only re-render if the URL actually changes
+            const prevUrl = prev.isAI ? aiImageUrl : prev.monster?.imageUrl;
+            const nextUrl = next.isAI ? aiImageUrl : next.monster?.imageUrl;
+            return prevUrl === nextUrl;
         });
 
         const BattleSystem = () => {
@@ -2226,6 +2242,23 @@
                 opponentMonster?.Speed
             ]);
 
+            // Add these at the top of BattleSystem component
+            const stablePlayerMonster = React.useRef(null);
+            const stableOpponentMonster = React.useRef(null);
+
+            // Add this effect after your existing useEffects
+            React.useEffect(() => {
+                if (playerMonster && !stablePlayerMonster.current) {
+                    stablePlayerMonster.current = playerMonster;
+                }
+                if (!stableOpponentMonster.current) {
+                    stableOpponentMonster.current = {
+                        ...opponentMonster,
+                        imageUrl: aiImageUrl
+                    };
+                }
+            }, [playerMonster, opponentMonster, aiImageUrl]);
+
             // Update the return JSX
             return (
                 <div className="battle-container">
@@ -2236,7 +2269,7 @@
                             <div className="monster-name" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>
                                 {activeMonster.monsterName}
                             </div>
-                            <MonsterImage monster={memoizedPlayerMonster} />
+                            <MonsterImage monster={stablePlayerMonster.current || playerMonster} />
                         </div>
                         <div className="monster-info">
                             <ul>
@@ -2288,7 +2321,7 @@
                             <div className="monster-name" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>
                                 Level {opponentMonster.level} Robot
                             </div>
-                            <MonsterImage monster={memoizedOpponentMonster} isAI={true} />
+                            <MonsterImage monster={stableOpponentMonster.current || opponentMonster} isAI={true} />
                         </div>
                         <div className="monster-info">
                             <ul>
