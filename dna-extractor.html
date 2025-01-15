@@ -313,7 +313,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.079</span></p>
+        <p>Version: <span id="versionNumber">1.0.08</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
     </footer>
     <script type="module">
@@ -809,6 +809,99 @@
             }
         }
 
+        // Move generateImage outside displayMonster and make it a named function
+        async function generateImage(prompt, monster, retryCount = 0) {
+            const timeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timeout')), 60000)
+            );
+
+            const models = [
+                'Lykon/DreamShaper',
+                'prompthero/openjourney-v4',
+                'runwayml/stable-diffusion-v1-5',
+            ];
+
+            const modelIndex = retryCount % models.length;
+            const currentModel = models[modelIndex];
+            
+            const baseDelay = 2000;
+            const maxDelay = 30000;
+            const jitter = Math.random() * 1000;
+            const delay = Math.min(baseDelay * Math.pow(1.5, Math.floor(retryCount / 2)) + jitter, maxDelay);
+
+            try {
+                if (retryCount > 0) {
+                    console.log(`DNA Extractor overheating, backing off for ${(delay/1000).toFixed(1)} seconds before retry ${retryCount}...`);
+                    updateDebugMessage(`Cooling down... Next attempt in ${(delay/1000).toFixed(1)} seconds`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+
+                console.log(`Attempting to synthesize appearance with model ${currentModel} (attempt ${retryCount + 1})`);
+                updateDebugMessage(`Synthesizing appearance with ${currentModel.split('/')[1]}...`);
+
+                const response = await Promise.race([
+                    fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer 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',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            inputs: prompt.positivePrompt,
+                            parameters: {
+                                negative_prompt: prompt.negativePrompt,
+                                width: 512,
+                                height: 512,
+                                num_inference_steps: 30,
+                                guidance_scale: 8.5,
+                                seed: Math.floor(Math.random() * 2147483647)
+                            }
+                        })
+                    }),
+                    timeout
+                ]);
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    console.log(`Model response error: ${response.status} - ${errorBody}`);
+
+                    if (response.status === 429 || response.status === 503) {
+                        if (retryCount < models.length * 3) {
+                            return generateImage(prompt, monster, retryCount + 1);
+                        }
+                        throw new Error('All models are currently busy. Please try again later.');
+                    }
+
+                    throw new Error(`Model error: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                if (blob.size < 1000) {
+                    throw new Error('Invalid image data received');
+                }
+
+                try {
+                    const imageUrl = await uploadMonsterImage(blob, monster);
+                    return imageUrl;
+                } catch (storageError) {
+                    console.error('Storage error:', storageError);
+                    const tempUrl = URL.createObjectURL(blob);
+                    console.warn('Using temporary URL as fallback:', tempUrl);
+                    return tempUrl;
+                }
+
+            } catch (error) {
+                console.error(`Attempt ${retryCount + 1} failed:`, error);
+                
+                if (retryCount < models.length * 3) {
+                    return generateImage(prompt, monster, retryCount + 1);
+                }
+                
+                throw new Error('Unable to generate image after multiple attempts. Please try again later.');
+            }
+        }
+
+        // Modify displayMonster to use the external generateImage function
         async function displayMonster(monster) {
             console.log('Displaying monster:', monster);
             const monsterResult = document.getElementById('monsterResult');
@@ -855,105 +948,7 @@
                 updateDebugMessage('Materializing your monster...');
 
                 // Rest of the generation code
-                const generateImage = async (retryCount = 0) => {
-                    const timeout = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Request timeout')), 60000) // Increased timeout
-                    );
-
-                    const models = [
-                        'Lykon/DreamShaper',
-                        'prompthero/openjourney-v4',
-                        'runwayml/stable-diffusion-v1-5',
-                        //'stabilityai/stable-diffusion-2-1'
-                    ];
-
-                    const modelIndex = retryCount % models.length;
-                    const currentModel = models[modelIndex];
-                    
-                    // Exponential backoff with jitter
-                    const baseDelay = 2000; // Start with 2 seconds
-                    const maxDelay = 30000; // Max 30 seconds
-                    const jitter = Math.random() * 1000;
-                    const delay = Math.min(baseDelay * Math.pow(1.5, Math.floor(retryCount / 2)) + jitter, maxDelay);
-
-                    try {
-                        if (retryCount > 0) {
-                            console.log(`DNA Extractor overheating, backing off for ${(delay/1000).toFixed(1)} seconds before retry ${retryCount}...`);
-                            updateDebugMessage(`Cooling down... Next attempt in ${(delay/1000).toFixed(1)} seconds`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                        }
-
-                        console.log(`Attempting to synthesize appearence with model ${currentModel} (attempt ${retryCount + 1})`);
-                        updateDebugMessage(`Synthesizing appearence with ${currentModel.split('/')[1]}...`);
-
-                        const response = await Promise.race([
-                            fetch(`https://api-inference.huggingface.co/models/${currentModel}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': 'Bearer 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',
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    inputs: prompt.positivePrompt,
-                                    parameters: {
-                                        negative_prompt: prompt.negativePrompt,
-                                        width: 512,
-                                        height: 512,
-                                        num_inference_steps: 30, // Increased for better quality
-                                        guidance_scale: 8.5,     // Increased for stronger prompt adherence
-                                        seed: Math.floor(Math.random() * 2147483647)
-                                    }
-                                })
-                            }),
-                            timeout
-                        ]);
-
-                        // Handle various response status codes
-                        if (!response.ok) {
-                            const errorBody = await response.text();
-                            console.log(`Model response error: ${response.status} - ${errorBody}`);
-
-                            if (response.status === 429 || response.status === 503) {
-                                if (retryCount < models.length * 3) { // Try each model up to 3 times
-                                    return generateImage(retryCount + 1);
-                                }
-                                throw new Error('All models are currently busy. Please try again later.');
-                            }
-
-                            throw new Error(`Model error: ${response.status}`);
-                        }
-
-                        const blob = await response.blob();
-                        if (blob.size < 1000) {
-                            throw new Error('Invalid image data received');
-                        }
-
-                        try {
-                            // Use the new upload function
-                            const imageUrl = await uploadMonsterImage(blob, monster);
-                            return imageUrl;
-                        } catch (storageError) {
-                            console.error('Storage error:', storageError);
-                            // Create temporary URL as fallback
-                            const tempUrl = URL.createObjectURL(blob);
-                            console.warn('Using temporary URL as fallback:', tempUrl);
-                            return tempUrl;
-                        }
-
-                    } catch (error) {
-                        console.error(`Attempt ${retryCount + 1} failed:`, error);
-                        
-                        if (retryCount < models.length * 3) {
-                            console.log('Retrying with next model...');
-                            return generateImage(retryCount + 1);
-                        }
-                        
-                        // If all retries failed, throw final error
-                        throw new Error('Unable to generate image after multiple attempts. Please try again later.');
-                    }
-                };
-
-                const imageUrl = await generateImage();
+                const imageUrl = await generateImage(prompt, monster, 0);
                 
                 const monsterImage = monsterResult.querySelector('.monster-image');
                 monsterImage.innerHTML = `
@@ -1019,86 +1014,60 @@
                     </div>
                 `;
 
-                // Add click handler for retry button
                 const retryButton = monsterImage.querySelector('#retryGenerationButton');
                 const deleteButton = monsterImage.querySelector('#deleteFailedMonster');
 
+                // Fix retry functionality
                 retryButton.addEventListener('click', async () => {
-                    retryButton.disabled = true;
-                    retryButton.style.opacity = '0.5';
-                    retryButton.textContent = 'Retrying...';
-
-                    // Remove the retry button and show loading state
-                    monsterImage.innerHTML = `
-                        <div style="text-align: center;">
-                            <p>Recalibrating DNA Synthesis...</p>
-                            <p style="font-size: 0.8em;">Adjusting genetic parameters...</p>
-                            <p style="font-size: 0.8em;">Stabilizing molecular structure...</p>
-                            <p style="font-size: 0.8em;">Stand by for materialization...</p>
-                        </div>
-                    `;
-
                     try {
-                        // Reset the generation attempts counter before retrying
-                        const imageUrl = await generateImage(0); // Start fresh with 0 retries
-                        if (!imageUrl) throw new Error('Failed to generate image');
+                        retryButton.disabled = true;
+                        retryButton.style.opacity = '0.5';
+                        retryButton.textContent = 'Retrying...';
 
                         monsterImage.innerHTML = `
-                            <img src="${imageUrl}" alt="${monster.monsterName}" 
+                            <div style="text-align: center;">
+                                <p>Recalibrating DNA Synthesis...</p>
+                                <p style="font-size: 0.8em;">Adjusting genetic parameters...</p>
+                                <p style="font-size: 0.8em;">Stabilizing molecular structure...</p>
+                                <p style="font-size: 0.8em;">Stand by for materialization...</p>
+                            </div>
+                        `;
+
+                        const newImageUrl = await generateImage(prompt, monster, 0);
+                        if (!newImageUrl) throw new Error('Failed to generate image');
+
+                        monsterImage.innerHTML = `
+                            <img src="${newImageUrl}" alt="${monster.monsterName}" 
                                 style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
                         `;
 
-                        // Update the monster document with the successful image URL
                         const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
                         const monsterRef = doc(db, 'monsters', monsterInstanceId);
                         await updateDoc(monsterRef, { 
-                            imageUrl: imageUrl,
+                            imageUrl: newImageUrl,
                             lastUpdated: new Date().toISOString()
                         });
 
                     } catch (retryError) {
                         console.error('Retry failed:', retryError);
-                        monsterImage.innerHTML = `
-                            <div style="text-align: center; padding: 2rem;">
-                                <p>DNA Synthesis Failed</p>
-                                <p style="font-size: 0.8em; color: #666;">
-                                    All DNA synthesizers are currently busy. Please try again later or delete this failed monster.
-                                </p>
-                                <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
-                                    Retry DNA Synthesis
-                                </button>
-                                <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
-                                    Delete Failed Monster
-                                </button>
-                            </div>
-                        `;
-                        
-                        // Reattach event listeners to new buttons
-                        const newRetryButton = monsterImage.querySelector('#retryGenerationButton');
-                        const newDeleteButton = monsterImage.querySelector('#deleteFailedMonster');
-                        newRetryButton.addEventListener('click', retryButton.onclick);
-                        newDeleteButton.addEventListener('click', deleteButton.onclick);
+                        displayRetryError(monsterImage, monster, prompt);
                     }
                 });
 
-                // Add click handler for delete button
+                // Keep delete functionality separate and simple
                 deleteButton.addEventListener('click', async () => {
                     try {
                         const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
                         const monsterRef = doc(db, 'monsters', monsterInstanceId);
                         await deleteDoc(monsterRef);
 
-                        // Remove the used hash from user's list
                         const userRef = doc(db, 'users', monster.ownerId);
                         await updateDoc(userRef, {
                             usedHash: arrayRemove(monster.hash)
                         });
 
-                        // Reset the monster display area
-                        monsterResult.style.display = 'none';
+                        document.getElementById('monsterResult').style.display = 'none';
                         updateDebugMessage('Failed monster deleted. You can try scanning a new code.');
-                        
-                        // Reset scan button
                         document.getElementById('startButton').style.display = 'block';
                     } catch (deleteError) {
                         console.error('Error deleting failed monster:', deleteError);
@@ -1106,6 +1075,58 @@
                     }
                 });
             }
+        }
+
+        // Add helper function for displaying retry error
+        function displayRetryError(monsterImage, monster, prompt) {
+            monsterImage.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <p>DNA Synthesis Failed</p>
+                    <p style="font-size: 0.8em; color: #666;">
+                        All DNA synthesizers are currently busy. Please try again later or delete this failed monster.
+                    </p>
+                    <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
+                        Retry DNA Synthesis
+                    </button>
+                    <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                        Delete Failed Monster
+                    </button>
+                </div>
+            `;
+
+            // Reattach event listeners
+            const newRetryButton = monsterImage.querySelector('#retryGenerationButton');
+            const newDeleteButton = monsterImage.querySelector('#deleteFailedMonster');
+            
+            newRetryButton.addEventListener('click', async () => {
+                try {
+                    newRetryButton.disabled = true;
+                    const newImageUrl = await generateImage(prompt, monster, 0);
+                    if (!newImageUrl) throw new Error('Failed to generate image');
+                    monsterImage.innerHTML = `
+                        <img src="${newImageUrl}" alt="${monster.monsterName}" 
+                            style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+                    `;
+                } catch (error) {
+                    newRetryButton.disabled = false;
+                    displayRetryError(monsterImage, monster, prompt);
+                }
+            });
+
+            newDeleteButton.addEventListener('click', async () => {
+                try {
+                    const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
+                    await deleteDoc(doc(db, 'monsters', monsterInstanceId));
+                    await updateDoc(doc(db, 'users', monster.ownerId), {
+                        usedHash: arrayRemove(monster.hash)
+                    });
+                    document.getElementById('monsterResult').style.display = 'none';
+                    updateDebugMessage('Failed monster deleted. You can try scanning a new code.');
+                    document.getElementById('startButton').style.display = 'block';
+                } catch (error) {
+                    showError('Failed to delete monster. Please try again.');
+                }
+            });
         }
 
         // Add this new function before generateImage
