@@ -969,7 +969,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.048</span></p>
+            <p>Version: <span id="versionNumber">1.0.050</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1039,6 +1039,13 @@
             // AI will be equal to player level or up to 2 levels higher
             return playerLevel + levelBonus;
         }
+
+        const calculateXPProgress = (currentExp, level) => {
+            const currentLevelTotalXP = monsterStats.calculateTotalXPToLevel(level);
+            const nextLevelTotalXP = currentLevelTotalXP + monsterStats.calculateXPForNextLevel(level);
+            const progress = ((currentExp - currentLevelTotalXP) / (nextLevelTotalXP - currentLevelTotalXP)) * 100;
+            return Math.min(100, Math.max(0, progress));
+        };
 
         const BattleSystem = () => {
             // Add isDefending state

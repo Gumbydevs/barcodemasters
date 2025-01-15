@@ -766,11 +766,20 @@
 
     // Modify the createMonsterCard function
     async function createMonsterCard(monster) {
-        const xpToNextLevel = monster.level * 100;
-        const xpProgress = (monster.experience / xpToNextLevel) * 100;
         const ownerUsername = await getUsernameById(monster.ownerId);
         const typeDescription = await getMonsterTypeDescription(monster.type);
-
+        
+        // Fix XP calculation using monsterStats
+        const currentExp = monster.experience || 0;
+        const currentLevel = monster.level || 1;
+        const totalXPForCurrentLevel = monsterStats.calculateTotalXPToLevel(currentLevel);
+        const nextLevelXP = monsterStats.calculateXPForNextLevel(currentLevel);
+        const currentLevelXP = currentExp - totalXPForCurrentLevel;
+        const xpProgress = (currentLevelXP / nextLevelXP) * 100;
+        
+        // Ensure currentLevelXP is not negative
+        const displayCurrentLevelXP = Math.max(0, currentLevelXP);
+        
         // Create image HTML based on whether the monster has an imageUrl
         const imageHTML = monster.imageUrl ? 
             `<div class="monster-image-container">
@@ -807,8 +816,8 @@
                             <span>${monster.Speed}</span>
                         </div>
                         <div class="stat-item">
-                            <span>XP</span>
-                            <span>${monster.experience}/${xpToNextLevel}</span>
+                            <span>XP Progress</span>
+                            <span>${displayCurrentLevelXP}/${nextLevelXP}</span>
                         </div>
                         <div class="stat-item">
                             <span>Owner</span>
@@ -816,7 +825,7 @@
                         </div>
                     </div>
                     <div class="xp-progress">
-                        <div class="xp-progress-bar" style="width: ${xpProgress}%"></div>
+                        <div class="xp-progress-bar" style="width: ${Math.max(0, Math.min(100, xpProgress))}%"></div>
                     </div>
                     <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
                     <div class="created-date">Created by: ${ownerUsername}</div>
@@ -835,6 +844,12 @@
         document.getElementById('highestLevel').textContent = highestLevel;
         const uniqueTypes = new Set(monsters.map(m => m.type)).size;
         document.getElementById('uniqueTypes').textContent = uniqueTypes;
+
+        // Add total cumulative XP calculation
+        const totalXP = monsters.reduce((sum, m) => sum + (m.experience || 0), 0);
+        if (document.getElementById('totalXP')) {
+            document.getElementById('totalXP').textContent = totalXP.toLocaleString();
+        }
     }
 
     async function filterAndSortMonsters() {
