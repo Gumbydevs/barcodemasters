@@ -754,27 +754,23 @@
                     throw new Error('Invalid monster type: missing stat modifiers');
                 }
 
-                const level = seededRandom(seed) < 0.2 ? 2 : 1;
+                // Remove random level assignment and always start at level 1
                 const monster = {
                     hash,
                     monsterName: generateName(seed),
                     type: selectedType.typeName,
-                    level,
+                    level: 1, // Always start at level 1
+                    experience: 0, // Start with 0 XP
                     HP: calculateStat('HP', seed, selectedType.statModifiers),
                     AP: calculateStat('AP', seed, selectedType.statModifiers),
                     Speed: calculateStat('Speed', seed, selectedType.statModifiers),
-                    experience: 0,
                     ownerId: user.uid,
                     dateCreated: new Date().toISOString(),
                     typeInfo: selectedType,
                     createdBy: userData.username || 'Unknown Player'
                 };
 
-                if (level > 1) {
-                    monster.HP = Math.round(monster.HP * (1 + (level - 1) * 0.2));     // Changed from 0.3
-                    monster.AP = Math.round(monster.AP * (1 + (level - 1) * 0.15));    // Changed from 0.3
-                    monster.Speed = Math.round(monster.Speed * (1 + (level - 1) * 0.1)); // Changed from 0.3
-                }
+                // Remove level multiplier section since all monsters start at level 1
 
                 const monsterInstanceId = `${hash}-${user.uid}`;
                 const monsterRef = doc(db, 'monsters', monsterInstanceId);
