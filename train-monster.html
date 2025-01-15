@@ -275,27 +275,24 @@
 
     /* Add or update image container styles */
     .monster-image-container {
-        width: 100%;
-        height: 280px;
+        display: inline-block; /* Change to inline-block to wrap around the image */
         border-radius: 8px;
         margin: 1rem 0;
         overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         background: rgba(128, 128, 128, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .monster-image-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        display: block; /* Ensure the image is a block element */
+        max-width: 100%;
+        height: auto;
         border-radius: 8px;
     }
 
     /* Update existing placeholder styles */
     .monster-image-placeholder {
+        display: inline-block; /* Change to inline-block to wrap around the placeholder */
         width: 100%;
         height: 280px;
         background: rgba(128, 128, 128, 0.1);
@@ -356,67 +353,7 @@
         background: rgba(46, 204, 113, 0.9); /* Default green background */
     }
     </style>
-</head>
-<body>
-    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-
-    <div class="collection-container">
-        <div class="collection-header">
-            <div class="logo-container">
-                <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
-            </div>
-            <h1>Train Your Monster</h1>
-        </div>
-
-        <div class="filters">
-            <select id="monsterSelect" class="filter-select">
-                <option value="">Select a Monster</option>
-                <!-- Monster options will be dynamically added here -->
-            </select>
-        </div>
-        <div id="trainingSection" style="text-align: center; display: none;">
-            <h3>Choose a Stat to Train:</h3>
-    <select id="statSelect" class="filter-select">
-        <option value="">Select a Stat</option>
-        <option value="HP">HP</option>
-        <option value="AP">AP</option>
-        <option value="Speed">Speed</option>
-    </select>
-    <button class="nav-button" id="startTrainingButton">Start Training</button>
-    
-        <div id="trainingTimerContainer" class="training-timer-container">
-        <div class="training-progress-bar">
-        <div id="trainingProgressFill" class="training-progress-fill"></div>
-    </div>
-    
-        <div id="trainingTimeRemaining" class="training-time-remaining">Time remaining: 5s</div>
-    </div>
-        <p id="trainingStatus" style="display: none;">Training in progress...</p>
-    </div>
-
-        <div id="selectedMonster">
-            <!-- Selected monster details will be displayed here -->
-        </div>
-
-        <div class="navigation-grid">
-            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
-            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
-            <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
-            <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
-            <button class="nav-button" onclick="location.href='help.html'">Help</button>
-            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
-            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
-            <button class="nav-button" id="logoutButton">Logout</button>
-        </div>
-
-        <p id="errorMessage" style="color: red; display: none;"></p>
-    </div>
-
-    <footer>
-        <p>Version: <span id="versionNumber">1.0.032</span></p>
-        <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
-    </footer>
-
+    <script src="monsterStats.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -498,12 +435,14 @@ async function getMonsterTypeDescription(type) {
 }
 
 async function createMonsterCard(monster) {
-    const xpToNextLevel = monster.level * 100;
-    const xpProgress = (monster.experience / xpToNextLevel) * 100;
     const ownerUsername = await getUsernameById(monster.ownerId);
     const typeDescription = await getMonsterTypeDescription(monster.type);
 
-    // Create image HTML based on whether the monster has an imageUrl
+    // Keep complex XP calculations for next level and progress
+    const nextLevelXP = monsterStats.calculateXPForNextLevel(monster.level);
+    const xpProgress = Math.min(100, Math.max(0, (monster.experience / nextLevelXP) * 100));
+
+    // Create image HTML
     const imageHTML = monster.imageUrl ? 
         `<div class="monster-image-container">
             <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
@@ -511,6 +450,15 @@ async function createMonsterCard(monster) {
         </div>` : 
         `<div class="monster-image-placeholder"></div>`;
 
+    // Use raw experience value from database for display
+    const xpDisplay = `
+        <div class="stat-item">
+            <span>XP</span>
+            <span>${monster.experience || 0}/${nextLevelXP}</span>
+        </div>
+    `;
+
+    // Rest of the monster card template
     return `
         <div class="monster-card" data-id="${monster.id}">
             <div class="monster-info">
@@ -538,10 +486,7 @@ async function createMonsterCard(monster) {
                         <span>Speed</span>
                         <span>${monster.Speed}</span>
                     </div>
-                    <div class="stat-item">
-                        <span>XP</span>
-                        <span>${monster.experience}/${xpToNextLevel}</span>
-                    </div>
+                    ${xpDisplay}
                     <div class="stat-item">
                         <span>Owner</span>
                         <span>${ownerUsername}</span>
@@ -822,16 +767,15 @@ async function completeTraining() {
                 experience: newExp
             };
 
-            // Check for level up
-            if (newExp >= currentLevel * 100) {
+            // Check for level up using monsterStats functions
+            if (monsterStats.canLevelUp(currentLevel, newExp)) {
                 const newLevel = currentLevel + 1;
                 updates.level = newLevel;
                 
                 // Update stats with level-up bonuses
-                const baseStats = monsterData;
-                updates.HP = Math.round(baseStats.HP * (1 + 0.2));
-                updates.AP = Math.round(baseStats.AP * (1 + 0.15));
-                updates.Speed = Math.round(baseStats.Speed * (1 + 0.1));
+                updates.HP = Math.round(monsterData.HP * 1.2);
+                updates.AP = Math.round(monsterData.AP * 1.15);
+                updates.Speed = Math.round(monsterData.Speed * 1.1);
                 
                 // Show level up toast first with monster name
                 showToast(`🌟 ${monsterData.monsterName} has reached level ${newLevel}!`, true);
@@ -857,6 +801,8 @@ async function completeTraining() {
             if (monsterIndex !== -1) {
                 currentMonsters[monsterIndex] = updatedMonsterData;
             }
+            // Immediately refresh the list to re-render card
+            await filterAndSortMonsters();
         }
     } catch (error) {
         console.error('Error updating monster:', error);
@@ -957,5 +903,66 @@ darkModeToggle.addEventListener("click", function() {
 
         
     </script>
+</head>
+<body>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="collection-container">
+        <div class="collection-header">
+            <div class="logo-container">
+                <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+            </div>
+            <h1>Train Your Monster</h1>
+        </div>
+
+        <div class="filters">
+            <select id="monsterSelect" class="filter-select">
+                <option value="">Select a Monster</option>
+                <!-- Monster options will be dynamically added here -->
+            </select>
+        </div>
+        <div id="trainingSection" style="text-align: center; display: none;">
+            <h3>Choose a Stat to Train:</h3>
+    <select id="statSelect" class="filter-select">
+        <option value="">Select a Stat</option>
+        <option value="HP">HP</option>
+        <option value="AP">AP</option>
+        <option value="Speed">Speed</option>
+    </select>
+    <button class="nav-button" id="startTrainingButton">Start Training</button>
+    
+        <div id="trainingTimerContainer" class="training-timer-container">
+        <div class="training-progress-bar">
+        <div id="trainingProgressFill" class="training-progress-fill"></div>
+    </div>
+    
+        <div id="trainingTimeRemaining" class="training-time-remaining">Time remaining: 5s</div>
+    </div>
+        <p id="trainingStatus" style="display: none;">Training in progress...</p>
+    </div>
+
+        <div id="selectedMonster">
+            <!-- Selected monster details will be displayed here -->
+        </div>
+
+        <div class="navigation-grid">
+            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
+            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
+            <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
+            <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
+            <button class="nav-button" onclick="location.href='help.html'">Help</button>
+            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
+            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
+            <button class="nav-button" id="logoutButton">Logout</button>
+        </div>
+
+        <p id="errorMessage" style="color: red; display: none;"></p>
+    </div>
+
+    <footer>
+        <p>Version: <span id="versionNumber">1.0.032</span></p>
+        <p>&copy; 2025 Barcode Masters | <a href="/barcodemasters/changelog.html">Change Log</a> | <a href="/barcodemasters/privacy-policy.html">Privacy Policy</a></p> 
+    </footer>
+
 </body>
 </html>
