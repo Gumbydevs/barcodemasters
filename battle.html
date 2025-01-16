@@ -1966,7 +1966,9 @@
 
                     // Update battle log and show toast
                     addToLog(`🏆 Victory! Earned ${totalExp} XP!`);
-                    showToast(`Victory! Gained ${totalExp} XP! 🎉`);
+                    const randomVictoryMessage = victoryMessages[Math.floor(Math.random() * victoryMessages.length)]
+                        .replace('{username}', username);
+                    showToast(`${randomVictoryMessage}\nGained ${totalExp} XP! 🎉`);
 
                     // Get current monster data
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
@@ -2002,7 +2004,10 @@
                         console.log('Level up detected:', updates);
 
                         setTimeout(() => {
-                            showToast(`Level Up! Your monster is now level ${newLevel}! 🌟`, true);
+                            const randomLevelUpMessage = levelUpMessages[Math.floor(Math.random() * levelUpMessages.length)]
+                                .replace('{username}', username)
+                                .replace('{level}', updates.level);
+                            showToast(randomLevelUpMessage, true);
                             addToLog(`🌟 Level Up! Now level ${newLevel}!`);
                         }, 1500);
                     }
@@ -2237,7 +2242,9 @@
                     // Only show XP loss in messages if there was actual XP lost
                     if (actualXpLost > 0) {
                         addToLog(`💀 Defeat! Lost ${actualXpLost} XP!`);
-                        showToast(`Defeat! Lost ${actualXpLost} XP! ❌`, false, true);
+                        const randomDefeatMessage = defeatMessages[Math.floor(Math.random() * defeatMessages.length)]
+                            .replace('{username}', username);
+                        showToast(randomDefeatMessage, false, true);
                     } else {
                         addToLog(`💀 Defeat!`);
                         showToast(`Defeat! ❌`, false, true);
@@ -2572,6 +2579,31 @@
                 void healthBar.offsetWidth; // reflow to restart animation
                 healthBar.classList.add(isPlayer ? 'player-health-flash' : 'opponent-health-flash');
             };
+
+            // Add these arrays right before the showToast function in the BattleSystem component
+            const victoryMessages = [
+                "Amazing victory, {username}! You're getting stronger! 🌟",
+                "Incredible work, {username}! Keep up the great battling! 💪",
+                "Outstanding performance, {username}! You're a true champion! 🏆",
+                "Wonderful job, {username}! Your monster fought perfectly! ⭐",
+                "Spectacular win, {username}! You're becoming a master! 🌈"
+            ];
+
+            const levelUpMessages = [
+                "Phenomenal, {username}! Your monster reached level {level}! 🌟",
+                "Incredible growth, {username}! Level {level} achieved! ✨",
+                "You're unstoppable, {username}! Welcome to level {level}! 🎯",
+                "Outstanding progress, {username}! Level {level} unlocked! 🎊",
+                "Amazing advancement, {username}! Your monster is now level {level}! 💫"
+            ];
+
+            const defeatMessages = [
+                "Nice try, {username}! You'll get them next time! 💪",
+                "Keep going, {username}! Every battle makes you stronger! 🌟",
+                "Almost had it, {username}! Try training your monster more! 📈",
+                "Don't give up, {username}! You're getting better with each battle! ✨",
+                "Close one, {username}! A true master learns from every battle! 🎯"
+            ];
 
             // Update the return JSX
             return (
