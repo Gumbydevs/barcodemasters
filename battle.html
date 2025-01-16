@@ -1563,6 +1563,13 @@
             font-weight: bold;
             font-size: larger; /* Increased font size */
         }
+
+        .xp-gain {
+            color: #f39c12; /* Orange color for XP gains */
+        }
+        .level-up {
+            color: #2ecc71; /* Green color for level number */
+        }
     </style>
 </head>
 <body>
@@ -1974,7 +1981,8 @@
                     // Update battle log and show toast
                     addToLog(`🏆 Victory! Earned ${totalExp} XP!`);
                     const randomVictoryMessage = victoryMessages[Math.floor(Math.random() * victoryMessages.length)]
-                        .replace('{username}', username);
+                        .replace('{username}', username)
+                        .replace('{xp}', totalExp);
                     showToast(`${randomVictoryMessage}\nGained ${totalExp} XP! 🎉`);
 
                     // Get current monster data
@@ -2431,7 +2439,7 @@
                 toast = document.createElement('div');
                 toast.id = toastId;
                 toast.className = `toast${isLevelUp ? ' level-up' : ''}${isDefeat ? ' defeat' : ''}`;
-                toast.textContent = message;
+                toast.innerHTML = message; // Use innerHTML to handle HTML content
                 
                 console.log('Creating new toast:', { id: toastId, message }); // Debug log
                 document.body.appendChild(toast);
@@ -2589,27 +2597,27 @@
 
             // Add these arrays right before the showToast function in the BattleSystem component
             const victoryMessages = [
-                "Amazing victory, {username}! You're getting stronger! 🌟",
-                "Incredible work, {username}! Keep up the great battling! 💪",
-                "Outstanding performance, {username}! You're a true champion! 🏆",
-                "Wonderful job, {username}! Your monster fought perfectly! ⭐",
-                "Spectacular win, {username}! You're becoming a master! 🌈"
+                "Great win, {username}! Gained <span class='xp-gain'>{xp} XP</span>!",
+                "Awesome job, {username}! Earned <span class='xp-gain'>{xp} XP</span>!",
+                "Well done, {username}! Got <span class='xp-gain'>{xp} XP</span>!",
+                "Nice work, {username}! <span class='xp-gain'>{xp} XP</span> gained!",
+                "You did it, {username}! <span class='xp-gain'>{xp} XP</span> earned!"
             ];
 
             const levelUpMessages = [
-                "Phenomenal, {username}! Your monster reached level {level}! 🌟",
-                "Incredible growth, {username}! Level {level} achieved! ✨",
-                "You're unstoppable, {username}! Welcome to level {level}! 🎯",
-                "Outstanding progress, {username}! Level {level} unlocked! 🎊",
-                "Amazing advancement, {username}! Your monster is now level {level}! 💫"
+                "Level up! Now level <span class='level-up'>{level}</span>!",
+                "Congrats! Reached level <span class='level-up'>{level}</span>!",
+                "Amazing! Level <span class='level-up'>{level}</span>!",
+                "Great! Now level <span class='level-up'>{level}</span>!",
+                "Fantastic! Level <span class='level-up'>{level}</span>!"
             ];
 
             const defeatMessages = [
-                "Nice try, {username}! You'll get them next time! 💪",
-                "Keep going, {username}! Every battle makes you stronger! 🌟",
-                "Almost had it, {username}! Try training your monster more! 📈",
-                "Don't give up, {username}! You're getting better with each battle! ✨",
-                "Close one, {username}! A true master learns from every battle! 🎯"
+                "Tough luck, {username}! Try again!",
+                "Almost, {username}! Keep going!",
+                "Close one, {username}! Don't give up!",
+                "Not this time, {username}! Keep trying!",
+                "You'll get it, {username}! Stay strong!"
             ];
 
             // Update the return JSX
