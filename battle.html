@@ -1346,16 +1346,7 @@
         .battle-controls {
             margin: 2rem 0;
             padding: 1rem;
-        }
-    </style>
-</head>
-<body>
             white-space: nowrap;
-        }
-
-        /* Update the battle controls container for better spacing */
-        .battle-controls {
-            margin: 2rem 0;
             padding-bottom: 1.5rem; /* Add space for the disabled message */
         }
     </style>
@@ -1395,7 +1386,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.056</span></p>
+            <p>Version: <span id="versionNumber">1.0.0561</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -2479,7 +2470,7 @@
                         ></div>
                     </div>
 
-                    <div class="battle-log">
+                    <div className="battle-log">
                         <ul>
                             {battleLog.map((entry, index) => (
                                 <li key={Date.now() + index}>{entry}</li>
@@ -2689,4 +2680,3 @@
     </script>
 </body>
 </html>
-````
