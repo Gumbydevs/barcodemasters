@@ -829,7 +829,7 @@
         .monster-image-container {
             contain: layout size;
             will-change: transform;
-            transform: translateZ(0);
+            transform: translate3d(0,0,0);
             backface-visibility: hidden;
             isolation: isolate;
             position: relative;
@@ -851,9 +851,9 @@
             object-fit: contain;
             border-radius: 8px;
             pointer-events: none;
-            transform: translateZ(0);
+            transform: translate3d(0,0,0);
             backface-visibility: hidden;
-            -webkit-transform: translateZ(0);
+            -webkit-transform: translate3d(0,0,0);
             -webkit-backface-visibility: hidden;
             -webkit-perspective: 1000px;
             perspective: 1000px;
@@ -1386,7 +1386,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.0561</span></p>
+            <p>Version: <span id="versionNumber">1.0.0562</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
