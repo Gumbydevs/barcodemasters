@@ -293,6 +293,22 @@
                 width: 95%;
             }
         }
+
+        .rename-button {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .rename-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
     </style>
 </head>
 <body>
@@ -322,6 +338,22 @@
                             <div>Losses</div>
                             <strong id="playerLosses">0</strong>
                         </div>
+                        <div class="stat-box">
+                            <div>Total Monsters</div>
+                            <strong id="totalMonsters">0</strong>
+                        </div>
+                        <div class="stat-box">
+                            <div>Highest Level</div>
+                            <strong id="highestLevel">0</strong>
+                        </div>
+                        <div class="stat-box">
+                            <div>Unique Types</div>
+                            <strong id="uniqueTypes">0</strong>
+                        </div>
+                        <div class="stat-box">
+                            <div>Completion</div>
+                            <strong id="completionPercentage">0%</strong>
+                        </div>
                     </div>
                     <!-- MVP Monster Section -->
                     <div class="mvp-monster">
@@ -329,6 +361,7 @@
                         <p id="mvpMonsterName">Loading MVP...</p>
                         <p>Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
                     </div>
+                    <button class="rename-button" id="renamePlayerButton">Rename Player</button>
                 </div>
             </div>
         </div>
@@ -356,7 +389,7 @@
 
     <!-- Version Number -->
     <footer>
-        <p>Version: <span id="versionNumber">1.0.03</span></p>
+        <p>Version: <span id="versionNumber">1.0.04</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
 
@@ -364,7 +397,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -557,6 +590,9 @@
                     // Find and display MVP monster
                     const mvpMonster = await findMVPMonster(user.uid);
                     updateMVPMonster(mvpMonster);
+
+                    // Update player stats
+                    await updatePlayerStats(user.uid);
                 } else {
                     console.log("No such document!");
                 }
@@ -564,6 +600,37 @@
                 window.location.href = 'index.html';
             }
         });
+
+        // Function to fetch and update player stats
+        async function updatePlayerStats(userId) {
+            const db = getFirestore();
+            const monstersRef = collection(db, "monsters");
+            const q = query(monstersRef, where("ownerId", "==", userId));
+
+            try {
+                const querySnapshot = await getDocs(q);
+                let totalMonsters = 0;
+                let highestLevel = 0;
+                const uniqueTypes = new Set();
+
+                querySnapshot.forEach((doc) => {
+                    const monster = doc.data();
+                    totalMonsters++;
+                    highestLevel = Math.max(highestLevel, monster.level || 0);
+                    uniqueTypes.add(monster.type);
+                });
+
+                const totalTypes = (await getDocs(collection(db, "monsterTypes"))).size;
+                const completionPercentage = ((uniqueTypes.size / totalTypes) * 100).toFixed(1);
+
+                document.getElementById('totalMonsters').textContent = totalMonsters;
+                document.getElementById('highestLevel').textContent = highestLevel;
+                document.getElementById('uniqueTypes').textContent = uniqueTypes.size;
+                document.getElementById('completionPercentage').textContent = `${completionPercentage}%`;
+            } catch (error) {
+                console.error("Error fetching player stats:", error);
+            }
+        }
 
         // Handle dark mode toggle
         const darkModeToggle = document.getElementById("darkModeToggle");
@@ -576,6 +643,84 @@
         darkModeToggle.addEventListener("click", function() {
             document.body.classList.toggle("dark-mode");
             localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        });
+
+        // Add this new profanity filter function
+        function containsProfanity(text) {
+            const profanityList = ["ass", "bitch", "damn", "fuck", "shit", "bastard", "crap", "dick", "piss", "pussy", "slut", "whore", "fag", "cunt", "hell", "moron", "idiot", "retard", "wanker","twat","penis","cock"];
+            const regex = new RegExp(profanityList.join("|"), "i");
+            return regex.test(text);
+        }
+
+        // Function to show error message as a toast
+        function showToast(message, isError = false) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: ${isError ? 'rgba(231, 76, 60, 0.9)' : 'rgba(46, 204, 113, 0.9)'};
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                    z-index: 1000;
+                `;
+                document.body.appendChild(toast);
+            } else {
+                toast.style.background = isError ? 'rgba(231, 76, 60, 0.9)' : 'rgba(46, 204, 113, 0.9)';
+            }
+
+            toast.textContent = message;
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        // Function to rename player
+        async function renamePlayer(userId, currentName) {
+            try {
+                const newName = prompt("Enter a new player name:", currentName);
+                if (!newName || newName.trim() === "") return;
+
+                // Check for profanity
+                if (containsProfanity(newName)) {
+                    showToast("The new name contains inappropriate language. Please choose a different name.", true);
+                    return;
+                }
+
+                // Update the player's name in the database
+                const userRef = doc(getFirestore(), "users", userId);
+                await updateDoc(userRef, {
+                    username: newName.trim()
+                });
+
+                // Update the displayed name
+                document.getElementById("userName").textContent = newName.trim();
+                showToast('Player renamed successfully!');
+            } catch (error) {
+                console.error("Error renaming player:", error);
+                showToast("Failed to rename player: " + error.message, true);
+            }
+        }
+
+        // Handle rename player button click
+        document.getElementById('renamePlayerButton').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                const currentName = document.getElementById("userName").textContent;
+                await renamePlayer(user.uid, currentName);
+            }
         });
     </script>
 </body>
