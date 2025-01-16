@@ -2456,7 +2456,7 @@
                     console.log('Toast animation started');
                 });
 
-                // Hide and remove toast after delay
+                // Hide and remove toast after toasttimer delay
                 setTimeout(() => {
                     console.log('Starting toast removal animation');
                     toast.style.transform = 'translateY(100px)';
@@ -2468,7 +2468,7 @@
                             console.log('Toast removed from DOM');
                         }
                     }, 300);
-                }, 5000);
+                }, 10000); // Increased duration to 10 seconds
             };
 
             // Add calculateBattleRewards function
@@ -2595,25 +2595,26 @@
                 healthBar.classList.add(isPlayer ? 'player-health-flash' : 'opponent-health-flash');
             };
 
-            // Add these arrays right before the showToast function in the BattleSystem component
+            // Encouraging victory , level up and defeat messages
             const victoryMessages = [
-                "Great win, {username}! Gained <span class='xp-gain'>{xp}</span>!",
-                "Awesome job, {username}! Earned <span class='xp-gain'>{xp}</span>!",
-                "Well done, {username}! Got <span class='xp-gain'>{xp}</span>!",
-                "Nice work, {username}! <span class='xp-gain'>{xp}</span> gained!",
-                "You did it, {username}! <span class='xp-gain'>{xp}</span> earned!"
+                "Great win, {username}! Gained <span class='xp-gain' style='color: black'>{xp}</span>!",
+                "Awesome job, {username}! Earned <span class='xp-gain'style='color: black'>{xp}</span>!",
+                "Well done, {username}! Got <span class='xp-gain' style='color: black'>{xp}</span>!",
+                "Nice work, {username}! <span class='xp-gain' style='color: black'>{xp}</span> gained!",
+                "You did it, {username}! <span class='xp-gain' style='color: black'>{xp}</span> earned!"
             ];
 
             const levelUpMessages = [
-                "Level up! Now level <span class='level-up'>{level}</span>!",
-                "Congrats! Reached level <span class='level-up'>{level}</span>!",
-                "Amazing! Level <span class='level-up'>{level}</span>!",
-                "Great! Now level <span class='level-up'>{level}</span>!",
-                "Fantastic! Level <span class='level-up'>{level}</span>!"
+                "Level up! {playerMonster.monsterName} is now level <span class='level-up' style='color: black'>{level}</span>!",
+                "Congrats! {playerMonster.monsterName} reached level <span class='level-up' style='color: black'>{level}</span>!",
+                "Amazing! Level <span class='level-up' style='color: black'>{level}</span>!",
+                "Great stuff! {playerMonster.monsterName} is now level <span class='level-up' style='color: black'>{level}</span>!",
+                "Fantastic! {playerMonster.monsterName} hit Level <span class='level-up' style='color: black'>{level}</span>!"
             ];
 
             const defeatMessages = [
                 "Tough luck, {username}! Try again!",
+                "Train your monsters, {username}! You'll win next time!",
                 "Almost, {username}! Keep going!",
                 "Close one, {username}! Don't give up!",
                 "Not this time, {username}! Keep trying!",
