@@ -809,7 +809,7 @@
 
             // Check for profanity
             if (containsProfanity(newName)) {
-                showError("The new name contains inappropriate language. Please choose a different name.");
+                showToast("The new name contains inappropriate language. Please choose a different name.", false, true);
                 return;
             }
 
