@@ -46,6 +46,85 @@
         <button class="nav-button" onclick="location.href='profile.html'">Back to game!</button>
     </div>
 
+    <h2>Changelog for January 16, 2024</h2>
+    <h3>Added / Changed</h3>
+    <ul>
+        <li><strong>Profile Image Upload:</strong>
+            <ul>
+                <li>Implemented functionality to upload and display player profile images.</li>
+                <li>Profile images are saved in Firebase Storage under user-images/playerID.</li>
+                <li>Updated profile page to show the uploaded player photo.</li>
+            </ul>
+        </li>
+        <li><strong>Profanity Filter:</strong>
+            <ul>
+                <li>Added a profanity filter to prevent inappropriate language in player names.</li>
+                <li>Implemented real-time checking for profanity during player name changes.</li>
+            </ul>
+        </li>
+        <li><strong>Toast Notifications:</strong>
+            <ul>
+                <li>Added toast notifications for various actions, including errors and successes.</li>
+                <li>Implemented toast notifications for profile photo updates and player renaming.</li>
+            </ul>
+        </li>
+        <li><strong>Battle Animations:</strong>
+            <ul>
+                <li>Added animations to battles, currently working for the player side.</li>
+                <li>Still troubleshooting to make animations show for the opponent side.</li>
+            </ul>
+        </li>
+        <li><strong>Monster Types:</strong>
+            <ul>
+                <li>Added new monster types, increasing the total to 225 monsters.</li>
+                <li>This surpasses the original Pokémon launch count of 151!</li>
+            </ul>
+        </li>
+    </ul>
+
+
+    <ul>
+        <li><strong>Dark Mode Toggle:</strong>
+            <ul>
+                <li>Improved dark mode toggle functionality with localStorage support.</li>
+                <li>Ensured dark mode state persists across sessions.</li>
+            </ul>
+        </li>
+        <li><strong>User Stats in Player Profile:</strong>
+            <ul>
+                <li>Added more user stats to player profile (most monsters, collection progression, unique types, etc.).</li>
+                <li>Added ability for player to rename themselves.</li>
+            </ul>
+        </li>
+        <li><strong>Experience Gain Balancing:</strong>
+            <ul>
+                <li>Balanced experience gain to ensure fair progression.</li>
+                <li>Fixed issues preventing negative XP.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Fixed</h3>
+    <ul>
+        <li><strong>Profile Image Display:</strong>
+            <ul>
+                <li>Resolved issues with displaying the uploaded profile image on the profile page.</li>
+                <li>Ensured proper background image styling for the avatar placeholder.</li>
+            </ul>
+        </li>
+        <li><strong>Player Stats Update:</strong>
+            <ul>
+                <li>Fixed issues with updating player stats in real-time.</li>
+                <li>Improved error handling during player stats fetching and updating.</li>
+            </ul>
+        </li>
+        <li><strong>iOS Image Flicker Issue:</strong>
+            <ul>
+                <li>Spent extensive hours trying to fix the iOS image flicker issue with no success.</li>
+            </ul>
+        </li>
+    </ul>
+
     <h2>Changelog for January 15, 2024</h2>
     <h3>Enhanced</h3>
     <ul>
