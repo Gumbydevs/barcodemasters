@@ -21,6 +21,10 @@
             margin: 0; 
             padding: 0; 
             min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
         }
         
         body.dark-mode {
@@ -33,7 +37,8 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 1rem;
-            padding-top: 6rem;
+            padding-top: 2rem; /* Reduced padding-top */
+            padding-bottom: 2rem; /* Reduced padding-bottom */
             box-sizing: border-box;
             color: inherit; /* Inherit text color from body */
             background: rgba(12, 12, 12, 0.1);
@@ -47,7 +52,8 @@
         @media (max-width: 480px) {
     .battle-container {
         padding: 0.5rem;
-        padding-top: 3rem;
+        padding-top: 1rem; /* Reduced padding-top */
+        padding-bottom: 1rem; /* Reduced padding-bottom */
         font-size: 0.9rem;
     }
 
@@ -1549,12 +1555,13 @@
         .battle-log li.victory-message {
             color: #2ecc71;
             font-weight: bold;
-            font-size:xx-small;
+            font-size: larger; /* Increased font size */
         }
 
         .battle-log li.defeat-message {
             color: #e74c3c;
             font-weight: bold;
+            font-size: larger; /* Increased font size */
         }
     </style>
 </head>
