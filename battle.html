@@ -1449,7 +1449,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05631</span></p>
+            <p>Version: <span id="versionNumber">1.0.05632</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -2087,13 +2087,14 @@
                 try {
                     const currentExp = parseInt(playerMonster.experience) || 0;
                     const lostExp = Math.floor(currentExp * 0.1); // Lose 10% of current XP
-                    const newExp = Math.max(0, currentExp - lostExp);
+                    const newExp = Math.max(0, currentExp - lostExp); // Ensure exp doesn't go below 0
 
-                    // Update battle log
-                    addToLog(`💀 Defeat! Lost ${lostExp} XP!`);
+                    // Update battle log with actual XP lost
+                    const actualLostExp = currentExp - newExp; // Calculate actual XP lost
+                    addToLog(`💀 Defeat! Lost ${actualLostExp} XP!`);
                     
-                    // Show toast notification
-                    showToast(`Defeat! Lost ${lostExp} XP! ❌`, false, true);
+                    // Show toast notification with actual XP lost
+                    showToast(`Defeat! Lost ${actualLostExp} XP! ❌`, false, true);
 
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
                     await monsterRef.update({ experience: newExp });
