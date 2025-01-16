@@ -2228,32 +2228,24 @@
                     const currentExp = parseInt(playerMonster.experience) || 0;
                     const currentLevel = parseInt(playerMonster.level) || 1;
                     
-                    // Get minimum XP required for current level
                     const minXpForCurrentLevel = monsterStats.calculateTotalXPToLevel(currentLevel);
-                    
-                    // Calculate XP above the minimum threshold
                     const xpAboveThreshold = Math.max(0, currentExp - minXpForCurrentLevel);
-                    
-                    // Calculate XP loss (10% of XP above threshold)
                     const xpLoss = Math.floor(xpAboveThreshold * 0.1);
-                    
-                    // Ensure new XP doesn't go below current level's minimum
                     const newExp = Math.max(minXpForCurrentLevel, currentExp - xpLoss);
-                    
-                    // Calculate actual XP lost
                     const actualXpLost = currentExp - newExp;
 
-                    // Update battle log with actual XP lost
-                    addToLog(`💀 Defeat! Lost ${actualXpLost} XP!`);
-                    
-                    // Show toast notification with actual XP lost
-                    showToast(`Defeat! Lost ${actualXpLost} XP! ❌`, false, true);
+                    // Only show XP loss in messages if there was actual XP lost
+                    if (actualXpLost > 0) {
+                        addToLog(`💀 Defeat! Lost ${actualXpLost} XP!`);
+                        showToast(`Defeat! Lost ${actualXpLost} XP! ❌`, false, true);
+                    } else {
+                        addToLog(`💀 Defeat!`);
+                        showToast(`Defeat! ❌`, false, true);
+                    }
 
                     if (actualXpLost > 0) {
                         const monsterRef = db.collection('monsters').doc(playerMonster.id);
                         await monsterRef.update({ experience: newExp });
-
-                        // Update local state
                         setPlayerMonster(prev => ({
                             ...prev,
                             experience: newExp
