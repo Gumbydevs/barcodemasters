@@ -1044,11 +1044,28 @@
 
         /* Add opponent-specific animation classes */
         .opponent-damage-animation {
-            animation: damage-flash 0.5s ease-in-out;
+            animation: damage-flash 0.5s ease-in-out !important;
         }
 
-        .opponent-shake-animation {
-            animation: shake 0.5s ease-in-out;
+        .opponent-heal-animation {
+            animation: heal-pulse 0.8s ease-in-out !important;
+        }
+
+        .opponent-defend-animation {
+            animation: defense-glow 2s ease-in-out infinite !important;
+        }
+
+        .opponent-crit-animation {
+            animation: special-attack-glow 1s ease-in-out !important;
+        }
+
+        /* Ensure animations work on both player and opponent containers */
+        .battle-container .monster:last-child .monster-image-container.opponent-damage-animation,
+        .battle-container .monster:last-child .monster-image-container.opponent-heal-animation,
+        .battle-container .monster:last-child .monster-image-container.opponent-defend-animation,
+        .battle-container .monster:last-child .monster-image-container.opponent-crit-animation {
+            animation-play-state: running !important;
+            animation-fill-mode: both !important;
         }
 
         /* Add hardware acceleration for opponent container */
@@ -1223,12 +1240,12 @@
         }
 
         .battle-container .monster:last-child.shake-animation,
-        .battle-container .monster:last-child.opponent-shake-animation {
+        .battle-container .monster.last-child.opponent-shake-animation {
             animation: shake 0.5s ease-in-out !important;
         }
 
         .battle-container .monster:last-child .monster-image-container.damage-animation,
-        .battle-container .monster:last-child .monster-image-container.opponent-damage-animation {
+        .battle-container .monster.last-child .monster-image-container.opponent-damage-animation {
             animation: damage-flash 0.5s ease-in-out !important;
         }
 
@@ -1349,6 +1366,26 @@
             white-space: nowrap;
             padding-bottom: 1.5rem; /* Add space for the disabled message */
         }
+
+        /* Update battle log and controls spacing */
+        .battle-log {
+            height: 100px; /* Reduced from 120px */
+            margin: 10px 0; /* Reduced from 20px */
+        }
+
+        .battle-controls {
+            margin: 0.5rem 0; /* Reduced from 2rem */
+            padding: 0.5rem; /* Reduced from 1rem */
+        }
+
+        /* Update victory/defeat section spacing */
+        .victory-text, .defeat-text {
+            margin: 0.5rem 0; /* Reduced from 1rem */
+        }
+
+        .battle-controls button {
+            margin: 3px; /* Reduced from 5px */
+        }
     </style>
 </head>
 <body>
@@ -1386,7 +1423,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.0562</span></p>
+            <p>Version: <span id="versionNumber">1.0.0563</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1464,35 +1501,12 @@
             return Math.min(100, Math.max(0, progress));
         };
 
-        // Add this optimized MonsterImage component before the BattleSystem component
+        // Simplified MonsterImage component
         const MonsterImage = React.memo(({ monster, isAI = false }) => {
-            // Create refs to maintain stable values
-            const stableUrl = React.useRef(isAI ? aiImageUrl : monster?.imageUrl);
-            const stableKey = React.useRef(`${isAI ? 'ai' : 'player'}-${stableUrl.current}`);
-            const containerRef = React.useRef(null);
-            
-            // Only update refs if URL actually changes
-            React.useEffect(() => {
-                const newUrl = isAI ? aiImageUrl : monster?.imageUrl;
-                if (newUrl !== stableUrl.current) {
-                    stableUrl.current = newUrl;
-                    stableKey.current = `${isAI ? 'ai' : 'player'}-${newUrl}`;
-                }
-            }, [isAI, aiImageUrl, monster?.imageUrl]);
+            const imageUrl = isAI ? monster?.aiImageUrl : monster?.imageUrl;
 
-            // Ensure transform properties are applied once
-            React.useEffect(() => {
-                if (containerRef.current) {
-                    containerRef.current.style.transform = 'translateZ(0)';
-                    containerRef.current.style.webkitTransform = 'translateZ(0)';
-                    containerRef.current.style.backfaceVisibility = 'hidden';
-                    containerRef.current.style.webkitBackfaceVisibility = 'hidden';
-                }
-            }, []);
-            
             return (
                 <div 
-                    ref={containerRef}
                     className="monster-image-container"
                     style={{
                         contain: 'strict',
@@ -1501,26 +1515,16 @@
                         WebkitTransform: 'translateZ(0)',
                         backfaceVisibility: 'hidden',
                         WebkitBackfaceVisibility: 'hidden',
-                        perspective: '1000px',
-                        WebkitPerspective: '1000px'
                     }}
                 >
-                    {stableUrl.current ? (
+                    {imageUrl ? (
                         <img 
-                            key={stableKey.current}
-                            src={stableUrl.current}
+                            src={imageUrl}
                             alt={isAI ? 'AI Opponent' : monster?.monsterName}
-                            loading="eager"
-                            decoding="sync"
                             style={{
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'contain',
-                                transform: 'translateZ(0)',
-                                WebkitTransform: 'translateZ(0)',
-                                backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden',
-                                willChange: 'transform'
                             }}
                         />
                     ) : (
@@ -1528,11 +1532,10 @@
                     )}
                 </div>
             );
-        }, (prev, next) => {
-            // Only re-render if the URL actually changes
-            const prevUrl = prev.isAI ? aiImageUrl : prev.monster?.imageUrl;
-            const nextUrl = next.isAI ? aiImageUrl : next.monster?.imageUrl;
-            return prevUrl === nextUrl;
+        }, (prevProps, nextProps) => {
+            // Prevent re-render if the image URL hasn't changed
+            return prevProps.monster?.imageUrl === nextProps.monster?.imageUrl &&
+                   prevProps.isAI === nextProps.isAI;
         });
 
         const BattleSystem = () => {
@@ -1946,6 +1949,17 @@
                 }
 
                 // Execute the chosen action
+                const opponentContainer = document.querySelector('.battle-container .monster:last-child');
+                const opponentImage = opponentContainer?.querySelector('.monster-image-container');
+                const playerContainer = document.querySelector('.battle-container .monster:first-child');
+                const playerImage = playerContainer?.querySelector('.monster-image-container');
+
+                // Clear any existing animations
+                if (opponentImage) {
+                    opponentImage.classList.remove('opponent-heal-animation', 'opponent-defend-animation', 'opponent-damage-animation', 'opponent-crit-animation');
+                    void opponentImage.offsetWidth;
+                }
+
                 switch (action) {
                     case 'heal':
                         const healPercent = 0.3; // Heal 30% of max HP
@@ -1955,21 +1969,17 @@
                         addToLog(`Opponent healed for ${newHealth - opponentHealth} HP!`);
                         
                         // Add visual effect
-                        const healOpponentElement = document.querySelector('.battle-container .monster:last-child');
-                        if (healOpponentElement) {
-                            healOpponentElement.classList.remove('heal-animation');
-                            void healOpponentElement.offsetWidth;
-                            healOpponentElement.classList.add('heal-animation');
+                        if (opponentImage) {
+                            opponentImage.classList.add('opponent-heal-animation');
                             setTimeout(() => {
-                                healOpponentElement.classList.remove('heal-animation');
+                                opponentImage.classList.remove('opponent-heal-animation');
                             }, 800);
                         }
                         break;
 
                     case 'defend':
-                        const opponentElement = document.querySelector('.battle-container .monster:last-child');
-                        if (opponentElement) {
-                            opponentElement.classList.add('defending');
+                        if (opponentImage) {
+                            opponentImage.classList.add('opponent-defend-animation');
                         }
                         addToLog("Opponent is defending against the next attack!");
                         window.aiDefending = true;
