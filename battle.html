@@ -57,10 +57,12 @@
 
             .battle-log {
                 background: rgba(0, 0, 0, 0.15); /* Slightly darker for better contrast on mobile */
+                
             }
 
             body.dark-mode .battle-log {
                 background: rgba(0, 0, 0, 0.3); /* Even darker in dark mode for better contrast */
+                
             }
         }
 
@@ -101,13 +103,14 @@
         }
 
         .nav-button {
-            padding: 1rem;
+            padding: 0rem;
             border: none;
             border-radius: 8px;
             background: linear-gradient(135deg, #2c3e50, #3498db);
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
+            align-self: top;
         }
 
         /* Footer */
@@ -159,7 +162,7 @@
         body.dark-mode .monster-name { color: #60a5fa; /* Lighter blue for dark mode */ }
         button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; cursor: pointer; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .battle-log { background: rgba(0, 0, 0, 0.1); /* Slightly darker background for better contrast */ border-radius: 8px; padding: 10px; margin: 20px 0; max-height: 150px; overflow-y: auto; color: inherit; text-align: center; /* Center the text */ }
+        .battle-log { background: rgba(0, 0, 0, 0.1); /* Slightly darker background for better contrast */ border-radius: 8px; padding: 10px; margin: 20px 0; max-height: 50px; overflow-y: auto; color: inherit; text-align: center; /* Center the text */ }
         .timer { display: none; } /* This will hide any existing timer elements */ body[data-theme="dark"] .timer {color: inherit; /* Remove the specific color override */}
         .start-battle-button { padding: 1rem 2rem; margin-bottom: 2rem; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; cursor: pointer; font-size: 1.2rem; }
         .start-battle-button:hover { background: linear-gradient(135deg, #34495e, #2980b9); }
@@ -527,7 +530,7 @@
 
         /* Battle controls positioning */
         .battle-controls {
-            margin-top: 0; /* Remove auto margin */
+            margin: 2rem 0;
             padding: 1rem;
             background: inherit;
             z-index: 10;
@@ -1232,6 +1235,129 @@
         .battle-container .monster:last-child .monster-image-container.special-attack-animation {
             animation: special-attack-glow 1s ease-in-out !important;
         }
+
+        /* New animations for health bar flashing (damage/heal) */
+        @keyframes healthBarFlash {
+            0% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.5) saturate(1.3); }
+            100% { filter: brightness(1) saturate(1); }
+        }
+
+        /* Classes for player and opponent health bar VFX */
+        .player-health-flash {
+            animation: healthBarFlash 0.5s ease-in-out;
+        }
+        .opponent-health-flash {
+            animation: healthBarFlash 0.5s ease-in-out;
+        }
+
+        /* Enhanced health bar flash animation */
+        @keyframes healthBarFlash {
+            0% { 
+                filter: brightness(1) saturate(1);
+                transform: scaleY(1);
+            }
+            50% { 
+                filter: brightness(2) saturate(2);
+                transform: scaleY(1.2);
+            }
+            100% { 
+                filter: brightness(1) saturate(1);
+                transform: scaleY(1);
+            }
+        }
+
+        /* Enhanced shake animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-2deg); }
+            75% { transform: translateX(10px) rotate(2deg); }
+        }
+
+        /* Enhanced heal pulse animation */
+        @keyframes heal-pulse {
+            0% { filter: brightness(1); }
+            50% { 
+                filter: brightness(2) drop-shadow(0 0 20px #2ecc71) 
+                       drop-shadow(0 0 30px #27ae60);
+            }
+            100% { filter: brightness(1); }
+        }
+
+        /* Enhanced damage flash animation */
+        @keyframes damage-flash {
+            0% { filter: brightness(1); }
+            50% { 
+                filter: brightness(2) drop-shadow(0 0 20px #e74c3c) 
+                       drop-shadow(0 0 30px #c0392b);
+            }
+            100% { filter: brightness(1); }
+        }
+
+        /* Enhanced special attack glow */
+        @keyframes special-attack-glow {
+            0% { filter: brightness(1); }
+            50% { 
+                filter: brightness(2.5) drop-shadow(0 0 25px #f39c12) 
+                       drop-shadow(0 0 40px #e67e22);
+            }
+            100% { filter: brightness(1); }
+        }
+
+        /* Enhanced defense glow */
+        @keyframes defense-glow {
+            0% { box-shadow: 0 0 10px 5px rgba(52, 152, 219, 0.6); }
+            50% { box-shadow: 0 0 25px 10px rgba(52, 152, 219, 0.8); }
+            100% { box-shadow: 0 0 10px 5px rgba(52, 152, 219, 0.6); }
+        }
+
+        /* Make health bar effects more visible */
+        .player-health-flash, .opponent-health-flash {
+            animation: healthBarFlash 0.5s ease-in-out;
+            transform-origin: center;
+        }
+
+        /* Update durations for more impactful animations */
+        .shake-animation, .opponent-shake-animation {
+            animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both !important;
+        }
+
+        .heal-animation {
+            animation: heal-pulse 1s ease-in-out !important;
+        }
+
+        .damage-animation, .opponent-damage-animation {
+            animation: damage-flash 0.7s ease-in-out !important;
+        }
+
+        .special-attack-animation {
+            animation: special-attack-glow 1.2s ease-in-out !important;
+        }
+
+        /* Add these new styles for disabled battle controls */
+        .battle-controls button[disabled] {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        /* Update the battle controls container for better spacing */
+        .battle-controls {
+            margin: 2rem 0;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+            white-space: nowrap;
+        }
+
+        /* Update the battle controls container for better spacing */
+        .battle-controls {
+            margin: 2rem 0;
+            padding-bottom: 1.5rem; /* Add space for the disabled message */
+        }
     </style>
 </head>
 <body>
@@ -1269,7 +1395,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.055</span></p>
+            <p>Version: <span id="versionNumber">1.0.056</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -2259,6 +2385,19 @@
                 }
             }, [playerMonster, opponentMonster, aiImageUrl]);
 
+            // Add this function to apply health bar VFX
+            const applyHealthBarVFX = (isPlayer) => {
+                const healthBar = isPlayer 
+                    ? document.querySelector('.health-fill.player-health') 
+                    : document.querySelector('.health-fill.opponent-health');
+                if (!healthBar) return;
+              
+                // Add VFX class then remove it after animation
+                healthBar.classList.remove(isPlayer ? 'player-health-flash' : 'opponent-health-flash');
+                void healthBar.offsetWidth; // reflow to restart animation
+                healthBar.classList.add(isPlayer ? 'player-health-flash' : 'opponent-health-flash');
+            };
+
             // Update the return JSX
             return (
                 <div className="battle-container">
@@ -2340,7 +2479,7 @@
                         ></div>
                     </div>
 
-                    <div className="battle-log">
+                    <div class="battle-log">
                         <ul>
                             {battleLog.map((entry, index) => (
                                 <li key={Date.now() + index}>{entry}</li>
@@ -2348,55 +2487,61 @@
                         </ul>
                     </div>
 
-                    <div className="battle-controls">
-                        {!isBattleOver && isPlayerTurn ? (
-                            <div>
-                                <button onClick={handleAttack} disabled={isBattleOver || battleState !== 'ongoing'}>
-                                    Attack
-                                </button>
-                                <button onClick={handleDefend} disabled={isBattleOver || battleState !== 'ongoing'}>
-                                    Defend
-                                </button>
-                                <button onClick={handleHeal} disabled={isBattleOver || battleState !== 'ongoing'}>
-                                    Heal
-                                </button>
-                                <button 
-                                    onClick={handleSpecialAttack} 
-                                    disabled={isBattleOver || battleState !== 'ongoing' || specialCooldown > 0}
-                                    style={{
-                                        background: specialCooldown > 0 ? 
-                                            'linear-gradient(135deg, #666, #999)' : 
-                                            'linear-gradient(135deg, #c0392b, #e74c3c)',
-                                        position: 'relative'
-                                    }}
-                                >
-                                    Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
-                                </button>
-                            </div>
-                        ) : (
-                            <div>
-                                {isBattleOver && (
-                                    <div>
-                                        <h3 className={battleState === 'victory' ? 'victory-text' : 'defeat-text'}>
-                                            {opponentHealth <= 0 ? '🏆 Victory!' : '💀 Defeat!'}
-                                        </h3>
-                                        <button 
-                                            className="nav-button start-new-battle" 
-                                            onClick={() => window.location.reload()}
-                                            style={{marginBottom: '10px'}}
-                                        >
-                                            Start New Battle
-                                        </button>
-                                        <button 
-                                            className="nav-button" 
-                                            onClick={() => window.location.href='monster-collection.html'}
-                                        >
-                                            Return to Collection
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                    <div className={`battle-controls ${!isPlayerTurn ? 'opponent-turn' : ''}`}>
+                        <div>
+                            {!isBattleOver ? (
+                                <div>
+                                    <button 
+                                        onClick={handleAttack} 
+                                        disabled={!isPlayerTurn || battleState !== 'ongoing'}
+                                    >
+                                        Attack
+                                    </button>
+                                    <button 
+                                        onClick={handleDefend} 
+                                        disabled={!isPlayerTurn || battleState !== 'ongoing'}
+                                    >
+                                        Defend
+                                    </button>
+                                    <button 
+                                        onClick={handleHeal} 
+                                        disabled={!isPlayerTurn || battleState !== 'ongoing'}
+                                    >
+                                        Heal
+                                    </button>
+                                    <button 
+                                        onClick={handleSpecialAttack} 
+                                        disabled={!isPlayerTurn || battleState !== 'ongoing' || specialCooldown > 0}
+                                        style={{
+                                            background: specialCooldown > 0 ? 
+                                                'linear-gradient(135deg, #666, #999)' : 
+                                                'linear-gradient(135deg, #c0392b, #e74c3c)',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <h3 className={battleState === 'victory' ? 'victory-text' : 'defeat-text'}>
+                                        {opponentHealth <= 0 ? '🏆 Victory!' : '💀 Defeat!'}
+                                    </h3>
+                                    <button 
+                                        className="nav-button start-new-battle" 
+                                        onClick={() => window.location.reload()}
+                                    >
+                                        Start New Battle
+                                    </button>
+                                    <button 
+                                        className="nav-button" 
+                                        onClick={() => window.location.href='monster-collection.html'}
+                                    >
+                                        Return to Collection
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
@@ -2544,3 +2689,4 @@
     </script>
 </body>
 </html>
+````
