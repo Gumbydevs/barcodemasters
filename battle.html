@@ -65,8 +65,9 @@
     }
 
     .battle-controls button {
-        padding: 8px 16px;
+        padding: 8px 1px;
         font-size: 0.9rem;
+        
     }
 }
 
@@ -166,7 +167,7 @@
         body.dark-mode .monster-name { color: #60a5fa; /* Lighter blue for dark mode */ }
         button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; cursor: pointer; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .battle-log { background: rgba(0, 0, 0, 0.1); /* Slightly darker background for better contrast */ border-radius: 8px; padding: 10px; margin: 20px 0; max-height: 50px; overflow-y: auto; color: inherit; text-align: center; /* Center the text */ }
+        .battle-log { background: rgba(0, 0, 0, 0.1); /* Slightly darker background for better contrast */ border-radius: 8px; padding: 10px; margin: 20px 0; max-height: 50px; overflow-y: auto; color: inherit; font-size:small; text-align: center; /* Center the text */ }
         .timer { display: none; } /* This will hide any existing timer elements */ body[data-theme="dark"] .timer {color: inherit; /* Remove the specific color override */}
         .start-battle-button { padding: 1rem 2rem; margin-bottom: 2rem; border: none; border-radius: 8px; background: linear-gradient(135deg, #2c3e50, #3498db); color: white; cursor: pointer; font-size: 1.2rem; }
         .start-battle-button:hover { background: linear-gradient(135deg, #34495e, #2980b9); }
@@ -1514,6 +1515,47 @@
         .heal-animation { animation: heal-pulse 0.8s ease-in-out; }
         .damage-animation { animation: damage-flash 0.5s ease-in-out; }
         .special-attack-animation { animation: special-attack-glow 0.8s ease-in-out; }
+
+        /* Update battle controls container for better centering */
+        .battle-controls {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            text-align: center; /* Add this */
+        }
+
+        .battle-controls > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Add this */
+        }
+
+        .battle-controls > div > div {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Add this */
+            gap: 5px; /* Add this for consistent spacing */
+            width: 100%; /* Add this */
+            max-width: 600px; /* Add this to prevent too wide on large screens */
+        }
+
+        /* Adjust button margins for better spacing */
+        .battle-controls button {
+            margin: 1px;
+            flex: 0 1 auto; /* Add this to prevent button stretching */
+            min-width: 80px; /* Add this to maintain minimum button width */
+        }
+
+        /* Update battle log styles for better readability */
+        .battle-log li.victory-message {
+            color: #2ecc71;
+            font-weight: bold;
+            font-size:xx-small;
+        }
+
+        .battle-log li.defeat-message {
+            color: #e74c3c;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -1551,7 +1593,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05636</span></p>
+            <p>Version: <span id="versionNumber">1.0.05637</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -2623,7 +2665,15 @@
                     <div className="battle-log">
                         <ul>
                             {battleLog.map((entry, index) => (
-                                <li key={Date.now() + index}>{entry}</li>
+                                <li 
+                                    key={Date.now() + index}
+                                    className={
+                                        entry.includes('Victory!') ? 'victory-message' : 
+                                        entry.includes('Defeat!') ? 'defeat-message' : ''
+                                    }
+                                >
+                                    {entry}
+                                </li>
                             ))}
                         </ul>
                     </div>
@@ -2665,9 +2715,6 @@
                                 </div>
                             ) : (
                                 <div>
-                                    <h3 className={battleState === 'victory' ? 'victory-text' : 'defeat-text'}>
-                                        {opponentHealth <= 0 ? '🏆 Victory!' : '💀 Defeat!'}
-                                    </h3>
                                     <button 
                                         className="nav-button start-new-battle" 
                                         onClick={() => window.location.reload()}
