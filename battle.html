@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"="width=device-width, initial-scale=1.0">
     <title>Barcode Masters - Battle System</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -1412,6 +1412,71 @@
         .monster.opponent .monster-image-container.damage-animation {
             animation: damage-flash 0.5s ease-in-out;
         }
+
+        .battle-container .monster.shake-animation .monster-image-container img {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .battle-container .monster.heal-animation .monster-image-container img {
+            animation: heal-pulse 0.8s ease-in-out;
+        }
+
+        .battle-container .monster.damage-animation .monster-image-container img {
+            animation: damage-flash 0.5s ease-in-out;
+        }
+
+        .battle-container .monster.special-attack-animation .monster-image-container img {
+            animation: special-attack-glow 1s ease-in-out;
+        }
+
+        /* Ensure opponent monster also applies animations */
+        .battle-container .opponent-monster.shake-animation .monster-image-container img,
+        .battle-container .opponent-monster.heal-animation .monster-image-container img,
+        .battle-container .opponent-monster.damage-animation .monster-image-container img,
+        .battle-container .opponent-monster.special-attack-animation .monster-image-container img {
+            animation-duration: 0.8s; /* matching your existing durations */
+            animation-timing-function: ease-in-out;
+        }
+
+        /* Consolidated monster-image-container styling */
+        .monster-image-container {
+            width: 150px;
+            height: 150px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            transform: none;
+            contain: none;
+        }
+
+        .monster-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            pointer-events: none;
+            transform: none;
+        }
+
+        @supports (-webkit-overflow-scrolling: touch) {
+            .monster-image-container,
+            .monster-image-container img {
+                transform: none !important;
+                contain: none !important;
+            }
+        }
+
+        /* Animations target the container only */
+        .shake-animation { animation: shake 0.5s ease-in-out; }
+        .heal-animation { animation: heal-pulse 0.8s ease-in-out; }
+        .damage-animation { animation: damage-flash 0.5s ease-in-out; }
+        .special-attack-animation { animation: special-attack-glow 0.8s ease-in-out; }
     </style>
 </head>
 <body>
@@ -1449,7 +1514,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05632</span></p>
+            <p>Version: <span id="versionNumber">1.0.05633</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
