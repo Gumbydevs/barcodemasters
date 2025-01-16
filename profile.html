@@ -95,6 +95,8 @@
             justify-content: center;
             color: white;
             font-size: 24px;
+            background-size: cover; /* Add this */
+            background-position: center; /* Add this */
         }
 
         .stats-container {
@@ -309,6 +311,22 @@
         .rename-button:hover {
             background: linear-gradient(135deg, #34495e, #2980b9);
         }
+
+        .upload-button {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .upload-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
     </style>
 </head>
 <body>
@@ -324,9 +342,10 @@
 
             <!-- Player Info -->
             <div class="player-info">
-                <div class="avatar-placeholder">
+                <div class="avatar-placeholder" id="avatarPlaceholder">
                     👤
                 </div>
+                <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
                 <div class="player-details">
                     <h2 id="userName">Loading...</h2>
                     <div class="stats-container">
@@ -362,6 +381,7 @@
                         <p>Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
                     </div>
                     <button class="rename-button" id="renamePlayerButton">Rename Player</button>
+                    <button class="upload-button" id="uploadImageButton">Change Profile Photo</button>
                 </div>
             </div>
         </div>
@@ -398,6 +418,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -412,6 +433,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         // Game tips array
         const gameTips = [
@@ -585,8 +607,11 @@
                 const docSnap = await getDoc(userRef);
 
                 if (docSnap.exists()) {
-                    document.getElementById("userName").textContent = docSnap.data().username;
-                    
+                    const userData = docSnap.data();
+                    document.getElementById("userName").textContent = userData.username;
+                    if (userData.profileImageUrl) {
+                        document.getElementById('avatarPlaceholder').style.backgroundImage = `url(${userData.profileImageUrl})`;
+                    }
                     // Find and display MVP monster
                     const mvpMonster = await findMVPMonster(user.uid);
                     updateMVPMonster(mvpMonster);
@@ -720,6 +745,41 @@
             if (user) {
                 const currentName = document.getElementById("userName").textContent;
                 await renamePlayer(user.uid, currentName);
+            }
+        });
+
+        // Function to handle profile image upload
+        async function uploadProfileImage(file, userId) {
+            const storageRef = ref(storage, `user-images/${userId}`);
+            try {
+                await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(storageRef);
+                await updateDoc(doc(getFirestore(), "users", userId), {
+                    profileImageUrl: downloadURL
+                });
+                document.getElementById('avatarPlaceholder').style.backgroundImage = `url(${downloadURL})`;
+                showToast('Profile photo updated successfully!');
+            } catch (error) {
+                console.error("Error uploading profile image:", error);
+                showToast("Failed to upload profile image: " + error.message, true);
+            }
+        }
+
+        // Handle upload image button click
+        document.getElementById('uploadImageButton').addEventListener('click', () => {
+            document.getElementById('profileImageInput').click();
+        });
+
+        // Handle file input change
+        document.getElementById('profileImageInput').addEventListener('change', async (event) => {
+            const user = auth.currentUser;
+            if (user && event.target.files.length > 0) {
+                const file = event.target.files[0];
+                if (file.size > 2 * 1024 * 1024) { // Limit file size to 2MB
+                    showToast("File size exceeds 2MB. Please choose a smaller file.", true);
+                    return;
+                }
+                await uploadProfileImage(file, user.uid);
             }
         });
     </script>
