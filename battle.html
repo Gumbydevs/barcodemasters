@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Barcode Masters - Battle System</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -44,27 +44,31 @@
             background: rgba(14, 13, 13, 0.7) !important; /* Darker background for dark mode */
         }
 
-        @media (max-width: 768px) {
-            .battle-container {
-                background: rgba(255, 255, 255, 0.9); /* Lighter background for light mode on mobile */
-                padding: 1rem;
-                padding-top: 4rem;
-            }
+        @media (max-width: 480px) {
+    .battle-container {
+        padding: 0.5rem;
+        padding-top: 3rem;
+        font-size: 0.9rem;
+    }
 
-            body.dark-mode .battle-container {
-                background: rgba(30, 41, 59, 0.95); /* Darker and more opaque for dark mode on mobile */
-            }
+    .monster-info {
+        font-size: 0.85rem;
+    }
 
-            .battle-log {
-                background: rgba(0, 0, 0, 0.15); /* Slightly darker for better contrast on mobile */
-                
-            }
+    .monster {
+        gap: 0.5rem;
+    }
 
-            body.dark-mode .battle-log {
-                background: rgba(0, 0, 0, 0.3); /* Even darker in dark mode for better contrast */
-                
-            }
-        }
+    .health-bar {
+        height: 15px;
+        margin: 5px 0;
+    }
+
+    .battle-controls button {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+}
 
         /* Monster card styling */
         .monster-card {
@@ -289,17 +293,50 @@
 
         /* Add monster image container styles */
         .monster-image-container {
-            width: 100%;
-            height: 280px;
+            width: 150px;
+            height: 150px;
+            position: relative;
             border-radius: 8px;
-            margin: 1rem 0;
+            background: rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(128, 128, 128, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+}
+
+.monster-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+    .monster-image-container {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Animations without transforms */
+.damage-animation {
+    animation: damage-flash 0.5s ease-in-out;
+}
+
+.heal-animation {
+    animation: heal-pulse 0.8s ease-in-out;
+}
+
+@keyframes damage-flash {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(1.5); }
+    100% { filter: brightness(1); }
+}
+
+@keyframes heal-pulse {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(1.5); }
+    100% { filter: brightness(1); }
+}
+        
 
         .monster-image-container img {
             width: 100%;
@@ -1514,7 +1551,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05633</span></p>
+            <p>Version: <span id="versionNumber">1.0.05634</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
