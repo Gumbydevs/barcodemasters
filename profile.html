@@ -97,6 +97,7 @@
             font-size: 24px;
             background-size: cover; /* Add this */
             background-position: center; /* Add this */
+            background-image: none; /* Add this */
         }
 
         .stats-container {
@@ -409,7 +410,7 @@
 
     <!-- Version Number -->
     <footer>
-        <p>Version: <span id="versionNumber">1.0.04</span></p>
+        <p>Version: <span id="versionNumber">1.0.051</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
 
@@ -611,6 +612,7 @@
                     document.getElementById("userName").textContent = userData.username;
                     if (userData.profileImageUrl) {
                         document.getElementById('avatarPlaceholder').style.backgroundImage = `url(${userData.profileImageUrl})`;
+                        document.getElementById('avatarPlaceholder').textContent = ''; // Add this line to remove the emoji
                     }
                     // Find and display MVP monster
                     const mvpMonster = await findMVPMonster(user.uid);
