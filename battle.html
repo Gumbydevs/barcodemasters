@@ -1551,7 +1551,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05634</span></p>
+            <p>Version: <span id="versionNumber">1.0.05635</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1631,40 +1631,36 @@
 
         // Simplified MonsterImage component
         const MonsterImage = React.memo(({ monster, isAI = false }) => {
-            const imageUrl = isAI ? monster?.aiImageUrl : monster?.imageUrl;
+    const imageUrl = isAI ? monster?.aiImageUrl : monster?.imageUrl;
+    const containerRef = React.useRef(null);
+    const imageRef = React.useRef(null);
 
-            return (
-                <div 
-                    className="monster-image-container"
-                    style={{
-                        contain: 'strict',
-                        willChange: 'transform',
-                        transform: 'translateZ(0)',
-                        WebkitTransform: 'translateZ(0)',
-                        backfaceVisibility: 'hidden',
-                        WebkitBackfaceVisibility: 'hidden',
-                    }}
-                >
-                    {imageUrl ? (
-                        <img 
-                            src={imageUrl}
-                            alt={isAI ? 'AI Opponent' : monster?.monsterName}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain',
-                            }}
-                        />
-                    ) : (
-                        <div className="monster-image-placeholder" />
-                    )}
-                </div>
-            );
-        }, (prevProps, nextProps) => {
+    return (
+        <div 
+            ref={containerRef}
+            className="monster-image-container"
+        >
+            {imageUrl && (
+                <img 
+                    ref={imageRef}
+                    src={imageUrl}
+                    alt={isAI ? 'AI Opponent' : monster?.monsterName}
+                    loading="eager"
+                    decoding="sync"
+                />
+            )}
+        </div>
+    );
+}, (prev, next) => {
+    // More strict comparison
+    return (prev.monster?.imageUrl === next.monster?.imageUrl &&
+            prev.isAI === next.isAI);
+});
+         (prevProps, nextProps) => {
             // Prevent re-render if the image URL hasn't changed
             return prevProps.monster?.imageUrl === nextProps.monster?.imageUrl &&
                    prevProps.isAI === nextProps.isAI;
-        });
+        };
 
         const BattleSystem = () => {
             // Add isDefending state
@@ -1839,7 +1835,7 @@
                 return { damage, isCritical: false };
             };
 
-            // Replace the handleAttack function with this version:
+            // HandleAttack function with updated damage calculation
             const handleAttack = async () => {
                 if (isBattleOver || !isPlayerTurn) return;
     
