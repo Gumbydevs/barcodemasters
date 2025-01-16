@@ -1386,6 +1386,32 @@
         .battle-controls button {
             margin: 3px; /* Reduced from 5px */
         }
+
+        /* Remove 3D transforms and aggressive will-change to reduce iOS flicker */
+        .monster-image-container {
+            /* ...existing code... */
+            transform: none;
+            -webkit-transform: none;
+            will-change: auto;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .monster-image-container img {
+            /* ...existing code... */
+            transform: none;
+            -webkit-transform: none;
+            will-change: auto;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        /* Ensure VFX also apply to the opponent monster */
+        .monster.opponent .monster-image-container.shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        .monster.opponent .monster-image-container.damage-animation {
+            animation: damage-flash 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -1423,7 +1449,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.0563</span></p>
+            <p>Version: <span id="versionNumber">1.0.05631</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
