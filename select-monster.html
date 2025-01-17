@@ -411,25 +411,29 @@
                 return;
             }
 
-            // Get all monster types for the filter
-            const typesRef = collection(db, 'monsterTypes');
-            const typesSnapshot = await getDocs(typesRef);
-            const typeSelect = document.getElementById('filterType');
-            typesSnapshot.forEach(doc => {
-                const option = document.createElement('option');
-                option.value = doc.id;
-                option.textContent = doc.id;
-                typeSelect.appendChild(option);
-            });
-
+            // Get all monsters first
             const monstersRef = collection(db, 'monsters');
             const q = query(monstersRef, where('ownerId', '==', user.uid));
             const querySnapshot = await getDocs(q);
             
-            // Convert to array for sorting
+            // Convert to array for sorting and get unique types
             let monsters = [];
+            const uniqueTypes = new Set();
             querySnapshot.forEach(doc => {
-                monsters.push({ id: doc.id, ...doc.data() });
+                const monster = { id: doc.id, ...doc.data() };
+                monsters.push(monster);
+                uniqueTypes.add(monster.type);
+            });
+
+            // Sort types alphabetically and populate type filter
+            const sortedTypes = Array.from(uniqueTypes).sort();
+            const typeSelect = document.getElementById('filterType');
+            typeSelect.innerHTML = '<option value="all">All Types</option>';
+            sortedTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeSelect.appendChild(option);
             });
 
             // Initial sort by date
