@@ -135,10 +135,20 @@
             border-radius: 8px;
             text-align: center;
         }
+
+        .version-number {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+    <div class="version-number">v1.0.1</div>
 
     <div class="battle-container">
         <div class="logo-container">
@@ -188,6 +198,12 @@
     </div>
 
     <script type="text/babel">
+        // Add version constant at the top of your script
+        const APP_VERSION = '1.0.1'; // Update this when you make changes
+        
+        // Add version to console on load
+        console.log(`PvP Battle Version: ${APP_VERSION}`);
+
         // Add global error handlers to catch and display errors
         window.onerror = function(msg, url, line, col, error) {
             alert(`Error: ${msg}\nAt: ${url}:${line}:${col}\n${error?.stack || ''}`);
