@@ -853,43 +853,81 @@
         // Add these functions to handle monster selection
         async function loadUserMonsters() {
             const user = firebase.auth().currentUser;
-            if (!user) return;
+            if (!user) {
+                showToast('Please log in to view monsters', false);
+                return;
+            }
 
             try {
-                const monstersRef = db.collection('monsters')
+                showToast('Loading monsters...'); // Add feedback
+                
+                // Get user's monsters
+                const monstersRef = firebase.firestore()
+                    .collection('monsters')
                     .where('ownerId', '==', user.uid);
+                    
                 const snapshot = await monstersRef.get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('monsterList').innerHTML = 
+                        '<div class="no-monsters">No monsters found. Visit the scanner to get monsters!</div>';
+                    return;
+                }
                 
                 const monsters = [];
                 snapshot.forEach(doc => {
-                    monsters.push({ id: doc.id, ...doc.data() });
+                    const data = doc.data();
+                    monsters.push({ 
+                        id: doc.id, 
+                        ...data,
+                        level: data.level || 1, // Ensure level exists
+                        type: data.type || 'Unknown' // Ensure type exists
+                    });
                 });
 
-                // Populate type filter
-                const types = [...new Set(monsters.map(m => m.type))];
-                const typeFilter = document.getElementById('typeFilter');
-                typeFilter.innerHTML = '<option value="">All Types</option>';
-                types.forEach(type => {
-                    const option = document.createElement('option');
-                    option.value = type;
-                    option.textContent = type;
-                    typeFilter.appendChild(option);
-                });
+                // Debug log
+                console.log('Loaded monsters:', monsters.length);
+
+                // Only update type filter if we have monsters
+                if (monsters.length > 0) {
+                    // Populate type filter
+                    const types = [...new Set(monsters.map(m => m.type).filter(Boolean))];
+                    const typeFilter = document.getElementById('typeFilter');
+                    typeFilter.innerHTML = '<option value="">All Types</option>';
+                    types.forEach(type => {
+                        if (type) { // Only add valid types
+                            const option = document.createElement('option');
+                            option.value = type;
+                            option.textContent = type;
+                            typeFilter.appendChild(option);
+                        }
+                    });
+                }
 
                 displayMonsters(monsters);
+                showToast(`Loaded ${monsters.length} monsters!`);
             } catch (error) {
                 console.error('Error loading monsters:', error);
-                showToast('Error loading monsters!', false);
+                showToast('Error loading monsters! ' + error.message, false);
+                document.getElementById('monsterList').innerHTML = 
+                    '<div class="error-message">Error loading monsters. Please try again.</div>';
             }
         }
 
         function displayMonsters(monsters) {
+            if (!monsters || monsters.length === 0) {
+                document.getElementById('monsterList').innerHTML = 
+                    '<div class="no-monsters">No monsters available</div>';
+                return;
+            }
+
             const monsterList = document.getElementById('monsterList');
             const typeFilter = document.getElementById('typeFilter').value;
             const levelFilter = document.getElementById('levelFilter').value;
 
-            let filteredMonsters = monsters;
+            let filteredMonsters = [...monsters];
 
+            // Apply filters
             if (typeFilter) {
                 filteredMonsters = filteredMonsters.filter(m => m.type === typeFilter);
             }
@@ -898,34 +936,75 @@
                 const [min, max] = levelFilter === '21+' ? [21, 999] : levelFilter.split('-').map(Number);
                 filteredMonsters = filteredMonsters.filter(m => {
                     const level = parseInt(m.level) || 1;
-                    return level >= min && level <= (max || 999);
+                    return level >= min && (max ? level <= max : true);
                 });
             }
 
+            // Sort monsters by level
+            filteredMonsters.sort((a, b) => (b.level || 1) - (a.level || 1));
+
+            // Create monster cards
             monsterList.innerHTML = filteredMonsters.map(monster => `
                 <div class="monster-card" onclick="selectMonster('${monster.id}')" data-id="${monster.id}">
-                    <img src="${monster.imageUrl || 'placeholder.png'}" alt="${monster.monsterName}">
-                    <div>${monster.monsterName}</div>
-                    <div>Level ${monster.level || 1}</div>
+                    <img src="${monster.imageUrl || 'images/placeholder-monster.png'}" 
+                         alt="${monster.monsterName || 'Unknown Monster'}"
+                         onerror="this.src='images/placeholder-monster.png'">
+                    <div class="monster-name">${monster.monsterName || 'Unknown Monster'}</div>
+                    <div class="monster-level">Level ${monster.level || 1}</div>
+                    <div class="monster-type">${monster.type || 'Unknown Type'}</div>
+                    <div class="monster-stats">
+                        HP: ${monster.HP || 0} | ATK: ${monster.ATK || 0}
+                    </div>
                 </div>
             `).join('');
+
+            console.log('Displayed monsters:', filteredMonsters.length);
         }
 
-        function selectMonster(monsterId) {
-            // Remove previous selection
-            document.querySelectorAll('.monster-card.selected').forEach(card => {
-                card.classList.remove('selected');
-            });
-
-            // Add selection to new card
-            const card = document.querySelector(`.monster-card[data-id="${monsterId}"]`);
-            if (card) {
-                card.classList.add('selected');
+        // Add some additional styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .no-monsters, .error-message {
+                text-align: center;
+                padding: 20px;
+                color: #666;
+                font-style: italic;
+            }
+            
+            .error-message {
+                color: #e74c3c;
             }
 
-            // Update the create/join battle buttons to use this monster
-            window.selectedMonsterId = monsterId;
-        }
+            .monster-card {
+                position: relative;
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+
+            .monster-name {
+                font-weight: bold;
+                margin: 5px 0;
+            }
+
+            .monster-level {
+                color: #3498db;
+            }
+
+            .monster-type {
+                color: #2ecc71;
+                font-size: 0.9em;
+            }
+
+            .monster-stats {
+                font-size: 0.8em;
+                color: #e74c3c;
+                margin-top: 5px;
+            }
+        `;
+        document.head.appendChild(style);
 
         // Add filter event listeners
         document.getElementById('typeFilter').addEventListener('change', () => {
@@ -940,25 +1019,30 @@
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 try {
-                    // Check for active battle first
-                    if (handleBattleState()) {
-                        return; // Skip other initialization if redirecting
-                    }
-
-                    if (typeof PvPBattleManager === 'undefined') {
-                        console.error('PvPBattleManager not loaded');
-                        showToast('Error loading battle manager', false);
+                    // Debug log
+                    console.log('User authenticated, loading monsters...');
+                    
+                    // Ensure monster list container exists
+                    const monsterList = document.getElementById('monsterList');
+                    if (!monsterList) {
+                        console.error('Monster list container not found!');
                         return;
                     }
 
-                    const tempManager = new PvPBattleManager(null, null);
-                    await tempManager.initializeBattlesCollection(user.uid);
+                    // Show loading state
+                    monsterList.innerHTML = '<div>Loading monsters...</div>';
+                    
                     await loadUserMonsters();
-                    await initializePvPBattle();
+                    
+                    // Rest of initialization
+                    // ...existing initialization code...
                 } catch (error) {
-                    console.error('Error during initialization:', error);
-                    showToast('Error initializing battles!', false);
+                    console.error('Error in auth state change:', error);
+                    showToast('Error loading content!', false);
                 }
+            } else {
+                console.log('User not authenticated');
+                window.location.href = 'index.html';
             }
         });
 
@@ -1104,7 +1188,7 @@
             }
         });
     </script>
-    <h6>Version: 0.0034</h6>
+    <h6>Version: 0.0035</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
