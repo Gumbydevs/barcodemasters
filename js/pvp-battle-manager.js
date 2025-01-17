@@ -20,6 +20,18 @@ class PvPBattleManager {
         const db = firebase.firestore();
         
         try {
+            // First check if user already has an active battle
+            const existingBattles = await db
+                .collection('users')
+                .doc(user.uid)
+                .collection('battles')
+                .where('status', 'in', ['waiting', 'in_progress'])
+                .get();
+
+            if (!existingBattles.empty) {
+                throw new Error('You already have an active battle');
+            }
+
             // Fetch monster data
             const monsterDoc = await db.collection('monsters').doc(monsterId).get();
             if (!monsterDoc.exists) throw new Error('Monster not found');
@@ -27,13 +39,7 @@ class PvPBattleManager {
             const monsterData = monsterDoc.data();
             if (monsterData.ownerId !== user.uid) throw new Error('Not your monster');
 
-            // Create battle document
-            const battleRef = db
-                .collection('users')
-                .doc(user.uid)
-                .collection('battles')
-                .doc(battleCode);
-
+            // Create battle with proper initialization
             const battleData = {
                 battleCode,
                 creator: {
@@ -46,13 +52,27 @@ class PvPBattleManager {
                 opponent: null,
                 status: 'waiting',
                 currentTurn: null,
+                moves: [],
                 created: firebase.firestore.FieldValue.serverTimestamp(),
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            await battleRef.set(battleData);
-            return battleData;
+            // Create in user's battles subcollection
+            const battleRef = db
+                .collection('users')
+                .doc(user.uid)
+                .collection('battles')
+                .doc(battleCode);
 
+            await battleRef.set(battleData);
+
+            // Also update user's active battle reference
+            await db.collection('users').doc(user.uid).update({
+                activeBattle: battleCode,
+                battleStatus: 'waiting'
+            });
+
+            return battleData;
         } catch (error) {
             console.error('Error creating battle:', error);
             throw error;

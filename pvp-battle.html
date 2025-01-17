@@ -309,36 +309,39 @@
                 return;
             }
 
-            const battleCode = generateBattleCode();
-
             try {
-                showToast('Creating battle...'); // Add feedback
+                showToast('Creating battle...'); 
                 
-                // Verify monster data first
-                const monsterData = await fetchMonsterData(window.selectedMonsterId);
-                if (!monsterData) {
-                    throw new Error('Could not fetch monster data');
-                }
-
-                // Create battle in user's subcollection
+                const battleCode = generateBattleCode();
                 const battleData = await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
                 
-                // Store battle info in localStorage
-                localStorage.setItem('currentBattle', JSON.stringify({
+                // Store battle info with more details
+                const battleInfo = {
                     battleCode,
                     creatorId: user.uid,
-                    role: 'creator'
-                }));
-
-                showToast(`Battle created! Code: ${battleCode}`);
+                    role: 'creator',
+                    timestamp: Date.now(),
+                    monsterId: window.selectedMonsterId
+                };
                 
-                // Redirect to battle page with a small delay
+                localStorage.setItem('currentBattle', JSON.stringify(battleInfo));
+                
+                // Redirect with slight delay and proper error handling
                 setTimeout(() => {
                     window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${user.uid}`;
-                }, 1000);
+                }, 500);
+
             } catch (error) {
                 console.error('Error creating battle:', error);
-                showToast(`Error creating battle: ${error.message}`, false);
+                showToast(`Error: ${error.message}`, false);
+                
+                // Clean up if there was an error
+                localStorage.removeItem('currentBattle');
+                try {
+                    await PvPBattleManager.resetUserBattleState(user.uid);
+                } catch (cleanupError) {
+                    console.error('Error cleaning up:', cleanupError);
+                }
             }
         };
 
@@ -783,60 +786,55 @@
             
             try {
                 if (battleCode && creatorId) {
-                    // Check if battle exists and is valid
                     const battleRef = firebase.firestore()
                         .collection('users')
                         .doc(creatorId)
                         .collection('battles')
                         .doc(battleCode);
 
-                    const battle = await battleRef.get();
-                    
-                    if (!battle.exists || battle.data().status === 'cancelled') {
-                        showToast('Battle not found or cancelled!', false);
-                        localStorage.removeItem('currentBattle');
-                        setTimeout(() => {
+                    // Add a listener for battle updates
+                    const unsubscribe = battleRef.onSnapshot((doc) => {
+                        if (!doc.exists) {
+                            showToast('Battle not found!', false);
+                            localStorage.removeItem('currentBattle');
                             window.location.href = 'pvp-battle.html';
-                        }, 1500);
-                        return;
-                    }
+                            return;
+                        }
 
-                    const battleData = battle.data();
-                    const now = new Date();
-                    const lastUpdate = battleData.lastUpdate?.toDate() || battleData.created?.toDate();
-                    const timeDiff = (now - lastUpdate) / 1000 / 60; // minutes
+                        const battleData = doc.data();
+                        
+                        // Only redirect if battle is actually cancelled or completed
+                        if (['cancelled', 'completed'].includes(battleData.status)) {
+                            localStorage.removeItem('currentBattle');
+                            showToast('Battle ended!', false);
+                            setTimeout(() => {
+                                window.location.href = 'pvp-battle.html';
+                            }, 1500);
+                            return;
+                        }
 
-                    // If battle is inactive for more than 10 minutes, auto-cancel it
-                    if (timeDiff > 10 && battleData.status !== 'completed') {
-                        await battleRef.update({
-                            status: 'cancelled',
-                            lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-                            reason: 'timeout'
-                        });
-                        localStorage.removeItem('currentBattle');
-                        showToast('Battle timed out due to inactivity!', false);
-                        setTimeout(() => {
-                            window.location.href = 'pvp-battle.html';
-                        }, 1500);
-                        return;
-                    }
+                        // Show battle UI
+                        document.getElementById('battleLobby').style.display = 'none';
+                        document.getElementById('monsterSelect').style.display = 'none';
+                        document.getElementById('battleArena').style.display = 'block';
+                        
+                        // Render battle component if not already rendered
+                        if (!window.battleComponentMounted) {
+                            ReactDOM.render(
+                                <PvPBattle 
+                                    battleCode={battleCode} 
+                                    creatorId={creatorId}
+                                />, 
+                                document.getElementById('root')
+                            );
+                            window.battleComponentMounted = true;
+                        }
+                    });
 
-                    // Set up battle manager and continue
-                    window.pvpBattleManager = new PvPBattleManager(battleCode, creatorId);
-                    
-                    document.getElementById('battleLobby').style.display = 'none';
-                    document.getElementById('monsterSelect').style.display = 'none';
-                    document.getElementById('battleArena').style.display = 'block';
-                    
-                    ReactDOM.render(
-                        <PvPBattle 
-                            battleCode={battleCode} 
-                            creatorId={creatorId}
-                        />, 
-                        document.getElementById('root')
-                    );
+                    // Store unsubscribe function
+                    window.battleUnsubscribe = unsubscribe;
                 } else {
-                    // Check for and cleanup any stuck battles before loading the lobby
+                    // We're in the lobby
                     await PvPBattleManager.cleanupStuckBattles(user.uid);
                     loadActiveBattles();
                 }
@@ -844,11 +842,15 @@
                 console.error('Error initializing battle:', error);
                 showToast('Error starting battle!', false);
                 localStorage.removeItem('currentBattle');
-                setTimeout(() => {
-                    window.location.href = 'pvp-battle.html';
-                }, 1500);
             }
         };
+
+        // Add cleanup on page unload
+        window.addEventListener('unload', () => {
+            if (window.battleUnsubscribe) {
+                window.battleUnsubscribe();
+            }
+        });
 
         // Update the loadActiveBattles function
         const loadActiveBattles = async () => {
@@ -1356,7 +1358,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0036</h6>
+    <h6>Version: 0.0037</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
