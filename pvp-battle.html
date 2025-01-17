@@ -745,18 +745,29 @@
         });
 
         // Initialize monster list when user is authenticated
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
-                // Initialize battles collection first
-                PvPBattleManager.initializeBattlesCollection()
-                    .then(() => {
-                        loadUserMonsters();
-                        initializePvPBattle();
-                    })
-                    .catch(error => {
-                        console.error('Error initializing battles:', error);
-                        showToast('Error initializing battles!', false);
-                    });
+                try {
+                    // Check if PvPBattleManager is loaded
+                    if (typeof PvPBattleManager === 'undefined') {
+                        console.error('PvPBattleManager not loaded');
+                        showToast('Error loading battle manager', false);
+                        return;
+                    }
+
+                    // Create an instance first
+                    const tempManager = new PvPBattleManager(null, null);
+                    
+                    // Initialize battles collection using the instance
+                    await tempManager.initializeBattlesCollection(user.uid);
+                    
+                    // Load monsters and initialize battle
+                    await loadUserMonsters();
+                    await initializePvPBattle();
+                } catch (error) {
+                    console.error('Error during initialization:', error);
+                    showToast('Error initializing battles!', false);
+                }
             }
         });
 

@@ -2,11 +2,14 @@ class PvPBattleManager {
     constructor(battleCode, creatorId) {
         this.battleCode = battleCode;
         this.creatorId = creatorId;
-        this.battleRef = firebase.firestore()
-            .collection('users')
-            .doc(creatorId)
-            .collection('battles')
-            .doc(battleCode);
+        this.db = firebase.firestore();
+        if (battleCode && creatorId) {
+            this.battleRef = this.db
+                .collection('users')
+                .doc(creatorId)
+                .collection('battles')
+                .doc(battleCode);
+        }
     }
 
     // Update the createBattle static method
@@ -199,27 +202,29 @@ class PvPBattleManager {
         }
     }
 
-    static async initializeBattlesCollection() {
-        const user = firebase.auth().currentUser;
-        if (!user) throw new Error('Not authenticated');
+    // Change from static to instance method
+    async initializeBattlesCollection(userId) {
+        if (!userId) {
+            const user = firebase.auth().currentUser;
+            if (!user) throw new Error('Not authenticated');
+            userId = user.uid;
+        }
 
-        const db = firebase.firestore();
-        const userRef = db.collection('users').doc(user.uid);
-        
         try {
-            // Check if battles subcollection exists
+            const userRef = this.db.collection('users').doc(userId);
             const battlesRef = userRef.collection('battles');
+            
+            // Check if collection exists
             const snapshot = await battlesRef.limit(1).get();
             
             if (snapshot.empty) {
-                // Create an initial empty document to ensure collection exists
+                // Create initialization document
                 await battlesRef.doc('__init__').set({
                     created: firebase.firestore.FieldValue.serverTimestamp(),
                     type: 'initialization'
                 });
-                console.log('Battles collection initialized');
                 
-                // Delete the initialization document
+                // Clean up initialization document
                 await battlesRef.doc('__init__').delete();
             }
             
