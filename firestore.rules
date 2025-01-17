@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2';
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Existing users rules
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+
+      match /monsters/{monsterId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Simplified battles rules
+      match /battles/{battleId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated() && (
+          resource.data.creator.uid == request.auth.uid ||
+          resource.data.opponent.uid == request.auth.uid
+        );
+        allow delete: if isAuthenticated() && 
+          resource.data.creator.uid == request.auth.uid;
+      }
+    }
+
+    // Simplified collection group query rule for battles
+    match /{path=**}/battles/{battleId} {
+      allow read, list: if isAuthenticated();
+    }
+
+    // Existing monsterTypes rules
+    match /monsterTypes/{typeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Integrated monsters collection rules
+    match /monsters/{monsterId} {
+      allow read: if true;
+      allow create: if isAuthenticated() &&
+                    request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+                            (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+  }
+}
+
+service firebase.storage {
+  // ... your existing storage rules remain unchanged ...
+  match /b/{bucket}/o {
+    match /monsters/{monsterId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                   monsterId.matches(request.auth.uid + '$|.*-' + request.auth.uid + '$');
+    }
+
+    match /monster-images/{imageId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                   request.auth.uid == imageId.split('-')[1] &&
+                   request.resource.size < 5 * 1024 * 1024;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

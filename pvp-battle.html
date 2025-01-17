@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Barcode Masters - PVP Battles</title>
+
+    <!-- Import all required scripts from battle.html -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="js/pvp-battle-manager.js"></script>
+    <script src="monsterStats.js"></script>
+
+    <!-- Initialize Firebase first -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda"
+        };
+
+        // Initialize Firebase with auth and storage
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+
+        // Add security rules check
+        db.collection('monsters').limit(1).get()
+            .catch(error => {
+                if (error.code === 'permission-denied') {
+                    console.error('Firebase permissions error:', error);
+                    alert('Please log in to access battles.');
+                    window.location.href = 'index.html';
+                }
+            });
+    </script>
+
+    <style>
+        /* Copy all styles from battle.html */
+        /* ...existing styles... */
+
+        /* Add PVP-specific styles */
+        .battle-lobby {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* ...rest of your PVP styles... */
+
+        /* Add all animation and toast styles from battle.html */
+        @keyframes healthBarFlash {
+            0% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.5) saturate(1.3); }
+            100% { filter: brightness(1) saturate(1); }
+        }
+
+        /* ...rest of battle.html animations... */
+
+        .monster-select-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-dropdown {
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .monster-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .monster-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .monster-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .monster-card.selected {
+            border: 2px solid #3498db;
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        .monster-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .selected-monster-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
+
+    <div class="battle-container">
+        <div class="logo-container">
+            <!-- Logo here -->
+        </div>
+
+        <!-- Add Monster Selection Section -->
+        <div id="monsterSelect" class="monster-select-container">
+            <h2>Select Your Monster</h2>
+            <div class="filter-controls">
+                <select id="typeFilter" class="filter-dropdown">
+                    <option value="">All Types</option>
+                    <!-- Types will be populated dynamically -->
+                </select>
+                <select id="levelFilter" class="filter-dropdown">
+                    <option value="">All Levels</option>
+                    <option value="1-10">Level 1-10</option>
+                    <option value="11-20">Level 11-20</option>
+                    <option value="21+">Level 21+</option>
+                </select>
+            </div>
+            <div id="monsterList" class="monster-list">
+                <!-- Monsters will be listed here -->
+            </div>
+        </div>
+
+        <!-- Battle Lobby Section -->
+        <div id="battleLobby" class="battle-lobby">
+            <h2>PVP Battle Lobby</h2>
+            <div class="navigation-grid">
+                <button class="nav-button" onclick="createBattle()">Create Battle</button>
+                <button class="nav-button" onclick="joinBattlePrompt()">Join Battle</button>
+                <button class="nav-button" onclick="location.href='battle.html'">AI Battle</button>
+                <button class="nav-button" onclick="location.href='monster-collection.html'">Collection</button>
+            </div>
+
+            <div id="activeBattles" class="battle-list">
+                <!-- Active battles will be listed here -->
+            </div>
+        </div>
+
+        <!-- Battle Arena Section (Initially Hidden) -->
+        <div id="battleArena" style="display: none;">
+            <div id="root"></div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        // Firebase configuration
+        // ...existing firebase config...
+
+        // Define functions before HTML that uses them
+        const generateBattleCode = () => {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        };
+
+        // Make functions globally accessible right away
+        window.createBattle = async () => {
+            if (!window.selectedMonsterId) {
+                alert('Please select a monster first!');
+                return;
+            }
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Please log in first!');
+                return;
+            }
+
+            const battleCode = generateBattleCode();
+
+            try {
+                // Create battle in user's subcollection
+                await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
+                showToast(`Battle created! Code: ${battleCode}`);
+                monitorBattle(battleCode);
+            } catch (error) {
+                console.error('Error creating battle:', error);
+                showToast('Error creating battle!', false);
+            }
+        };
+
+        window.joinBattlePrompt = () => {
+            const code = prompt('Enter battle code:');
+            if (code) {
+                window.joinBattle(code.toUpperCase());
+            }
+        };
+
+        window.joinBattle = async (battleCode, creatorId) => {
+            if (!window.selectedMonsterId) {
+                alert('Please select a monster first!');
+                return;
+            }
+
+            const user = firebase.auth().currentUser;
+
+            try {
+                const battleRef = firebase.firestore()
+                    .collection('users')
+                    .doc(creatorId)
+                    .collection('battles')
+                    .doc(battleCode);
+
+                const battle = await battleRef.get();
+
+                if (!battle.exists) {
+                    showToast('Battle not found!', false);
+                    return;
+                }
+
+                const battleData = battle.data();
+                
+                if (battleData.status !== 'waiting') {
+                    showToast('Battle already in progress!', false);
+                    return;
+                }
+
+                const monsterData = await fetchMonsterData(window.selectedMonsterId);
+                await battleRef.update({
+                    opponent: {
+                        uid: user.uid,
+                        monster: window.selectedMonsterId,
+                        monsterData,
+                        ready: true
+                    },
+                    status: 'in_progress',
+                    currentTurn: battleData.creator.uid,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                monitorBattle(battleCode);
+
+            } catch (error) {
+                console.error('Error joining battle:', error);
+                showToast('Error joining battle!', false);
+            }
+        };
+
+        // Add other necessary functions
+        window.showToast = (message, isSuccess = true) => {
+            const toast = document.createElement('div');
+            toast.className = `toast${!isSuccess ? ' error' : ''}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            }, 100);
+
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        window.fetchMonsterData = async (monsterId) => {
+            try {
+                const monsterRef = db.collection('monsters').doc(monsterId);
+                const doc = await monsterRef.get();
+                if (doc.exists) {
+                    return {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+                }
+                console.log('No monster document found');
+                return null;
+            } catch (error) {
+                console.error('Error fetching monster data:', error);
+                return null;
+            }
+        };
+
+        window.monitorBattle = (battleCode) => {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+
+            // First try to find the battle as creator
+            let unsubscribe = firebase.firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('battles')
+                .doc(battleCode)
+                .onSnapshot(
+                    (doc) => {
+                        if (doc.exists) {
+                            const battle = doc.data();
+                            if (battle.status === 'in_progress') {
+                                window.location.href = `pvp-battle.html?battle=${battleCode}`;
+                            }
+                        }
+                    },
+                    (error) => {
+                        console.error('Battle monitoring error:', error);
+                    }
+                );
+
+            return unsubscribe;
+        };
+
+        // PvP Battle Component
+        const PvPBattle = ({ battleCode }) => {
+            const [battleState, setBattleState] = React.useState(null);
+            const [playerMonster, setPlayerMonster] = React.useState(null);
+            const [opponentMonster, setOpponentMonster] = React.useState(null);
+            const [playerHealth, setPlayerHealth] = React.useState(100);
+            const [opponentHealth, setOpponentHealth] = React.useState(100);
+            const [isMyTurn, setIsMyTurn] = React.useState(false);
+            const [battleLog, setBattleLog] = React.useState([]);
+            const [isBattleOver, setIsBattleOver] = React.useState(false);
+            const [isDefending, setIsDefending] = React.useState(false);
+            const [specialCooldown, setSpecialCooldown] = React.useState(3);
+
+            // Monitor battle state
+            React.useEffect(() => {
+                const unsubscribe = db.collection('pvp_battles')
+                    .doc(battleCode)
+                    .onSnapshot((doc) => {
+                        if (!doc.exists) return;
+                        
+                        const battle = doc.data();
+                        const user = firebase.auth().currentUser;
+                        
+                        setBattleState(battle);
+                        setIsMyTurn(battle.currentTurn === user.uid);
+                        
+                        if (battle.creator.uid === user.uid) {
+                            setPlayerMonster(battle.creator.monsterData);
+                            setPlayerHealth(battle.creator.currentHP || battle.creator.monsterData.HP);
+                            setOpponentMonster(battle.opponent?.monsterData);
+                            setOpponentHealth(battle.opponent?.currentHP || battle.opponent?.monsterData.HP);
+                        } else {
+                            setPlayerMonster(battle.opponent?.monsterData);
+                            setPlayerHealth(battle.opponent?.currentHP || battle.opponent?.monsterData.HP);
+                            setOpponentMonster(battle.creator.monsterData);
+                            setOpponentHealth(battle.creator.currentHP || battle.creator.monsterData.HP);
+                        }
+                    });
+
+                return () => unsubscribe();
+            }, [battleCode]);
+
+            // Battle action handlers
+            const handleAttack = async () => {
+                if (!isMyTurn || isBattleOver) return;
+
+                try {
+                    const { damage, isCritical } = calculateDamage(playerMonster, true);
+                    await pvpBattleManager.makeMove('attack', { damage, isCritical });
+                    
+                    // Animation and effects handled by the battle manager
+                    addToLog(`You dealt ${damage} damage!${isCritical ? ' (Critical Hit!)' : ''}`);
+                } catch (error) {
+                    console.error('Attack error:', error);
+                    showToast('Error performing attack!', false);
+                }
+            };
+
+            const handleDefend = async () => {
+                if (!isMyTurn || isBattleOver) return;
+
+                try {
+                    await pvpBattleManager.makeMove('defend', {});
+                    setIsDefending(true);
+                    addToLog("You're defending against the next attack!");
+                } catch (error) {
+                    console.error('Defend error:', error);
+                    showToast('Error setting defense!', false);
+                }
+            };
+
+            const handleHeal = async () => {
+                if (!isMyTurn || isBattleOver) return;
+
+                try {
+                    const healAmount = Math.floor(playerMonster.HP * 0.3);
+                    await pvpBattleManager.makeMove('heal', { amount: healAmount });
+                    addToLog(`You healed for ${healAmount} HP!`);
+                } catch (error) {
+                    console.error('Heal error:', error);
+                    showToast('Error performing heal!', false);
+                }
+            };
+
+            const handleSpecialAttack = async () => {
+                if (!isMyTurn || isBattleOver || specialCooldown > 0) return;
+
+                try {
+                    const damage = Math.floor(calculateDamage(playerMonster, true).damage * 2.5);
+                    await pvpBattleManager.makeMove('special', { damage });
+                    setSpecialCooldown(3);
+                    addToLog(`💫 Special Attack dealt ${damage} massive damage!`);
+                } catch (error) {
+                    console.error('Special attack error:', error);
+                    showToast('Error performing special attack!', false);
+                }
+            };
+
+            // Return the battle UI
+            return (
+                <div className="battle-container">
+                    <h2>PVP Battle</h2>
+                    
+                    {/* Player Monster */}
+                    <div className="monster">
+                        <MonsterImage monster={playerMonster} />
+                        <div className="monster-info">
+                            {/* ...same monster info structure as battle.html... */}
+                        </div>
+                    </div>
+                    <div className="health-bar">
+                        <div 
+                            className="health-fill player-health" 
+                            style={{ width: `${(playerHealth / playerMonster?.HP || 1) * 100}%` }}
+                        ></div>
+                    </div>
+
+                    {/* Opponent Monster */}
+                    <div className="monster">
+                        <MonsterImage monster={opponentMonster} />
+                        <div className="monster-info">
+                            {/* ...same monster info structure as battle.html... */}
+                        </div>
+                    </div>
+                    <div className="health-bar">
+                        <div 
+                            className="health-fill opponent-health" 
+                            style={{ width: `${(opponentHealth / opponentMonster?.HP || 1) * 100}%` }}
+                        ></div>
+                    </div>
+
+                    {/* Battle Log */}
+                    <div className="battle-log">
+                        <ul>
+                            {battleLog.map((entry, index) => (
+                                <li key={index}>{entry}</li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Battle Controls */}
+                    <div className="battle-controls">
+                        {!isBattleOver ? (
+                            <div>
+                                <button onClick={handleAttack} disabled={!isMyTurn}>Attack</button>
+                                <button onClick={handleDefend} disabled={!isMyTurn}>Defend</button>
+                                <button onClick={handleHeal} disabled={!isMyTurn}>Heal</button>
+                                <button 
+                                    onClick={handleSpecialAttack} 
+                                    disabled={!isMyTurn || specialCooldown > 0}
+                                    style={{
+                                        background: specialCooldown > 0 ? 
+                                            'linear-gradient(135deg, #666, #999)' : 
+                                            'linear-gradient(135deg, #c0392b, #e74c3c)'
+                                    }}
+                                >
+                                    Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                <button className="nav-button" onClick={() => location.href='monster-collection.html'}>
+                                    Return to Collection
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // Initialize the app
+        const initializePvPBattle = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const battleCode = urlParams.get('battle');
+            
+            if (battleCode) {
+                // Join/resume specific battle
+                document.getElementById('battleLobby').style.display = 'none';
+                document.getElementById('battleArena').style.display = 'block';
+                ReactDOM.render(<PvPBattle battleCode={battleCode} />, document.getElementById('root'));
+            } else {
+                // Show battle lobby and active battles
+                loadActiveBattles();
+            }
+        };
+
+        // Update the loadActiveBattles function
+        const loadActiveBattles = async () => {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+
+            try {
+                // Query using collection group
+                const battlesQuery = await firebase.firestore()
+                    .collectionGroup('battles')
+                    .where('status', '==', 'waiting')
+                    .get();
+
+                const battlesHTML = battlesQuery.docs
+                    .filter(doc => doc.data().creator.uid !== user.uid) // Filter out own battles
+                    .map(doc => {
+                        const battle = doc.data();
+                        const creatorId = doc.ref.parent.parent.id;
+                        return `
+                            <div class="battle-item">
+                                <span>Battle #${battle.battleCode}</span>
+                                <span>Creator: ${battle.creator?.monsterData?.monsterName || 'Unknown'}</span>
+                                <button onclick="joinBattle('${battle.battleCode}', '${creatorId}')">Join Battle</button>
+                            </div>
+                        `;
+                    }).join('');
+
+                document.getElementById('activeBattles').innerHTML = battlesHTML || 
+                    '<div class="no-battles">No active battles found</div>';
+            } catch (error) {
+                console.error('Error loading battles:', error);
+                showToast('Error loading battles!', false);
+            }
+        };
+
+        // Add these functions to handle monster selection
+        async function loadUserMonsters() {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+
+            try {
+                const monstersRef = db.collection('monsters')
+                    .where('ownerId', '==', user.uid);
+                const snapshot = await monstersRef.get();
+                
+                const monsters = [];
+                snapshot.forEach(doc => {
+                    monsters.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Populate type filter
+                const types = [...new Set(monsters.map(m => m.type))];
+                const typeFilter = document.getElementById('typeFilter');
+                typeFilter.innerHTML = '<option value="">All Types</option>';
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    typeFilter.appendChild(option);
+                });
+
+                displayMonsters(monsters);
+            } catch (error) {
+                console.error('Error loading monsters:', error);
+                showToast('Error loading monsters!', false);
+            }
+        }
+
+        function displayMonsters(monsters) {
+            const monsterList = document.getElementById('monsterList');
+            const typeFilter = document.getElementById('typeFilter').value;
+            const levelFilter = document.getElementById('levelFilter').value;
+
+            let filteredMonsters = monsters;
+
+            if (typeFilter) {
+                filteredMonsters = filteredMonsters.filter(m => m.type === typeFilter);
+            }
+
+            if (levelFilter) {
+                const [min, max] = levelFilter === '21+' ? [21, 999] : levelFilter.split('-').map(Number);
+                filteredMonsters = filteredMonsters.filter(m => {
+                    const level = parseInt(m.level) || 1;
+                    return level >= min && level <= (max || 999);
+                });
+            }
+
+            monsterList.innerHTML = filteredMonsters.map(monster => `
+                <div class="monster-card" onclick="selectMonster('${monster.id}')" data-id="${monster.id}">
+                    <img src="${monster.imageUrl || 'placeholder.png'}" alt="${monster.monsterName}">
+                    <div>${monster.monsterName}</div>
+                    <div>Level ${monster.level || 1}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectMonster(monsterId) {
+            // Remove previous selection
+            document.querySelectorAll('.monster-card.selected').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Add selection to new card
+            const card = document.querySelector(`.monster-card[data-id="${monsterId}"]`);
+            if (card) {
+                card.classList.add('selected');
+            }
+
+            // Update the create/join battle buttons to use this monster
+            window.selectedMonsterId = monsterId;
+        }
+
+        // Add filter event listeners
+        document.getElementById('typeFilter').addEventListener('change', () => {
+            loadUserMonsters();
+        });
+
+        document.getElementById('levelFilter').addEventListener('change', () => {
+            loadUserMonsters();
+        });
+
+        // Initialize monster list when user is authenticated
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                loadUserMonsters();
+                initializePvPBattle();
+            }
+        });
+    </script>
+</body>
+</html>
