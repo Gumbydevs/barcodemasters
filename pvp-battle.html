@@ -149,9 +149,49 @@
             background-color: #111;
             color: #eee;
         }
+
+        /* Add Toast Styles */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .toast {
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .toast.success {
+            background-color: #2ecc71;
+        }
+
+        .toast.error {
+            background-color: #e74c3c;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
+    <div id="toastContainer" class="toast-container"></div>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
     <div class="version-number">v1.0.1</div>
 
@@ -203,6 +243,24 @@
     </div>
 
     <script type="text/babel">
+        // Add showToast function before other code
+        function showToast(message, isSuccess = true) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isSuccess ? 'success' : 'error'}`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
         // Define MonsterImage component
         function MonsterImage({ monster }) {
             if (!monster) return null;
@@ -801,6 +859,6 @@
             }
         });
     </script>
-    <h6>Version: 0.003</h6>
+    <h6>Version: 0.0031</h6>
 </body>
 </html>
