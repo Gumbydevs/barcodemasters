@@ -188,6 +188,16 @@
     </div>
 
     <script type="text/babel">
+        // Add global error handlers to catch and display errors
+        window.onerror = function(msg, url, line, col, error) {
+            alert(`Error: ${msg}\nAt: ${url}:${line}:${col}\n${error?.stack || ''}`);
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            alert(`Promise Error: ${event.reason}\n${event.reason?.stack || ''}`);
+        });
+
         // Firebase configuration
         // ...existing firebase config...
 
@@ -242,30 +252,40 @@
             }
 
             try {
-                // Create battle reference
+                // Add debug information
+                console.log('Joining battle:', {battleCode, creatorId});
+
                 const battleRef = firebase.firestore()
                     .collection('users')
                     .doc(creatorId)
                     .collection('battles')
                     .doc(battleCode);
 
-                // Get battle data
+                // Add more debug logging
+                console.log('Getting battle data...');
                 const battle = await battleRef.get();
-                if (!battle.exists) {
-                    showToast('Battle not found!', false);
-                    return;
-                }
-
-                const battleData = battle.data();
-                if (battleData.status !== 'waiting') {
-                    showToast('Battle already in progress!', false);
-                    return;
-                }
-
-                // Get monster data
-                const monsterData = await fetchMonsterData(window.selectedMonsterId);
                 
-                // Join battle
+                if (!battle.exists) {
+                    alert('Battle not found!');
+                    return;
+                }
+
+                console.log('Battle data:', battle.data());
+                const battleData = battle.data();
+                
+                if (battleData.status !== 'waiting') {
+                    alert('Battle already in progress!');
+                    return;
+                }
+
+                console.log('Fetching monster data...');
+                const monsterData = await fetchMonsterData(window.selectedMonsterId);
+                if (!monsterData) {
+                    alert('Error fetching monster data!');
+                    return;
+                }
+
+                console.log('Updating battle...'); 
                 await battleRef.update({
                     opponent: {
                         uid: user.uid,
@@ -279,12 +299,16 @@
                     lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Redirect to battle
-                window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
+                console.log('Battle joined successfully, redirecting...');
+                // Add a small delay before redirect to ensure update completes
+                setTimeout(() => {
+                    window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
+                }, 1000);
 
             } catch (error) {
-                console.error('Error joining battle:', error);
-                showToast('Error joining battle!', false);
+                // Stop and show the error
+                alert(`Error joining battle:\n${error.message}\n\nStack:\n${error.stack}`);
+                console.error('Full error:', error);
             }
         };
 
