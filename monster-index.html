@@ -411,6 +411,62 @@
                 padding: 0.3rem;
             }
         }
+
+        /* Monster Grid and Card Styles */
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+            gap: 0.8rem;
+            width: 100%;
+        }
+
+        .monster-card {
+            padding: 0.8rem;
+            font-size: 0.9em;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .monster-image-container,
+        .monster-image-placeholder {
+            height: 180px;
+            margin: 0.8rem 0;
+        }
+
+        .monster-name {
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin: 0.8rem 0;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 480px) {
+            .monsters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .monster-card {
+                padding: 0.5rem;
+            }
+
+            .monster-image-container,
+            .monster-image-placeholder {
+                height: 140px;
+            }
+
+            .monster-name {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
