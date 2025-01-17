@@ -255,7 +255,7 @@
             }
         };
 
-        window.joinBattle = async (battleCode, creatorId) => {
+        window.joinBattle = async (battleCode) => {
             if (!window.selectedMonsterId) {
                 alert('Please select a monster first!');
                 return;
@@ -268,14 +268,25 @@
             }
 
             try {
+                // Find the battle doc and creatorId
+                const groupSnapshot = await firebase.firestore()
+                    .collectionGroup('battles')
+                    .where('battleCode', '==', battleCode)
+                    .where('status', '==', 'waiting')
+                    .limit(1)
+                    .get();
+
+                if (groupSnapshot.empty) {
+                    alert('Battle not found!');
+                    return;
+                }
+
+                const doc = groupSnapshot.docs[0];
+                const creatorId = doc.ref.parent.parent.id;
+                const battleRef = doc.ref;
+
                 // Add debug information
                 console.log('Joining battle:', {battleCode, creatorId});
-
-                const battleRef = firebase.firestore()
-                    .collection('users')
-                    .doc(creatorId)
-                    .collection('battles')
-                    .doc(battleCode);
 
                 // Add more debug logging
                 console.log('Getting battle data...');
@@ -311,7 +322,7 @@
                         ready: true
                     },
                     status: 'in_progress',
-                    currentTurn: battleData.creator.uid,
+                    currentTurn: creatorId,
                     lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -323,7 +334,7 @@
 
             } catch (error) {
                 // Stop and show the error
-                alert(`Error joining battle:\n${error.message}\n\nStack:\n${error.stack}`);
+                alert(`Error joining battle:\n${error.message}\n${error.stack}`);
                 console.error('Full error:', error);
             }
         };
@@ -809,5 +820,6 @@
             }
         };
     </script>
+    <h6>Version: 0.001</h6>
 </body>
 </html>
