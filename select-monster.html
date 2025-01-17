@@ -44,20 +44,18 @@
 
         .monster-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 0.75rem;
+            grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+            gap: 0.8rem;
             width: 100%;
         }
 
         .monster-card {
+            padding: 0.8rem;
+            font-size: 0.9em;
             background: rgba(255, 255, 255, 0.1);
-            padding: 0.75rem;
             border-radius: 12px;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            font-size: 0.9rem;
         }
 
         .monster-card:hover {
@@ -72,10 +70,10 @@
 
         .monster-stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 0.5rem;
-            margin: 1rem 0;
-            font-size: 0.8rem;
+            margin: 0.8rem 0;
+            font-size: 0.85em;
         }
 
         .stat-item {
@@ -90,7 +88,7 @@
             font-weight: bold;
             color: #3498db;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.4rem;
         }
 
         h2 {
@@ -194,9 +192,9 @@
         /* Add monster image container styles */
         .monster-image-container {
             width: 100%;
-            height: 150px;
+            height: 180px;
             border-radius: 8px;
-            margin: 0.5rem 0;
+            margin: 0.8rem 0;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -215,10 +213,10 @@
         /* Update placeholder styles */
         .monster-image-placeholder {
             width: 100%;
-            height: 150px;
+            height: 180px;
             background: rgba(128, 128, 128, 0.1);
             border-radius: 8px;
-            margin: 0.5rem 0;
+            margin: 0.8rem 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -261,9 +259,22 @@
         }
 
         @media (max-width: 480px) {
+            .monsters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .monster-card {
+                padding: 0.5rem;
+            }
+
             .monster-image-container,
             .monster-image-placeholder {
-                height: 200px;
+                height: 140px;
+            }
+
+            .monster-name {
+                font-size: 1rem;
             }
         }
 
@@ -312,18 +323,7 @@
         }
     </style>
 </head>
-<body>
-    <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-
-    <div class="collection-container">
-        <div class="logo-container">
-            <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
-        </div>
-
-        <div class="navigation-grid">
-            <button class="nav-button" onclick="location.href='monster-collection.html'">Back to Collection</button>
-        </div>
-
+<body></body>
         <h2>Select Your Monster for Battle</h2>
 
         <!-- Add filter controls -->
