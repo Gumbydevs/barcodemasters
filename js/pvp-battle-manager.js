@@ -18,13 +18,19 @@ class PvPBattleManager {
         if (!user) throw new Error('Not authenticated');
 
         try {
+            // Fetch monster data first
             const monsterDoc = await firebase.firestore()
                 .collection('monsters')
                 .doc(monsterId)
                 .get();
 
-            if (!monsterDoc.exists || monsterDoc.data().ownerId !== user.uid) {
-                throw new Error('Monster not found or not owned by user');
+            if (!monsterDoc.exists) {
+                throw new Error('Monster not found');
+            }
+
+            const monsterData = monsterDoc.data();
+            if (monsterData.ownerId !== user.uid) {
+                throw new Error('Monster not owned by user');
             }
 
             const battleData = {
@@ -32,9 +38,9 @@ class PvPBattleManager {
                 creator: {
                     uid: user.uid,
                     monster: monsterId,
-                    monsterData: monsterDoc.data(),
+                    monsterData: monsterData,
                     ready: true,
-                    currentHP: monsterDoc.data().HP
+                    currentHP: monsterData.HP
                 },
                 opponent: null,
                 status: 'waiting',

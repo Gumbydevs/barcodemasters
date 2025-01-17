@@ -299,26 +299,46 @@
         // Make functions globally accessible right away
         window.createBattle = async () => {
             if (!window.selectedMonsterId) {
-                alert('Please select a monster first!');
+                showToast('Please select a monster first!', false);
                 return;
             }
 
             const user = firebase.auth().currentUser;
             if (!user) {
-                alert('Please log in first!');
+                showToast('Please log in first!', false);
                 return;
             }
 
             const battleCode = generateBattleCode();
 
             try {
+                showToast('Creating battle...'); // Add feedback
+                
+                // Verify monster data first
+                const monsterData = await fetchMonsterData(window.selectedMonsterId);
+                if (!monsterData) {
+                    throw new Error('Could not fetch monster data');
+                }
+
                 // Create battle in user's subcollection
-                await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
+                const battleData = await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
+                
+                // Store battle info in localStorage
+                localStorage.setItem('currentBattle', JSON.stringify({
+                    battleCode,
+                    creatorId: user.uid,
+                    role: 'creator'
+                }));
+
                 showToast(`Battle created! Code: ${battleCode}`);
-                monitorBattle(battleCode);
+                
+                // Redirect to battle page with a small delay
+                setTimeout(() => {
+                    window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${user.uid}`;
+                }, 1000);
             } catch (error) {
                 console.error('Error creating battle:', error);
-                showToast('Error creating battle!', false);
+                showToast(`Error creating battle: ${error.message}`, false);
             }
         };
 
@@ -620,6 +640,26 @@
             );
         };
 
+        // Add this helper function before the PvPBattle component
+        async function fetchMonsterData(monsterId) {
+            try {
+                const monsterDoc = await firebase.firestore()
+                    .collection('monsters')
+                    .doc(monsterId)
+                    .get();
+
+                if (!monsterDoc.exists) {
+                    throw new Error('Monster not found');
+                }
+
+                return monsterDoc.data();
+            } catch (error) {
+                console.error('Error fetching monster data:', error);
+                showToast('Error fetching monster data!', false);
+                return null;
+            }
+        }
+
         // Initialize the app
         const initializePvPBattle = async () => {
             const user = firebase.auth().currentUser;
@@ -859,6 +899,6 @@
             }
         });
     </script>
-    <h6>Version: 0.0031</h6>
+    <h6>Version: 0.0032</h6>
 </body>
 </html>
