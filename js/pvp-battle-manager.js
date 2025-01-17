@@ -17,21 +17,22 @@ class PvPBattleManager {
         const user = firebase.auth().currentUser;
         if (!user) throw new Error('Not authenticated');
 
+        const db = firebase.firestore();
+        
         try {
-            // Fetch monster data first
-            const monsterDoc = await firebase.firestore()
-                .collection('monsters')
-                .doc(monsterId)
-                .get();
-
-            if (!monsterDoc.exists) {
-                throw new Error('Monster not found');
-            }
+            // Fetch monster data
+            const monsterDoc = await db.collection('monsters').doc(monsterId).get();
+            if (!monsterDoc.exists) throw new Error('Monster not found');
 
             const monsterData = monsterDoc.data();
-            if (monsterData.ownerId !== user.uid) {
-                throw new Error('Monster not owned by user');
-            }
+            if (monsterData.ownerId !== user.uid) throw new Error('Not your monster');
+
+            // Create battle document
+            const battleRef = db
+                .collection('users')
+                .doc(user.uid)
+                .collection('battles')
+                .doc(battleCode);
 
             const battleData = {
                 battleCode,
@@ -39,25 +40,19 @@ class PvPBattleManager {
                     uid: user.uid,
                     monster: monsterId,
                     monsterData: monsterData,
-                    ready: true,
-                    currentHP: monsterData.HP
+                    currentHP: monsterData.HP,
+                    ready: true
                 },
                 opponent: null,
                 status: 'waiting',
                 currentTurn: null,
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-                created: firebase.firestore.FieldValue.serverTimestamp()
+                created: firebase.firestore.FieldValue.serverTimestamp(),
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            // Create in user's battles subcollection
-            await firebase.firestore()
-                .collection('users')
-                .doc(user.uid)
-                .collection('battles')
-                .doc(battleCode)
-                .set(battleData);
-
+            await battleRef.set(battleData);
             return battleData;
+
         } catch (error) {
             console.error('Error creating battle:', error);
             throw error;
@@ -65,6 +60,8 @@ class PvPBattleManager {
     }
 
     async makeMove(move, data) {
+        if (!this.battleRef) throw new Error('Battle reference not initialized');
+        
         const user = firebase.auth().currentUser;
         if (!user) throw new Error('User not authenticated');
 
@@ -74,20 +71,19 @@ class PvPBattleManager {
         const battleData = battle.data();
         if (battleData.currentTurn !== user.uid) throw new Error('Not your turn');
 
-        // Process the move
+        // Calculate the move outcome
         const updates = this.calculateMoveOutcome(move, data, battleData);
-        
+
         // Update battle state
-        await this.battleRef.update({
+        return await this.battleRef.update({
             ...updates,
             lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
             currentTurn: this.getNextTurn(battleData),
-            moves: firebase.firestore.FieldValue.arrayUnion({
-                player: user.uid,
+            [`${user.uid === battleData.creator.uid ? 'creator' : 'opponent'}.lastMove`]: {
                 move,
                 data,
                 timestamp: new Date()
-            })
+            }
         });
     }
 
@@ -275,4 +271,33 @@ class PvPBattleManager {
             throw error;
         }
     }
+
+    // Add these missing helper methods
+    static async getBattleById(creatorId, battleCode) {
+        const db = firebase.firestore();
+        return await db
+            .collection('users')
+            .doc(creatorId)
+            .collection('battles')
+            .doc(battleCode)
+            .get();
+    }
+
+    // Add damage calculation directly in the manager
+    calculateDamage(attacker, isPlayer = true) {
+        const baseAP = parseInt(attacker.AP) || 5;
+        const variance = Math.floor((Math.random() * 0.3 - 0.15) * baseAP);
+        let damage = baseAP + variance;
+        
+        // Critical hit chance (10%)
+        if (Math.random() < 0.1) {
+            damage = Math.floor(damage * 1.5);
+            return { damage, isCritical: true };
+        }
+        
+        return { damage, isCritical: false };
+    }
 }
+
+// Export the class
+window.PvPBattleManager = PvPBattleManager;
