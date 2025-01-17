@@ -1607,7 +1607,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05639</span></p>
+            <p>Version: <span id="versionNumber">1.0.0564</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1985,7 +1985,7 @@
                     const randomVictoryMessage = victoryMessages[Math.floor(Math.random() * victoryMessages.length)]
                         .replace('{username}', username)
                         .replace('{xp}', totalExp);
-                    showToast(`${randomVictoryMessage}\nGained ${totalExp} XP! 🎉`);
+                        showToast(`${randomVictoryMessage}\nGained <span style='color: black'>${totalExp} XP! 🎉</span>`);
 
                     // Get current monster data
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
@@ -2022,10 +2022,10 @@
 
                         setTimeout(() => {
                             const randomLevelUpMessage = levelUpMessages[Math.floor(Math.random() * levelUpMessages.length)]
-                                .replace('{username}', username)
+                                .replace('{monsterName}', playerMonster.monsterName)
                                 .replace('{level}', updates.level);
                             showToast(randomLevelUpMessage, true);
-                            addToLog(`🌟 Level Up! Now level ${newLevel}!`);
+                            addToLog(`🌟 Level Up! ${playerMonster.monsterName} is now level ${newLevel}!`);
                         }, 1500);
                     }
 
@@ -2122,7 +2122,7 @@
                     const random = Math.random();
                     if (random < 0.4) { // 40% chance to heal
                         action = 'heal';
-                    } else if (random < 0.7) { // 30% chance to defend
+                    } else if (random < 0.3) { // 30% chance to defend
                         action = 'defend';
                     }
                     // 30% chance to attack
@@ -2599,19 +2599,19 @@
 
             // Encouraging victory , level up and defeat messages
             const victoryMessages = [
-                "Great win, {username}! Gained <span class='xp-gain' style='color: black'>{xp}</span>!",
-                "Awesome job, {username}! Earned <span class='xp-gain'style='color: black'>{xp}</span>!",
-                "Well done, {username}! Got <span class='xp-gain' style='color: black'>{xp}</span>!",
-                "Nice work, {username}! <span class='xp-gain' style='color: black'>{xp}</span> gained!",
-                "You did it, {username}! <span class='xp-gain' style='color: black'>{xp}</span> earned!"
+                "Great win, {username}! ",
+                "Awesome job, {username}! ",
+                "Well done, {username}! ",
+                "Nice work, {username}! ",
+                "You did it, {username}! "  
             ];
 
             const levelUpMessages = [
-                "Level up! {playerMonster.monsterName} is now level <span class='level-up' style='color: black'>{level}</span>!",
-                "Congrats! {playerMonster.monsterName} reached level <span class='level-up' style='color: black'>{level}</span>!",
-                "Amazing! Level <span class='level-up' style='color: black'>{level}</span>!",
-                "Great stuff! {playerMonster.monsterName} is now level <span class='level-up' style='color: black'>{level}</span>!",
-                "Fantastic! {playerMonster.monsterName} hit Level <span class='level-up' style='color: black'>{level}</span>!"
+                "Level up! {monsterName} is now level {level}!",
+                "Congrats! {monsterName} reached level {level}!",
+                "Amazing! {monsterName} is now level {level}!",
+                "Great stuff! {monsterName} is now level {level}!",
+                "Fantastic! {monsterName} hit level {level}!"
             ];
 
             const defeatMessages = [
