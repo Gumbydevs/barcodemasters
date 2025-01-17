@@ -164,31 +164,66 @@ class PvPBattleManager {
         const db = firebase.firestore();
         try {
             const userBattlesRef = db.collection('users').doc(userId).collection('battles');
+            
+            // Get all potentially stuck battles
             const stuckBattles = await userBattlesRef
-                .where('status', 'in', ['waiting', 'in_progress'])
+                .where('status', 'in', ['waiting', 'in_progress', 'joining'])
                 .get();
 
-            const twoHoursAgo = new Date();
-            twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+            const thirtyMinutesAgo = new Date();
+            thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
 
             const cleanup = stuckBattles.docs.map(async (doc) => {
                 const battle = doc.data();
                 const lastUpdate = battle.lastUpdate?.toDate() || battle.created?.toDate();
                 
-                if (lastUpdate < twoHoursAgo) {
+                if (lastUpdate < thirtyMinutesAgo) {
+                    // Delete old battles
                     await doc.ref.delete();
                 } else {
+                    // Cancel more recent ones
                     await doc.ref.update({
                         status: 'cancelled',
-                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                        cancellationReason: 'cleanup'
                     });
                 }
             });
 
             await Promise.all(cleanup);
+
+            // Also reset the user's battle state
+            await db.collection('users').doc(userId).update({
+                activeBattle: null,
+                battleStatus: null
+            });
+
             return true;
         } catch (error) {
             console.error('Error cleaning up battles:', error);
+            throw error;
+        }
+    }
+
+    // Add this method to handle force reset
+    static async forceResetBattle(userId, battleCode) {
+        const db = firebase.firestore();
+        try {
+            const battleRef = db.collection('users').doc(userId).collection('battles').doc(battleCode);
+            await battleRef.update({
+                status: 'cancelled',
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                cancellationReason: 'force_reset'
+            });
+            
+            await db.collection('users').doc(userId).update({
+                activeBattle: null,
+                battleStatus: null
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error force resetting battle:', error);
             throw error;
         }
     }
