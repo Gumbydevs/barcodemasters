@@ -284,6 +284,8 @@
             }
 
             try {
+                showToast('Joining battle...'); // Add feedback
+                
                 // Find the battle doc and creatorId
                 const groupSnapshot = await firebase.firestore()
                     .collectionGroup('battles')
@@ -293,7 +295,7 @@
                     .get();
 
                 if (groupSnapshot.empty) {
-                    alert('Battle not found!');
+                    showToast('Battle not found!', false);
                     return;
                 }
 
@@ -301,34 +303,21 @@
                 const creatorId = doc.ref.parent.parent.id;
                 const battleRef = doc.ref;
 
-                // Add debug information
-                console.log('Joining battle:', {battleCode, creatorId});
+                // Lock the battle immediately to prevent others from joining
+                await battleRef.update({
+                    status: 'joining',
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-                // Add more debug logging
-                console.log('Getting battle data...');
-                const battle = await battleRef.get();
-                
-                if (!battle.exists) {
-                    alert('Battle not found!');
-                    return;
-                }
-
-                console.log('Battle data:', battle.data());
-                const battleData = battle.data();
-                
-                if (battleData.status !== 'waiting') {
-                    alert('Battle already in progress!');
-                    return;
-                }
-
-                console.log('Fetching monster data...');
+                // Get monster data
                 const monsterData = await fetchMonsterData(window.selectedMonsterId);
                 if (!monsterData) {
-                    alert('Error fetching monster data!');
+                    await battleRef.update({ status: 'waiting' }); // Reset status if failed
+                    showToast('Error fetching monster data!', false);
                     return;
                 }
 
-                console.log('Updating battle...'); 
+                // Update battle with opponent data
                 await battleRef.update({
                     opponent: {
                         uid: user.uid,
@@ -342,81 +331,44 @@
                     lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                console.log('Battle joined successfully, redirecting...');
-                // Add a small delay before redirect to ensure update completes
+                // Store battle info in localStorage to prevent reload issues
+                localStorage.setItem('currentBattle', JSON.stringify({
+                    battleCode,
+                    creatorId,
+                    role: 'opponent'
+                }));
+
+                // Redirect with a small delay to ensure updates are complete
                 setTimeout(() => {
                     window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
                 }, 1000);
 
             } catch (error) {
-                // Stop and show the error
-                alert(`Error joining battle:\n${error.message}\n${error.stack}`);
-                console.error('Full error:', error);
+                console.error('Error joining battle:', error);
+                showToast(`Error joining battle: ${error.message}`, false);
             }
         };
 
-        // Add other necessary functions
-        window.showToast = (message, isSuccess = true) => {
-            const toast = document.createElement('div');
-            toast.className = `toast${!isSuccess ? ' error' : ''}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.transform = 'translateY(0)';
-                toast.style.opacity = '1';
-            }, 100);
+        // Add this function to handle page load/reload during battle
+        const handleBattleState = () => {
+            const battleInfo = localStorage.getItem('currentBattle');
+            if (battleInfo) {
+                try {
+                    const { battleCode, creatorId } = JSON.parse(battleInfo);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentBattle = urlParams.get('battle');
 
-            setTimeout(() => {
-                toast.style.transform = 'translateY(100px)';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
-
-        window.fetchMonsterData = async (monsterId) => {
-            try {
-                const monsterRef = db.collection('monsters').doc(monsterId);
-                const doc = await monsterRef.get();
-                if (doc.exists) {
-                    return {
-                        id: doc.id,
-                        ...doc.data()
-                    };
-                }
-                console.log('No monster document found');
-                return null;
-            } catch (error) {
-                console.error('Error fetching monster data:', error);
-                return null;
-            }
-        };
-
-        window.monitorBattle = (battleCode) => {
-            const user = firebase.auth().currentUser;
-            if (!user) return;
-
-            // First try to find the battle as creator
-            let unsubscribe = firebase.firestore()
-                .collection('users')
-                .doc(user.uid)
-                .collection('battles')
-                .doc(battleCode)
-                .onSnapshot(
-                    (doc) => {
-                        if (doc.exists) {
-                            const battle = doc.data();
-                            if (battle.status === 'in_progress') {
-                                window.location.href = `pvp-battle.html?battle=${battleCode}`;
-                            }
-                        }
-                    },
-                    (error) => {
-                        console.error('Battle monitoring error:', error);
+                    // If we're not on the battle page but have an active battle, redirect
+                    if (!currentBattle && battleCode) {
+                        window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
+                        return true;
                     }
-                );
-
-            return unsubscribe;
+                } catch (error) {
+                    console.error('Error handling battle state:', error);
+                    localStorage.removeItem('currentBattle');
+                }
+            }
+            return false;
         };
 
         // PvP Battle Component
@@ -791,20 +743,19 @@
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 try {
-                    // Check if PvPBattleManager is loaded
+                    // Check for active battle first
+                    if (handleBattleState()) {
+                        return; // Skip other initialization if redirecting
+                    }
+
                     if (typeof PvPBattleManager === 'undefined') {
                         console.error('PvPBattleManager not loaded');
                         showToast('Error loading battle manager', false);
                         return;
                     }
 
-                    // Create an instance first
                     const tempManager = new PvPBattleManager(null, null);
-                    
-                    // Initialize battles collection using the instance
                     await tempManager.initializeBattlesCollection(user.uid);
-                    
-                    // Load monsters and initialize battle
                     await loadUserMonsters();
                     await initializePvPBattle();
                 } catch (error) {
@@ -836,6 +787,11 @@
             }
         };
 
+        window.endBattle = () => {
+            localStorage.removeItem('currentBattle');
+            window.location.href = 'pvp-battle.html';
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             const toggleBtn = document.getElementById('darkModeToggle');
             if (toggleBtn) {
@@ -845,6 +801,6 @@
             }
         });
     </script>
-    <h6>Version: 0.002</h6>
+    <h6>Version: 0.003</h6>
 </body>
 </html>
