@@ -313,7 +313,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.08</span></p>
+        <p>Version: <span id="versionNumber">1.0.09</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
     <script type="module">
@@ -1008,8 +1008,11 @@
                         <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
                             Retry DNA Synthesis
                         </button>
-                        <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
-                            Delete Failed Monster
+                        <p style="font-size: 0.8em; color: #666; margin-top: 1rem;">
+                            Don't want to wait? Delete the failed monster and get your scan point back.
+                        </p>
+                        <button id="deleteFailedMonster" class="scan-button" style="margin-top: 0.5rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                            Delete Failed Monster (Refund Scan Point)
                         </button>
                     </div>
                 `;
@@ -1079,51 +1082,83 @@
 
         // Add helper function for displaying retry error
         function displayRetryError(monsterImage, monster, prompt) {
+            let retryCount = 0;  // Track retry attempts
+            
             monsterImage.innerHTML = `
                 <div style="text-align: center; padding: 2rem;">
                     <p>DNA Synthesis Failed</p>
                     <p style="font-size: 0.8em; color: #666;">
-                        All DNA synthesizers are currently busy. Please try again later or delete this failed monster.
+                        ${retryCount === 0 ? 
+                        'One more attempt available. Try again?' : 
+                        'Maximum attempts reached. Please delete the failed monster.'}
                     </p>
-                    <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
-                        Retry DNA Synthesis
-                    </button>
-                    <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
-                        Delete Failed Monster
+                    ${retryCount === 0 ? 
+                        `<button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
+                            Retry DNA Synthesis
+                        </button>` : ''}
+                    <p style="font-size: 0.8em; color: #666; margin-top: 1rem;">
+                        Don't worry - deleting the failed monster will refund your scan point!
+                    </p>
+                    <button id="deleteFailedMonster" class="scan-button" style="margin-top: 0.5rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                        Delete Failed Monster (Refund Scan Point)
                     </button>
                 </div>
             `;
 
-            // Reattach event listeners
             const newRetryButton = monsterImage.querySelector('#retryGenerationButton');
             const newDeleteButton = monsterImage.querySelector('#deleteFailedMonster');
             
-            newRetryButton.addEventListener('click', async () => {
-                try {
-                    newRetryButton.disabled = true;
-                    const newImageUrl = await generateImage(prompt, monster, 0);
-                    if (!newImageUrl) throw new Error('Failed to generate image');
-                    monsterImage.innerHTML = `
-                        <img src="${newImageUrl}" alt="${monster.monsterName}" 
-                            style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
-                    `;
-                } catch (error) {
-                    newRetryButton.disabled = false;
-                    displayRetryError(monsterImage, monster, prompt);
-                }
-            });
+            if (newRetryButton) {
+                newRetryButton.addEventListener('click', async () => {
+                    try {
+                        newRetryButton.disabled = true;
+                        const newImageUrl = await generateImage(prompt, monster, 0);
+                        if (!newImageUrl) throw new Error('Failed to generate image');
+                        monsterImage.innerHTML = `
+                            <img src="${newImageUrl}" alt="${monster.monsterName}" 
+                                style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+                        `;
+                    } catch (error) {
+                        retryCount++;
+                        displayRetryError(monsterImage, monster, prompt);
+                    }
+                });
+            }
 
             newDeleteButton.addEventListener('click', async () => {
                 try {
+                    const user = auth.currentUser;
+                    if (!user) throw new Error('User not authenticated');
+
                     const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
                     await deleteDoc(doc(db, 'monsters', monsterInstanceId));
-                    await updateDoc(doc(db, 'users', monster.ownerId), {
-                        usedHash: arrayRemove(monster.hash)
+
+                    // Refund scan point
+                    const userRef = doc(db, 'users', monster.ownerId);
+                    await runTransaction(db, async (transaction) => {
+                        const userDoc = await transaction.get(userRef);
+                        if (!userDoc.exists()) throw new Error('User document not found');
+
+                        const userData = userDoc.data();
+                        const today = new Date().toLocaleDateString('en-US');
+                        const dailyScans = userData.dailyScans || {};
+                        
+                        if (dailyScans[today] && dailyScans[today] > 0) {
+                            dailyScans[today]--;
+                        }
+
+                        transaction.update(userRef, {
+                            usedHash: arrayRemove(monster.hash),
+                            dailyScans: dailyScans
+                        });
                     });
+
                     document.getElementById('monsterResult').style.display = 'none';
-                    updateDebugMessage('Failed monster deleted. You can try scanning a new code.');
+                    updateDebugMessage('Failed monster deleted. Scan point refunded. You can try scanning a new code.');
                     document.getElementById('startButton').style.display = 'block';
+                    await refreshScanLimits(); // Refresh the display
                 } catch (error) {
+                    console.error('Error deleting failed monster:', error);
                     showError('Failed to delete monster. Please try again.');
                 }
             });
