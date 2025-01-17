@@ -1607,7 +1607,7 @@
         </div>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05638</span></p>
+            <p>Version: <span id="versionNumber">1.0.05639</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -1958,14 +1958,16 @@
 
                 try {
                     // Calculate XP gain with improved exponential scaling
-                    const baseXP = 20;
+                    const baseXP = 20 * Math.pow(1.2, Math.max(0, opponentMonster.level - 5)); // Exponential base scaling
                     const levelDifference = opponentMonster.level - playerMonster.level;
                     
+                    // More generous level difference bonus
+                    const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.85 : 0));
+                    
                     // Improved exponential scaling - more generous at higher levels
-                    const levelScaling = Math.pow(1.15, opponentMonster.level - 1); // Changed from 1.1 to 1.15
-                    const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.75 : 0)); // Changed from 0.5 to 0.75
+                    const levelScaling = Math.pow(1.25, opponentMonster.level - 1); // Increased from 1.15 to 1.25
                     const scaledBaseXP = Math.floor(baseXP * levelScaling);
-                    const randomBonus = Math.floor(Math.random() * 15); // Changed from 10 to 15
+                    const randomBonus = Math.floor(Math.random() * (baseXP * 0.2)); // Random bonus scales with base XP
                     const totalExp = scaledBaseXP + levelBonus + randomBonus;
 
                     console.log('Victory XP calculation:', {

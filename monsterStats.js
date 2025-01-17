@@ -8,7 +8,7 @@
         calculateXPForNextLevel: function(currentLevel) {
             if (!currentLevel || currentLevel < 1) return 150;
             const baseXP = 150;
-            const multiplier = Math.pow(1.75, currentLevel - 1);
+            const multiplier = Math.pow(1.65, currentLevel - 1); // Reduced from 1.75 to 1.65 for smoother scaling
             return Math.floor(baseXP * multiplier);
         },
         
