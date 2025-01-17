@@ -351,18 +351,18 @@
 
         window.joinBattle = async (battleCode) => {
             if (!window.selectedMonsterId) {
-                alert('Please select a monster first!');
+                showToast('Please select a monster first!', false);
                 return;
             }
 
             const user = firebase.auth().currentUser;
             if (!user) {
-                alert('Please log in first!');
+                showToast('Please log in first!', false);
                 return;
             }
 
             try {
-                showToast('Joining battle...'); // Add feedback
+                showToast('Finding battle...'); 
                 
                 // Find the battle doc and creatorId
                 const groupSnapshot = await firebase.firestore()
@@ -373,19 +373,32 @@
                     .get();
 
                 if (groupSnapshot.empty) {
-                    showToast('Battle not found!', false);
+                    showToast('Battle not found or already in progress!', false);
                     return;
                 }
 
-                const doc = groupSnapshot.docs[0];
-                const creatorId = doc.ref.parent.parent.id;
-                const battleRef = doc.ref;
+                const battleDoc = groupSnapshot.docs[0];
+                const creatorId = battleDoc.ref.parent.parent.id;
+                const battleRef = battleDoc.ref;
+                const battleData = battleDoc.data();
 
-                // Lock the battle immediately to prevent others from joining
-                await battleRef.update({
-                    status: 'joining',
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                // Verify not joining own battle
+                if (battleData.creator.uid === user.uid) {
+                    showToast('Cannot join your own battle!', false);
+                    return;
+                }
+
+                try {
+                    // First, try to lock the battle
+                    await battleRef.update({
+                        status: 'joining',
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Error locking battle:', error);
+                    showToast('Battle already taken!', false);
+                    return;
+                }
 
                 // Get monster data
                 const monsterData = await fetchMonsterData(window.selectedMonsterId);
@@ -396,34 +409,44 @@
                 }
 
                 // Update battle with opponent data
-                await battleRef.update({
-                    opponent: {
-                        uid: user.uid,
-                        monster: window.selectedMonsterId,
-                        monsterData: monsterData,
-                        currentHP: monsterData.HP,
-                        ready: true
-                    },
-                    status: 'in_progress',
-                    currentTurn: creatorId,
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                try {
+                    await battleRef.update({
+                        opponent: {
+                            uid: user.uid,
+                            monster: window.selectedMonsterId,
+                            monsterData: monsterData,
+                            currentHP: monsterData.HP,
+                            ready: true
+                        },
+                        status: 'in_progress',
+                        currentTurn: creatorId,
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
-                // Store battle info in localStorage to prevent reload issues
-                localStorage.setItem('currentBattle', JSON.stringify({
-                    battleCode,
-                    creatorId,
-                    role: 'opponent'
-                }));
+                    // Store battle info
+                    localStorage.setItem('currentBattle', JSON.stringify({
+                        battleCode,
+                        creatorId,
+                        role: 'opponent'
+                    }));
 
-                // Redirect with a small delay to ensure updates are complete
-                setTimeout(() => {
-                    window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
-                }, 1000);
+                    showToast('Successfully joined battle!');
+                    
+                    // Redirect to battle
+                    setTimeout(() => {
+                        window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('Error joining battle:', error);
+                    // Try to reset battle status
+                    await battleRef.update({ status: 'waiting' });
+                    showToast('Error joining battle. Please try again.', false);
+                }
 
             } catch (error) {
                 console.error('Error joining battle:', error);
-                showToast(`Error joining battle: ${error.message}`, false);
+                showToast(`Error: ${error.message}`, false);
             }
         };
 
@@ -899,6 +922,6 @@
             }
         });
     </script>
-    <h6>Version: 0.0032</h6>
+    <h6>Version: 0.0033</h6>
 </body>
 </html>
