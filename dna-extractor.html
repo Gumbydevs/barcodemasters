@@ -313,7 +313,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.09</span></p>
+        <p>Version: <span id="versionNumber">1.0.101</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
     <script type="module">
@@ -1015,7 +1015,7 @@
                         const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
                         await deleteDoc(doc(db, 'monsters', monsterInstanceId));
 
-                        // Refund scan point
+                        // Refund scan point by decreasing dailyScans count
                         const userRef = doc(db, 'users', monster.ownerId);
                         await runTransaction(db, async (transaction) => {
                             const userDoc = await transaction.get(userRef);
@@ -1025,8 +1025,13 @@
                             const today = new Date().toLocaleDateString('en-US');
                             const dailyScans = userData.dailyScans || {};
                             
+                            // Only decrease if there are scans recorded for today
                             if (dailyScans[today] && dailyScans[today] > 0) {
                                 dailyScans[today]--;
+                                // If count reaches 0, remove the entry for today
+                                if (dailyScans[today] === 0) {
+                                    delete dailyScans[today];
+                                }
                             }
 
                             transaction.update(userRef, {
