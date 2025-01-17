@@ -235,34 +235,42 @@
             }
 
             const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Please log in first!');
+                return;
+            }
 
             try {
+                // Create battle reference
                 const battleRef = firebase.firestore()
                     .collection('users')
                     .doc(creatorId)
                     .collection('battles')
                     .doc(battleCode);
 
+                // Get battle data
                 const battle = await battleRef.get();
-
                 if (!battle.exists) {
                     showToast('Battle not found!', false);
                     return;
                 }
 
                 const battleData = battle.data();
-                
                 if (battleData.status !== 'waiting') {
                     showToast('Battle already in progress!', false);
                     return;
                 }
 
+                // Get monster data
                 const monsterData = await fetchMonsterData(window.selectedMonsterId);
+                
+                // Join battle
                 await battleRef.update({
                     opponent: {
                         uid: user.uid,
                         monster: window.selectedMonsterId,
-                        monsterData,
+                        monsterData: monsterData,
+                        currentHP: monsterData.HP,
                         ready: true
                     },
                     status: 'in_progress',
@@ -270,7 +278,8 @@
                     lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                monitorBattle(battleCode);
+                // Redirect to battle
+                window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
 
             } catch (error) {
                 console.error('Error joining battle:', error);
@@ -343,7 +352,7 @@
         };
 
         // PvP Battle Component
-        const PvPBattle = ({ battleCode }) => {
+        const PvPBattle = ({ battleCode, creatorId }) => {
             const [battleState, setBattleState] = React.useState(null);
             const [playerMonster, setPlayerMonster] = React.useState(null);
             const [opponentMonster, setOpponentMonster] = React.useState(null);
@@ -357,32 +366,52 @@
 
             // Monitor battle state
             React.useEffect(() => {
-                const unsubscribe = db.collection('pvp_battles')
+                if (!battleCode || !creatorId) return;
+
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+
+                const unsubscribe = firebase.firestore()
+                    .collection('users')
+                    .doc(creatorId)
+                    .collection('battles')
                     .doc(battleCode)
                     .onSnapshot((doc) => {
-                        if (!doc.exists) return;
-                        
+                        if (!doc.exists) {
+                            showToast('Battle not found!', false);
+                            return;
+                        }
+
                         const battle = doc.data();
-                        const user = firebase.auth().currentUser;
-                        
                         setBattleState(battle);
                         setIsMyTurn(battle.currentTurn === user.uid);
-                        
+
+                        // Set player and opponent data based on role
                         if (battle.creator.uid === user.uid) {
                             setPlayerMonster(battle.creator.monsterData);
-                            setPlayerHealth(battle.creator.currentHP || battle.creator.monsterData.HP);
+                            setPlayerHealth(battle.creator.currentHP);
                             setOpponentMonster(battle.opponent?.monsterData);
-                            setOpponentHealth(battle.opponent?.currentHP || battle.opponent?.monsterData.HP);
+                            setOpponentHealth(battle.opponent?.currentHP);
                         } else {
-                            setPlayerMonster(battle.opponent?.monsterData);
-                            setPlayerHealth(battle.opponent?.currentHP || battle.opponent?.monsterData.HP);
+                            setPlayerMonster(battle.opponent.monsterData);
+                            setPlayerHealth(battle.opponent.currentHP);
                             setOpponentMonster(battle.creator.monsterData);
-                            setOpponentHealth(battle.creator.currentHP || battle.creator.monsterData.HP);
+                            setOpponentHealth(battle.creator.currentHP);
+                        }
+
+                        // Check battle status
+                        if (battle.status === 'completed') {
+                            setIsBattleOver(true);
+                            if (battle.winner === user.uid) {
+                                handleVictory();
+                            } else {
+                                handleDefeat();
+                            }
                         }
                     });
 
                 return () => unsubscribe();
-            }, [battleCode]);
+            }, [battleCode, creatorId]);
 
             // Battle action handlers
             const handleAttack = async () => {
@@ -514,17 +543,34 @@
         };
 
         // Initialize the app
-        const initializePvPBattle = () => {
+        const initializePvPBattle = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const battleCode = urlParams.get('battle');
+            const creatorId = urlParams.get('creator');
             
-            if (battleCode) {
-                // Join/resume specific battle
-                document.getElementById('battleLobby').style.display = 'none';
-                document.getElementById('battleArena').style.display = 'block';
-                ReactDOM.render(<PvPBattle battleCode={battleCode} />, document.getElementById('root'));
+            if (battleCode && creatorId) {
+                try {
+                    // Set up battle manager
+                    window.pvpBattleManager = new PvPBattleManager(battleCode, creatorId);
+                    
+                    // Hide lobby and show arena
+                    document.getElementById('battleLobby').style.display = 'none';
+                    document.getElementById('monsterSelect').style.display = 'none';
+                    document.getElementById('battleArena').style.display = 'block';
+                    
+                    // Render battle component
+                    ReactDOM.render(
+                        <PvPBattle 
+                            battleCode={battleCode} 
+                            creatorId={creatorId}
+                        />, 
+                        document.getElementById('root')
+                    );
+                } catch (error) {
+                    console.error('Error initializing battle:', error);
+                    showToast('Error starting battle!', false);
+                }
             } else {
-                // Show battle lobby and active battles
                 loadActiveBattles();
             }
         };
@@ -535,14 +581,15 @@
             if (!user) return;
 
             try {
-                // Query using collection group
+                // Temporary solution while index builds
                 const battlesQuery = await firebase.firestore()
                     .collectionGroup('battles')
-                    .where('status', '==', 'waiting')
+                    .orderBy('created', 'desc')  // This might need its own index but usually exists by default
+                    .limit(10)
                     .get();
 
                 const battlesHTML = battlesQuery.docs
-                    .filter(doc => doc.data().creator.uid !== user.uid) // Filter out own battles
+                    .filter(doc => doc.data().status === 'waiting' && doc.data().creator.uid !== user.uid)
                     .map(doc => {
                         const battle = doc.data();
                         const creatorId = doc.ref.parent.parent.id;

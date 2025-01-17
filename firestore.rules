@@ -23,13 +23,16 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
-      // Simplified battles rules
+      // Updated battles rules to allow joining
       match /battles/{battleId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated();
+        // Allow updates if user is either the creator or is joining as opponent
         allow update: if isAuthenticated() && (
-          resource.data.creator.uid == request.auth.uid ||
-          resource.data.opponent.uid == request.auth.uid
+          (resource.data.creator.uid == request.auth.uid) || 
+          (resource.data.status == 'waiting' && 
+           resource.data.creator.uid != request.auth.uid) ||
+          (resource.data.opponent.uid == request.auth.uid)
         );
         allow delete: if isAuthenticated() && 
           resource.data.creator.uid == request.auth.uid;

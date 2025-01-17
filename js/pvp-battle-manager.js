@@ -1,10 +1,12 @@
 class PvPBattleManager {
-    constructor(battleCode) {
-        const user = firebase.auth().currentUser;
+    constructor(battleCode, creatorId) {
         this.battleCode = battleCode;
-        // Store user reference
-        this.userRef = firebase.firestore().collection('users').doc(user.uid);
-        this.battleRef = this.userRef.collection('battles').doc(battleCode);
+        this.creatorId = creatorId;
+        this.battleRef = firebase.firestore()
+            .collection('users')
+            .doc(creatorId)
+            .collection('battles')
+            .doc(battleCode);
     }
 
     // Update the createBattle static method
@@ -142,5 +144,10 @@ class PvPBattleManager {
         // Switch turns between creator and opponent
         return battleState.currentTurn === battleState.creator.uid ?
             battleState.opponent.uid : battleState.creator.uid;
+    }
+
+    // Add new method to get battle reference
+    getBattleRef() {
+        return this.battleRef;
     }
 }
