@@ -44,19 +44,20 @@
 
         .monster-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
             width: 100%;
         }
 
         .monster-card {
             background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
+            padding: 0.75rem;
             border-radius: 12px;
             backdrop-filter: blur(10px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .monster-card:hover {
@@ -71,24 +72,25 @@
 
         .monster-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
             margin: 1rem 0;
+            font-size: 0.8rem;
         }
 
         .stat-item {
             text-align: center;
-            padding: 0.5rem;
+            padding: 0.25rem;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
         }
 
         .monster-name {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #3498db;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         h2 {
@@ -181,9 +183,9 @@
 
         .monster-type-badge {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
+            padding: 0.15rem 0.5rem;
             border-radius: 12px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             background: rgba(52, 152, 219, 0.2);
             color: #3498db;
             margin-bottom: 0.5rem;
@@ -192,9 +194,9 @@
         /* Add monster image container styles */
         .monster-image-container {
             width: 100%;
-            height: 280px;
+            height: 150px;
             border-radius: 8px;
-            margin: 1rem 0;
+            margin: 0.5rem 0;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -213,10 +215,10 @@
         /* Update placeholder styles */
         .monster-image-placeholder {
             width: 100%;
-            height: 280px;
+            height: 150px;
             background: rgba(128, 128, 128, 0.1);
             border-radius: 8px;
-            margin: 1rem 0;
+            margin: 0.5rem 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -282,6 +284,32 @@
             font-size: 0.8rem;
             z-index: 1;
         }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            color: inherit;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .dark-mode .filter-select {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .created-date {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -297,6 +325,21 @@
         </div>
 
         <h2>Select Your Monster for Battle</h2>
+
+        <!-- Add filter controls -->
+        <div class="filter-controls">
+            <select id="sortBy" class="filter-select">
+                <option value="dateDesc">Date (Newest)</option>
+                <option value="dateAsc">Date (Oldest)</option>
+                <option value="nameAsc">Name (A-Z)</option>
+                <option value="nameDesc">Name (Z-A)</option>
+                <option value="levelDesc">Level (High-Low)</option>
+                <option value="levelAsc">Level (Low-High)</option>
+            </select>
+            <select id="filterType" class="filter-select">
+                <option value="all">All Types</option>
+            </select>
+        </div>
         
         <!-- Add the top Start Battle button -->
         <button id="startBattleTop" class="start-battle-button" disabled>Start Battle</button>
@@ -307,7 +350,7 @@
         <button id="startBattleBottom" class="start-battle-button" disabled>Start Battle</button>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.05</span></p>
+            <p>Version: <span id="versionNumber">1.0.06</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -368,90 +411,151 @@
                 return;
             }
 
+            // Get all monster types for the filter
+            const typesRef = collection(db, 'monsterTypes');
+            const typesSnapshot = await getDocs(typesRef);
+            const typeSelect = document.getElementById('filterType');
+            typesSnapshot.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = doc.id;
+                typeSelect.appendChild(option);
+            });
+
             const monstersRef = collection(db, 'monsters');
             const q = query(monstersRef, where('ownerId', '==', user.uid));
             const querySnapshot = await getDocs(q);
+            
+            // Convert to array for sorting
+            let monsters = [];
+            querySnapshot.forEach(doc => {
+                monsters.push({ id: doc.id, ...doc.data() });
+            });
 
-            const grid = document.getElementById('monsterGrid');
-            for (const doc of querySnapshot.docs) {
-                const monster = doc.data();
-                const ownerUsername = await getUsernameById(monster.ownerId);
+            // Initial sort by date
+            monsters.sort((a, b) => b.dateCreated - a.dateCreated);
+
+            const renderMonsters = async (filteredMonsters) => {
+                const grid = document.getElementById('monsterGrid');
+                grid.innerHTML = ''; // Clear existing monsters
                 
-                // Get XP info using monsterStats utility
-                const xpInfo = window.monsterStats.getXPInfo(monster);
-                
-                const card = document.createElement('div');
-                card.className = 'monster-card';
-                if (monster.isOccupied) {
-                    card.classList.add('occupied');
-                }
-                
-                // Add occupied badge if monster is busy
-                const occupiedBadge = monster.isOccupied ? `<div class="occupied-badge">Busy</div>` : '';
-                
-                card.innerHTML = `
-                    ${occupiedBadge}
-                    <div class="monster-info">
-                        <div class="monster-name">${monster.monsterName}</div>
-                        ${monster.imageUrl ? 
-                            `<div class="monster-image-container">
-                                <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
-                                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
-                            </div>` : 
-                            `<div class="monster-image-placeholder"></div>`}
-                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                        
-                        <div class="monster-stats">
-                            <div class="stat-item">
-                                <span>Level</span>
-                                <span>${monster.level}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>HP</span>
-                                <span>${monster.currentHP || monster.HP}/${monster.HP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>AP</span>
-                                <span>${monster.AP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Speed</span>
-                                <span>${monster.Speed}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>XP</span>
-                                <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Owner</span>
-                                <span>${ownerUsername}</span>
-                            </div>
-                        </div>
-                        <div class="xp-progress">
-                            <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
-                        </div>
-                        <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
-                        <div class="created-date">Creator: ${ownerUsername}</div>
-                    </div>
-                `;
-                
-                card.addEventListener('click', () => {
+                // Use Promise.all to handle async operations in parallel
+                await Promise.all(filteredMonsters.map(async (monster) => {
+                    const ownerUsername = await getUsernameById(monster.ownerId);
+                    const xpInfo = window.monsterStats.getXPInfo(monster);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'monster-card';
                     if (monster.isOccupied) {
-                        showError('This monster is currently busy and cannot be selected for battle.');
-                        return;
+                        card.classList.add('occupied');
                     }
                     
-                    document.querySelectorAll('.monster-card').forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    selectedMonsterId = doc.id;
-                    selectedMonsterData = monster; // Store the selected monster data
-                    console.log('Selected Monster ID:', selectedMonsterId); // Debugging line to track the selected ID
-                    document.getElementById('startBattleTop').disabled = false;
-                    document.getElementById('startBattleBottom').disabled = false;
-                });
+                    const occupiedBadge = monster.isOccupied ? `<div class="occupied-badge">Busy</div>` : '';
+                    
+                    card.innerHTML = `
+                        ${occupiedBadge}
+                        <div class="monster-info">
+                            <div class="monster-name">${monster.monsterName}</div>
+                            ${monster.imageUrl ? 
+                                `<div class="monster-image-container">
+                                    <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
+                                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
+                                </div>` : 
+                                `<div class="monster-image-placeholder"></div>`}
+                            <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                            
+                            <div class="monster-stats">
+                                <div class="stat-item">
+                                    <span>Level</span>
+                                    <span>${monster.level}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>HP</span>
+                                    <span>${monster.currentHP || monster.HP}/${monster.HP}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>AP</span>
+                                    <span>${monster.AP}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>Speed</span>
+                                    <span>${monster.Speed}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>XP</span>
+                                    <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>Owner</span>
+                                    <span>${ownerUsername}</span>
+                                </div>
+                            </div>
+                            <div class="xp-progress">
+                                <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
+                            </div>
+                            <div class="created-date">Created: ${formatDate(monster.dateCreated)}</div>
+                            <div class="created-date">Creator: ${ownerUsername}</div>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => {
+                        if (monster.isOccupied) {
+                            showError('This monster is currently busy and cannot be selected for battle.');
+                            return;
+                        }
+                        
+                        document.querySelectorAll('.monster-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        selectedMonsterId = monster.id;
+                        selectedMonsterData = monster;
+                        document.getElementById('startBattleTop').disabled = false;
+                        document.getElementById('startBattleBottom').disabled = false;
+                    });
 
-                grid.appendChild(card);
-            }
+                    grid.appendChild(card);
+                }));
+            };
+
+            // Sort handler
+            document.getElementById('sortBy').addEventListener('change', (e) => {
+                const sortValue = e.target.value;
+                const type = document.getElementById('filterType').value;
+                
+                let filtered = type === 'all' ? [...monsters] : monsters.filter(m => m.type === type);
+                
+                switch(sortValue) {
+                    case 'dateDesc':
+                        filtered.sort((a, b) => b.dateCreated - a.dateCreated);
+                        break;
+                    case 'dateAsc':
+                        filtered.sort((a, b) => a.dateCreated - b.dateCreated);
+                        break;
+                    case 'nameAsc':
+                        filtered.sort((a, b) => a.monsterName.localeCompare(b.monsterName));
+                        break;
+                    case 'nameDesc':
+                        filtered.sort((a, b) => b.monsterName.localeCompare(a.monsterName));
+                        break;
+                    case 'levelDesc':
+                        filtered.sort((a, b) => b.level - a.level);
+                        break;
+                    case 'levelAsc':
+                        filtered.sort((a, b) => a.level - b.level);
+                        break;
+                }
+                
+                renderMonsters(filtered);
+            });
+
+            // Type filter handler
+            document.getElementById('filterType').addEventListener('change', (e) => {
+                const type = e.target.value;
+                const filtered = type === 'all' ? monsters : monsters.filter(m => m.type === type);
+                document.getElementById('sortBy').dispatchEvent(new Event('change'));
+            });
+
+            // Initial render
+            await renderMonsters(monsters);
         }
 
         function showError(message) {
