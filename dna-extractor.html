@@ -999,169 +999,52 @@
                 const monsterImage = monsterResult.querySelector('.monster-image');
                 monsterImage.innerHTML = `
                     <div style="text-align: center; padding: 2rem;">
-                        <p>DNA Synthesis Interrupted</p>
+                        <p>DNA Synthesis Failed</p>
                         <p style="font-size: 0.8em; color: #666;">
-                            ${error.message.includes('Rate limit') ? 
-                            'The DNA Synthesizer needs time to recharge. Please wait a moment...' : 
-                            'A DNA sequencing error occurred. Please try again.'}
+                            Unable to complete monster synthesis. Click below to get your scan point back.
                         </p>
-                        <button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
-                            Retry DNA Synthesis
-                        </button>
-                        <p style="font-size: 0.8em; color: #666; margin-top: 1rem;">
-                            Don't want to wait? Delete the failed monster and get your scan point back.
-                        </p>
-                        <button id="deleteFailedMonster" class="scan-button" style="margin-top: 0.5rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
-                            Delete Failed Monster (Refund Scan Point)
+                        <button id="deleteFailedMonster" class="scan-button" style="margin-top: 1rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
+                            Get Scan Point Back
                         </button>
                     </div>
                 `;
 
-                const retryButton = monsterImage.querySelector('#retryGenerationButton');
                 const deleteButton = monsterImage.querySelector('#deleteFailedMonster');
-
-                // Fix retry functionality
-                retryButton.addEventListener('click', async () => {
-                    try {
-                        retryButton.disabled = true;
-                        retryButton.style.opacity = '0.5';
-                        retryButton.textContent = 'Retrying...';
-
-                        monsterImage.innerHTML = `
-                            <div style="text-align: center;">
-                                <p>Recalibrating DNA Synthesis...</p>
-                                <p style="font-size: 0.8em;">Adjusting genetic parameters...</p>
-                                <p style="font-size: 0.8em;">Stabilizing molecular structure...</p>
-                                <p style="font-size: 0.8em;">Stand by for materialization...</p>
-                            </div>
-                        `;
-
-                        const newImageUrl = await generateImage(prompt, monster, 0);
-                        if (!newImageUrl) throw new Error('Failed to generate image');
-
-                        monsterImage.innerHTML = `
-                            <img src="${newImageUrl}" alt="${monster.monsterName}" 
-                                style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
-                        `;
-
-                        const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
-                        const monsterRef = doc(db, 'monsters', monsterInstanceId);
-                        await updateDoc(monsterRef, { 
-                            imageUrl: newImageUrl,
-                            lastUpdated: new Date().toISOString()
-                        });
-
-                    } catch (retryError) {
-                        console.error('Retry failed:', retryError);
-                        displayRetryError(monsterImage, monster, prompt);
-                    }
-                });
-
-                // Keep delete functionality separate and simple
                 deleteButton.addEventListener('click', async () => {
                     try {
                         const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
-                        const monsterRef = doc(db, 'monsters', monsterInstanceId);
-                        await deleteDoc(monsterRef);
+                        await deleteDoc(doc(db, 'monsters', monsterInstanceId));
 
+                        // Refund scan point
                         const userRef = doc(db, 'users', monster.ownerId);
-                        await updateDoc(userRef, {
-                            usedHash: arrayRemove(monster.hash)
+                        await runTransaction(db, async (transaction) => {
+                            const userDoc = await transaction.get(userRef);
+                            if (!userDoc.exists()) throw new Error('User document not found');
+
+                            const userData = userDoc.data();
+                            const today = new Date().toLocaleDateString('en-US');
+                            const dailyScans = userData.dailyScans || {};
+                            
+                            if (dailyScans[today] && dailyScans[today] > 0) {
+                                dailyScans[today]--;
+                            }
+
+                            transaction.update(userRef, {
+                                usedHash: arrayRemove(monster.hash),
+                                dailyScans: dailyScans
+                            });
                         });
 
                         document.getElementById('monsterResult').style.display = 'none';
-                        updateDebugMessage('Failed monster deleted. You can try scanning a new code.');
+                        updateDebugMessage('Scan point refunded. You can try scanning a new code.');
                         document.getElementById('startButton').style.display = 'block';
-                    } catch (deleteError) {
-                        console.error('Error deleting failed monster:', deleteError);
-                        showError('Failed to delete monster. Please try again.');
-                    }
-                });
-            }
-        }
-
-        // Add helper function for displaying retry error
-        function displayRetryError(monsterImage, monster, prompt) {
-            let retryCount = 0;  // Track retry attempts
-            
-            monsterImage.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <p>DNA Synthesis Failed</p>
-                    <p style="font-size: 0.8em; color: #666;">
-                        ${retryCount === 0 ? 
-                        'One more attempt available. Try again?' : 
-                        'Maximum attempts reached. Please delete the failed monster.'}
-                    </p>
-                    ${retryCount === 0 ? 
-                        `<button id="retryGenerationButton" class="scan-button" style="margin-top: 1rem;">
-                            Retry DNA Synthesis
-                        </button>` : ''}
-                    <p style="font-size: 0.8em; color: #666; margin-top: 1rem;">
-                        Don't worry - deleting the failed monster will refund your scan point!
-                    </p>
-                    <button id="deleteFailedMonster" class="scan-button" style="margin-top: 0.5rem; background: linear-gradient(135deg, #c0392b, #e74c3c);">
-                        Delete Failed Monster (Refund Scan Point)
-                    </button>
-                </div>
-            `;
-
-            const newRetryButton = monsterImage.querySelector('#retryGenerationButton');
-            const newDeleteButton = monsterImage.querySelector('#deleteFailedMonster');
-            
-            if (newRetryButton) {
-                newRetryButton.addEventListener('click', async () => {
-                    try {
-                        newRetryButton.disabled = true;
-                        const newImageUrl = await generateImage(prompt, monster, 0);
-                        if (!newImageUrl) throw new Error('Failed to generate image');
-                        monsterImage.innerHTML = `
-                            <img src="${newImageUrl}" alt="${monster.monsterName}" 
-                                style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
-                        `;
+                        await refreshScanLimits();
                     } catch (error) {
-                        retryCount++;
-                        displayRetryError(monsterImage, monster, prompt);
+                        console.error('Error processing refund:', error);
+                        showError('Failed to process refund. Please try again.');
                     }
                 });
             }
-
-            newDeleteButton.addEventListener('click', async () => {
-                try {
-                    const user = auth.currentUser;
-                    if (!user) throw new Error('User not authenticated');
-
-                    const monsterInstanceId = `${monster.hash}-${monster.ownerId}`;
-                    await deleteDoc(doc(db, 'monsters', monsterInstanceId));
-
-                    // Refund scan point
-                    const userRef = doc(db, 'users', monster.ownerId);
-                    await runTransaction(db, async (transaction) => {
-                        const userDoc = await transaction.get(userRef);
-                        if (!userDoc.exists()) throw new Error('User document not found');
-
-                        const userData = userDoc.data();
-                        const today = new Date().toLocaleDateString('en-US');
-                        const dailyScans = userData.dailyScans || {};
-                        
-                        if (dailyScans[today] && dailyScans[today] > 0) {
-                            dailyScans[today]--;
-                        }
-
-                        transaction.update(userRef, {
-                            usedHash: arrayRemove(monster.hash),
-                            dailyScans: dailyScans
-                        });
-                    });
-
-                    document.getElementById('monsterResult').style.display = 'none';
-                    updateDebugMessage('Failed monster deleted. Scan point refunded. You can try scanning a new code.');
-                    document.getElementById('startButton').style.display = 'block';
-                    await refreshScanLimits(); // Refresh the display
-                } catch (error) {
-                    console.error('Error deleting failed monster:', error);
-                    showError('Failed to delete monster. Please try again.');
-                }
-            });
         }
 
         // Add this new function before generateImage
