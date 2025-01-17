@@ -150,4 +150,52 @@ class PvPBattleManager {
     getBattleRef() {
         return this.battleRef;
     }
+
+    static async cleanupStuckBattles(userId) {
+        const db = firebase.firestore();
+        try {
+            const userBattlesRef = db.collection('users').doc(userId).collection('battles');
+            const stuckBattles = await userBattlesRef
+                .where('status', 'in', ['waiting', 'in_progress'])
+                .get();
+
+            const twoHoursAgo = new Date();
+            twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+
+            const cleanup = stuckBattles.docs.map(async (doc) => {
+                const battle = doc.data();
+                const lastUpdate = battle.lastUpdate?.toDate() || battle.created?.toDate();
+                
+                if (lastUpdate < twoHoursAgo) {
+                    await doc.ref.delete();
+                } else {
+                    await doc.ref.update({
+                        status: 'cancelled',
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            });
+
+            await Promise.all(cleanup);
+            return true;
+        } catch (error) {
+            console.error('Error cleaning up battles:', error);
+            throw error;
+        }
+    }
+
+    static async resetUserBattleState(userId) {
+        const db = firebase.firestore();
+        try {
+            const userRef = db.collection('users').doc(userId);
+            await userRef.update({
+                activeBattle: null,
+                battleStatus: null
+            });
+            return true;
+        } catch (error) {
+            console.error('Error resetting battle state:', error);
+            throw error;
+        }
+    }
 }

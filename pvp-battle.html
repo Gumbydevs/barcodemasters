@@ -173,6 +173,7 @@
                 <button class="nav-button" onclick="joinBattlePrompt()">Join Battle</button>
                 <button class="nav-button" onclick="location.href='battle.html'">AI Battle</button>
                 <button class="nav-button" onclick="location.href='monster-collection.html'">Collection</button>
+                <button class="nav-button" onclick="resetBattleState()">Reset Battle State</button>
             </div>
 
             <div id="activeBattles" class="battle-list">
@@ -544,21 +545,39 @@
 
         // Initialize the app
         const initializePvPBattle = async () => {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+
             const urlParams = new URLSearchParams(window.location.search);
             const battleCode = urlParams.get('battle');
             const creatorId = urlParams.get('creator');
             
-            if (battleCode && creatorId) {
-                try {
-                    // Set up battle manager
+            try {
+                if (battleCode && creatorId) {
+                    // Check if battle exists and is valid
+                    const battleRef = firebase.firestore()
+                        .collection('users')
+                        .doc(creatorId)
+                        .collection('battles')
+                        .doc(battleCode);
+
+                    const battle = await battleRef.get();
+                    
+                    if (!battle.exists || battle.data().status === 'cancelled') {
+                        showToast('Battle not found or cancelled!', false);
+                        setTimeout(() => {
+                            window.location.href = 'pvp-battle.html';
+                        }, 1500);
+                        return;
+                    }
+
+                    // Set up battle manager and continue
                     window.pvpBattleManager = new PvPBattleManager(battleCode, creatorId);
                     
-                    // Hide lobby and show arena
                     document.getElementById('battleLobby').style.display = 'none';
                     document.getElementById('monsterSelect').style.display = 'none';
                     document.getElementById('battleArena').style.display = 'block';
                     
-                    // Render battle component
                     ReactDOM.render(
                         <PvPBattle 
                             battleCode={battleCode} 
@@ -566,12 +585,17 @@
                         />, 
                         document.getElementById('root')
                     );
-                } catch (error) {
-                    console.error('Error initializing battle:', error);
-                    showToast('Error starting battle!', false);
+                } else {
+                    // Check for and cleanup any stuck battles before loading the lobby
+                    await PvPBattleManager.cleanupStuckBattles(user.uid);
+                    loadActiveBattles();
                 }
-            } else {
-                loadActiveBattles();
+            } catch (error) {
+                console.error('Error initializing battle:', error);
+                showToast('Error starting battle!', false);
+                setTimeout(() => {
+                    window.location.href = 'pvp-battle.html';
+                }, 1500);
             }
         };
 
@@ -703,6 +727,28 @@
                 initializePvPBattle();
             }
         });
+
+        window.resetBattleState = async () => {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                alert('Please log in first!');
+                return;
+            }
+
+            try {
+                await PvPBattleManager.cleanupStuckBattles(user.uid);
+                await PvPBattleManager.resetUserBattleState(user.uid);
+                showToast('Battle state reset successfully!');
+                
+                // Reload the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error('Error resetting battle state:', error);
+                showToast('Error resetting battle state!', false);
+            }
+        };
     </script>
 </body>
 </html>
