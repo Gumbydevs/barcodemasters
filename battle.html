@@ -1985,7 +1985,7 @@
                     const randomVictoryMessage = victoryMessages[Math.floor(Math.random() * victoryMessages.length)]
                         .replace('{username}', username)
                         .replace('{xp}', totalExp);
-                        showToast(`${randomVictoryMessage}\nGained <span style='color: black'>${totalExp} XP! 🎉</span>`);
+                    showToast(`${randomVictoryMessage}\nGained <span style='color: black'>${totalExp} XP! 🎉</span>`);
 
                     // Get current monster data
                     const monsterRef = db.collection('monsters').doc(playerMonster.id);
