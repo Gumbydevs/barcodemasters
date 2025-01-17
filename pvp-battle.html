@@ -723,8 +723,16 @@
         // Initialize monster list when user is authenticated
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                loadUserMonsters();
-                initializePvPBattle();
+                // Initialize battles collection first
+                PvPBattleManager.initializeBattlesCollection()
+                    .then(() => {
+                        loadUserMonsters();
+                        initializePvPBattle();
+                    })
+                    .catch(error => {
+                        console.error('Error initializing battles:', error);
+                        showToast('Error initializing battles!', false);
+                    });
             }
         });
 

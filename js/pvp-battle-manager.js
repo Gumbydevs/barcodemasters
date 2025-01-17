@@ -198,4 +198,35 @@ class PvPBattleManager {
             throw error;
         }
     }
+
+    static async initializeBattlesCollection() {
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error('Not authenticated');
+
+        const db = firebase.firestore();
+        const userRef = db.collection('users').doc(user.uid);
+        
+        try {
+            // Check if battles subcollection exists
+            const battlesRef = userRef.collection('battles');
+            const snapshot = await battlesRef.limit(1).get();
+            
+            if (snapshot.empty) {
+                // Create an initial empty document to ensure collection exists
+                await battlesRef.doc('__init__').set({
+                    created: firebase.firestore.FieldValue.serverTimestamp(),
+                    type: 'initialization'
+                });
+                console.log('Battles collection initialized');
+                
+                // Delete the initialization document
+                await battlesRef.doc('__init__').delete();
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error initializing battles collection:', error);
+            throw error;
+        }
+    }
 }
