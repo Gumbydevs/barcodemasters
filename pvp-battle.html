@@ -748,9 +748,12 @@
             const [playerName, setPlayerName] = React.useState('');
             const [opponentName, setOpponentName] = React.useState('');
 
+            // Add new state for cleanup status
+            const [isCleaningUp, setIsCleaningUp] = React.useState(false);
+            
             // Monitor battle state
             React.useEffect(() => {
-                if (!battleCode || !creatorId) return;
+                if (!battleCode || !creatorId || isCleaningUp) return;
 
                 const user = firebase.auth().currentUser;
                 if (!user) return;
@@ -762,40 +765,56 @@
                     .doc(battleCode)
                     .onSnapshot((doc) => {
                         if (!doc.exists) {
-                            showToast('Battle not found!', false);
+                            console.log('Battle document no longer exists');
+                            handleCleanup();
                             return;
                         }
 
                         const battle = doc.data();
-                        setBattleState(battle);
-                        setIsMyTurn(battle.currentTurn === user.uid);
+                        if (!battle) return;
 
-                        // Set player and opponent data based on role
-                        if (battle.creator.uid === user.uid) {
-                            setPlayerMonster(battle.creator.monsterData);
-                            setPlayerHealth(battle.creator.currentHP);
-                            setOpponentMonster(battle.opponent?.monsterData);
-                            setOpponentHealth(battle.opponent?.currentHP);
-                        } else {
-                            setPlayerMonster(battle.opponent.monsterData);
-                            setPlayerHealth(battle.opponent.currentHP);
-                            setOpponentMonster(battle.creator.monsterData);
-                            setOpponentHealth(battle.creator.currentHP);
+                        // Store battle data first
+                        setBattleState(battle);
+
+                        // Handle completed or cancelled battle
+                        if (['completed', 'cancelled'].includes(battle.status)) {
+                            console.log('Battle ended with status:', battle.status);
+                            
+                            if (battle.status === 'completed' && !isCleaningUp) {
+                                const isVictory = battle.winner === user.uid;
+                                handleBattleEnd(isVictory);
+                            } else {
+                                handleCleanup();
+                            }
+                            return;
                         }
 
-                        // Check battle status
-                        if (battle.status === 'completed') {
-                            setIsBattleOver(true);
-                            if (battle.winner === user.uid) {
-                                handleVictory();
+                        // Only update other state if battle is still active
+                        if (battle.status === 'in_progress') {
+                            setIsMyTurn(battle.currentTurn === user.uid);
+
+                            // Set player and opponent data based on role
+                            if (battle.creator.uid === user.uid) {
+                                setPlayerMonster(battle.creator.monsterData);
+                                setPlayerHealth(battle.creator.currentHP);
+                                setOpponentMonster(battle.opponent?.monsterData);
+                                setOpponentHealth(battle.opponent?.currentHP);
                             } else {
-                                handleDefeat();
+                                setPlayerMonster(battle.opponent.monsterData);
+                                setPlayerHealth(battle.opponent.currentHP);
+                                setOpponentMonster(battle.creator.monsterData);
+                                setOpponentHealth(battle.creator.currentHP);
                             }
                         }
+                    }, (error) => {
+                        console.error('Battle snapshot error:', error);
+                        handleCleanup();
                     });
 
-                return () => unsubscribe();
-            }, [battleCode, creatorId]);
+                return () => {
+                    unsubscribe();
+                };
+            }, [battleCode, creatorId, isCleaningUp]);
 
             React.useEffect(() => {
                 if (!battleState) return;
@@ -986,7 +1005,7 @@
 
             // Add new handler for battle end
             const handleBattleEnd = async (isVictory) => {
-                if (isBattleOver) return; // Prevent multiple executions
+                if (isBattleOver || isCleaningUp) return;
                 
                 try {
                     setIsBattleOver(true);
@@ -1048,22 +1067,33 @@
                     console.error('Error handling battle end:', error);
                     showToast('Error ending battle', false);
                 } finally {
-                    // Clean up battle state
-                    localStorage.removeItem('currentBattle');
-                    
-                    // Show return to lobby button after short delay
+                    // Clean up battle state after short delay
                     setTimeout(() => {
-                        const battleControls = document.querySelector('.battle-controls');
-                        if (battleControls) {
-                            battleControls.innerHTML = `
-                                <button class="battle-button" onclick="window.location.href='pvp-battle.html'">
-                                    Return to Lobby
-                                </button>
-                            `;
-                        }
+                        handleCleanup();
                     }, 2000);
                 }
             };
+
+            // Add cleanup handler
+            const handleCleanup = React.useCallback(async () => {
+                if (isCleaningUp) return;
+                setIsCleaningUp(true);
+        
+                try {
+                    localStorage.removeItem('currentBattle');
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        await PvPBattleManager.resetUserBattleState(user.uid);
+                    }
+                } catch (error) {
+                    console.error('Cleanup error:', error);
+                } finally {
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = 'pvp-battle.html';
+                    }, 1500);
+                }
+            }, [isCleaningUp]);
         
             // Update the victory handler
             const handleVictory = async () => {
