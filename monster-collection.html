@@ -658,6 +658,70 @@
             background: rgba(0, 0, 0, 0.2);
             border-color: rgba(255, 255, 255, 0.1);
         }
+
+        /* Add bottom navigation styles */
+        .bottom-nav {
+            position: relative;
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            margin-top: 2rem;
+        }
+
+        .bottom-nav .nav-button {
+            margin: 0;
+            min-width: 100px;
+        }
+
+        @media screen and (max-width: 480px) {
+            .bottom-nav {
+                padding: 10px;
+            }
+            
+            .bottom-nav .nav-button {
+                min-width: 80px;
+                font-size: 0.9em;
+            }
+        }
+
+        .nav-button {
+            padding: 0.75rem; /* Reduced from 1rem */
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @media screen and (max-width: 480px) {
+            .nav-button {
+                padding: 0.6rem; /* Reduced from 0.75rem */
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Update bottom nav specific button styles */
+        .bottom-nav .nav-button {
+            margin: 0;
+            min-width: 100px;
+            padding: 0.75rem; /* Match the main nav buttons */
+        }
+
+        @media screen and (max-width: 480px) {
+            .bottom-nav .nav-button {
+                min-width: 80px;
+                font-size: 0.85rem;
+                padding: 0.6rem; /* Match the main nav buttons */
+            }
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -724,10 +788,8 @@
             <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
             <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
             <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
-            <button class="nav-button" onclick="location.href='help.html'">Help</button>
             <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
             <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
-            <button class="nav-button" id="logoutButton">Logout</button>
         </div>
 
         <div class="monsters-grid" id="monstersGrid">
@@ -741,6 +803,12 @@
         <p>Version: <span id="versionNumber">1.0.07</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
+
+    <div class="bottom-nav">
+        <button class="nav-button" onclick="location.href='help.html'">Help</button>
+        <button class="nav-button" id="logoutButton" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">Logout</button>
+    </div>
+
     <style>
         footer {
             width: 100%;
@@ -860,7 +928,7 @@
         }
 
         .nav-button {
-            padding: 1rem;
+            padding: 0.35rem; /* Reduced from 1rem */
             border: none;
             border-radius: 8px;
             background: linear-gradient(135deg, #2c3e50, #3498db);
