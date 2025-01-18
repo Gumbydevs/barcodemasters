@@ -83,8 +83,8 @@ const staticTips = [
     "Experiencing odd behavior? Try refreshing the page first",
     "Check the Change Log in the footer for latest updates and fixes",
     "Join our Discord community for help and tips from other players",
-    "Having technical issues? Report them in our Discord for quick support",
-    "Can't find a feature? Check the Help page or ask in Discord",
+    "Having technical issues? Report them on our Discord for quick support",
+    "Can't find a feature? Check the Help page or ask on Discord",
     "Updates and new features are regularly added - check the Change Log to stay informed",
     
     // Original Fun Tips
@@ -92,6 +92,7 @@ const staticTips = [
     "Your scanner is powered by pure curiosity. And maybe a little magic",
     "Scanning barcodes is like opening a box of chocolates... you never know what you're gonna get",
     "The world of Barcode Masters is full of mysteries waiting to be uncovered with the right scan",
+    "Scanning is the secret to life, the universe, and everything - or at least to finding cool monsters",
     "Each barcode has a story – scan them all to piece together the mystery!",
     
     // Additional Navigation Tips
@@ -109,7 +110,7 @@ const staticTips = [
     
     // Community & Updates
     "Share your strategies and discoveries with other players in Discord",
-    "Found a bug? Let us know in Discord - we're always improving",
+    "Found a bug? Let us know on Discord - we're always improving",
     "Follow our Discord announcements for news about upcoming features",
     "Help other players by sharing your battle strategies in Discord",
     "Check Discord for community events and competitions"
