@@ -593,6 +593,45 @@
             margin-top: 1rem;
         }
 
+        /* Remove fading animations and simplify battle results styles */
+        .battle-results {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 2px solid;
+        }
+
+        .battle-results.victory {
+            border-color: #2ecc71;
+        }
+
+        .battle-results.defeat {
+            border-color: #e74c3c;
+        }
+
+        .result-header {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .result-header.victory {
+            color: #2ecc71;
+        }
+
+        .result-header.defeat {
+            color: #e74c3c;
+        }
+
     </style>
 </head>
 <body>
@@ -2059,32 +2098,13 @@
 
         // Update the BattleResults component in the script section:
         const BattleResults = ({ result, rewards, playerStats, monster }) => {
-            const [showStats, setShowStats] = React.useState(false);
-
-            React.useEffect(() => {
-                setTimeout(() => setShowStats(true), 500);
-            }, []);
-
-            // Calculate XP progress
-            const xpProgress = React.useMemo(() => {
-                if (!monster?.experience || !monster?.level) return null;
-
-                const currentExp = parseInt(monster.experience);
-                const currentLevel = parseInt(monster.level);
-                const xpInfo = monsterStats.getXPInfo(monster);
-
-                return {
-                    currentLevelXP: xpInfo.currentLevelXP,
-                    nextLevelXP: xpInfo.nextLevelXP,
-                    progress: xpInfo.progress,
-                    totalXP: currentExp
-                };
-            }, [monster]);
-
+            const user = firebase.auth().currentUser;
+            const isVictory = result === 'victory';
+            
             return (
                 <div className={`battle-results ${result}`}>
                     <h2 className={`result-header ${result}`}>
-                        {result === 'victory' ? '🏆 Victory!' : '💔 Defeat!'}
+                        {isVictory ? '🏆 Victory!' : '💔 Defeat!'}
                     </h2>
                     
                     {monster && (
@@ -2096,44 +2116,26 @@
                                 <div className="monster-stats-grid">
                                     <div>Level: {monster.level}</div>
                                     <div>Type: {monster.type}</div>
-                                    {showStats && (
-                                        <>
-                                            <div>HP: {monster.HP}</div>
-                                            <div>AP: {monster.AP}</div>
-                                            <div>Speed: {monster.Speed}</div>
-                                        </>
-                                    )}
+                                    <div>HP: {monster.HP}</div>
+                                    <div>AP: {monster.AP}</div>
+                                    <div>Speed: {monster.Speed}</div>
                                 </div>
-                                {xpProgress && (
-                                    <div className="xp-info">
-                                        <div className="xp-bar">
-                                            <div 
-                                                className="xp-fill"
-                                                style={{ width: `${xpProgress.progress}%` }}
-                                            ></div>
-                                        </div>
-                                        <div className="xp-text">
-                                            {xpProgress.currentLevelXP} / {xpProgress.nextLevelXP} XP
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     )}
 
-                    {rewards && (
+                    {rewards && isVictory && (
                         <div className="rewards-container">
-                            <div className="exp-reward">+{rewards.exp} XP Gained!</div>
+                            <h3>Battle Rewards</h3>
+                            <div className="exp-reward">Experience Gained: {rewards.exp} XP</div>
                             {rewards.levelUp && (
                                 <div className="level-up">
-                                    <div className="level-up-header">🌟 Level Up!</div>
-                                    <div className="level-change">
-                                        Level {rewards.levelUp.oldLevel} → {rewards.levelUp.newLevel}
-                                    </div>
+                                    <div className="level-up-header">Level Up!</div>
+                                    <div>Level {rewards.levelUp.oldLevel} → {rewards.levelUp.newLevel}</div>
                                     <div className="new-stats">
-                                        <div>HP: {rewards.levelUp.newStats.HP}</div>
-                                        <div>AP: {rewards.levelUp.newStats.AP}</div>
-                                        <div>Speed: {rewards.levelUp.newStats.Speed}</div>
+                                        <div>New HP: {rewards.levelUp.newStats.HP}</div>
+                                        <div>New AP: {rewards.levelUp.newStats.AP}</div>
+                                        <div>New Speed: {rewards.levelUp.newStats.Speed}</div>
                                     </div>
                                 </div>
                             )}
@@ -2160,7 +2162,7 @@
             );
         };
     </script>
-    <h6>Version: 0.0045</h6>
+    <h6>Version: 0.0046</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
