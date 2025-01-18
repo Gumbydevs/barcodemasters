@@ -516,8 +516,8 @@
         };
 
         // PvP Battle Component
-        const PvPBattle = ({ battleCode, creatorId }) => {
-            const [battleState, setBattleState] = React.useState(null);
+        const PvPBattle = ({ battleCode, creatorId, initialData }) => {
+            const [battleState, setBattleState] = React.useState(initialData || null);
             const [playerMonster, setPlayerMonster] = React.useState(null);
             const [opponentMonster, setOpponentMonster] = React.useState(null);
             const [playerHealth, setPlayerHealth] = React.useState(100);
@@ -803,23 +803,55 @@
         // Initialize the app
         const initializePvPBattle = async () => {
             const user = firebase.auth().currentUser;
-            if (!user) return;
+            if (!user) {
+                console.error('No authenticated user');
+                return;
+            }
 
             const urlParams = new URLSearchParams(window.location.search);
             const battleCode = urlParams.get('battle');
             const creatorId = urlParams.get('creator');
             
+            console.log('Initializing battle:', { battleCode, creatorId });
+            
             try {
                 if (battleCode && creatorId) {
+                    // Hide lobby and show battle arena immediately
+                    document.getElementById('battleLobby').style.display = 'none';
+                    document.getElementById('monsterSelect').style.display = 'none';
+                    document.getElementById('battleArena').style.display = 'block';
+
                     const battleRef = firebase.firestore()
                         .collection('users')
                         .doc(creatorId)
                         .collection('battles')
                         .doc(battleCode);
 
-                    // Add a listener for battle updates
+                    // First get initial battle data
+                    const initialBattle = await battleRef.get();
+                    if (!initialBattle.exists) {
+                        throw new Error('Battle not found');
+                    }
+
+                    console.log('Initial battle data:', initialBattle.data());
+
+                    // Render battle component immediately with initial data
+                    if (!window.battleComponentMounted) {
+                        ReactDOM.render(
+                            <PvPBattle 
+                                battleCode={battleCode} 
+                                creatorId={creatorId}
+                                initialData={initialBattle.data()}
+                            />, 
+                            document.getElementById('root')
+                        );
+                        window.battleComponentMounted = true;
+                    }
+
+                    // Then set up the listener for updates
                     const unsubscribe = battleRef.onSnapshot((doc) => {
                         if (!doc.exists) {
+                            console.error('Battle document no longer exists');
                             showToast('Battle not found!', false);
                             localStorage.removeItem('currentBattle');
                             window.location.href = 'pvp-battle.html';
@@ -827,9 +859,10 @@
                         }
 
                         const battleData = doc.data();
+                        console.log('Battle update received:', battleData);
                         
-                        // Only redirect if battle is actually cancelled or completed
                         if (['cancelled', 'completed'].includes(battleData.status)) {
+                            console.log('Battle ended with status:', battleData.status);
                             localStorage.removeItem('currentBattle');
                             showToast('Battle ended!', false);
                             setTimeout(() => {
@@ -837,35 +870,19 @@
                             }, 1500);
                             return;
                         }
-
-                        // Show battle UI
-                        document.getElementById('battleLobby').style.display = 'none';
-                        document.getElementById('monsterSelect').style.display = 'none';
-                        document.getElementById('battleArena').style.display = 'block';
-                        
-                        // Render battle component if not already rendered
-                        if (!window.battleComponentMounted) {
-                            ReactDOM.render(
-                                <PvPBattle 
-                                    battleCode={battleCode} 
-                                    creatorId={creatorId}
-                                />, 
-                                document.getElementById('root')
-                            );
-                            window.battleComponentMounted = true;
-                        }
                     });
 
                     // Store unsubscribe function
                     window.battleUnsubscribe = unsubscribe;
                 } else {
                     // We're in the lobby
+                    console.log('No battle parameters, showing lobby');
                     await PvPBattleManager.cleanupStuckBattles(user.uid);
                     loadActiveBattles();
                 }
             } catch (error) {
-                console.error('Error initializing battle:', error);
-                showToast('Error starting battle!', false);
+                console.error('Error in battle initialization:', error);
+                showToast('Error starting battle: ' + error.message, false);
                 localStorage.removeItem('currentBattle');
             }
         };
@@ -1380,6 +1397,20 @@
 
         // Export for global access if needed
         window.pvpBattle = pvpBattle;
+
+        // Add initialization call on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, checking auth state');
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    console.log('User authenticated, initializing battle');
+                    initializePvPBattle();
+                } else {
+                    console.log('No user, redirecting to login');
+                    window.location.href = 'index.html';
+                }
+            });
+        });
 
         // ...rest of your existing code...
     </script>
