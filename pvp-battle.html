@@ -632,47 +632,6 @@
             color: #e74c3c;
         }
 
-        /* Remove all animations and fix battle results display */
-        .battle-results {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1a1a1a;
-            padding: 2rem;
-            border-radius: 12px;
-            text-align: center;
-            width: 90%;
-            max-width: 600px;
-            z-index: 1000;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            border: 3px solid;
-            color: white;
-        }
-
-        .battle-results.victory {
-            border-color: #2ecc71;
-            background: #1a1a1a;
-        }
-
-        .battle-results.defeat {
-            border-color: #e74c3c;
-            background: #1a1a1a;
-        }
-
-        .result-header {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .result-header.victory {
-            color: #2ecc71;
-        }
-
-        .result-header.defeat {
-            color: #e74c3c;
-        }
-
         .return-button {
             margin-top: 1rem;
             padding: 1rem 2rem;
@@ -684,6 +643,86 @@
             font-size: 1.1rem;
         }
 
+        /* Replace all battle results styles with these simplified ones */
+        .battle-results {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .result-header {
+            text-align: center;
+            font-size: 32px;
+            margin: 20px 0;
+            padding: 10px;
+        }
+
+        .result-header.victory {
+            color: #2ecc71;
+            background: #27ae6020;
+        }
+
+        .result-header.defeat {
+            color: #e74c3c;
+            background: #c0392b20;
+        }
+
+        .player-info {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .monster-card {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .monster-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .battle-stats {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .xp-info {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+
+        .return-button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -2148,59 +2187,51 @@
 
         // ...rest of your existing code...
 
-        // Update the BattleResults component in the script section:
+        // Replace the BattleResults component with this updated version
         const BattleResults = ({ result, rewards, playerStats, monster }) => {
-            const user = firebase.auth().currentUser;
             const isVictory = result === 'victory';
             
             return (
-                <div className={`battle-results ${result}`}>
-                    <h2 className={`result-header ${result}`}>
-                        {isVictory ? '🏆 Victory!' : '💔 Defeat!'}
-                    </h2>
-                    
+                <div className="battle-results">
+                    <h1 className={`result-header ${result}`}>
+                        {isVictory ? 'VICTORY!' : 'DEFEAT!'}
+                    </h1>
+
+                    <div className="player-info">
+                        <h2>Battle Record</h2>
+                        <p>Wins: {playerStats?.wins || 0}</p>
+                        <p>Losses: {playerStats?.losses || 0}</p>
+                    </div>
+
                     {monster && (
-                        <div className="monster-result-card">
+                        <div className="monster-card">
                             <img src={monster.imageUrl || 'placeholder.png'} 
                                  alt={monster.monsterName} />
-                            <div className="monster-info">
-                                <h3>{monster.monsterName}</h3>
-                                <div className="monster-stats-grid">
-                                    <div>Level: {monster.level}</div>
-                                    <div>Type: {monster.type}</div>
-                                    <div>HP: {monster.HP}</div>
-                                    <div>AP: {monster.AP}</div>
-                                    <div>Speed: {monster.Speed}</div>
-                                </div>
+                            <div>
+                                <h2>{monster.monsterName}</h2>
+                                <p>Level: {monster.level}</p>
+                                <p>Type: {monster.type}</p>
+                                <p>XP: {monster.experience || 0}</p>
+                                <p>HP: {monster.HP}</p>
+                                <p>AP: {monster.AP}</p>
+                                <p>Speed: {monster.Speed}</p>
                             </div>
                         </div>
                     )}
 
-                    {rewards && isVictory && (
-                        <div className="rewards-container">
-                            <h3>Battle Rewards</h3>
-                            <div className="exp-reward">Experience Gained: {rewards.exp} XP</div>
+                    {rewards && (
+                        <div className="xp-info">
+                            <h2>Battle Rewards</h2>
+                            <p>Experience {isVictory ? 'Gained' : 'Lost'}: {rewards.exp} XP</p>
                             {rewards.levelUp && (
-                                <div className="level-up">
-                                    <div className="level-up-header">Level Up!</div>
-                                    <div>Level {rewards.levelUp.oldLevel} → {rewards.levelUp.newLevel}</div>
-                                    <div className="new-stats">
-                                        <div>New HP: {rewards.levelUp.newStats.HP}</div>
-                                        <div>New AP: {rewards.levelUp.newStats.AP}</div>
-                                        <div>New Speed: {rewards.levelUp.newStats.Speed}</div>
-                                    </div>
+                                <div>
+                                    <h3>LEVEL UP!</h3>
+                                    <p>New Level: {rewards.levelUp.newLevel}</p>
+                                    <p>New HP: {rewards.levelUp.newStats.HP}</p>
+                                    <p>New AP: {rewards.levelUp.newStats.AP}</p>
+                                    <p>New Speed: {rewards.levelUp.newStats.Speed}</p>
                                 </div>
                             )}
-                        </div>
-                    )}
-
-                    {playerStats && (
-                        <div className="player-stats">
-                            <h3>Battle Record</h3>
-                            <div className="stats-grid">
-                                <div>Wins: {playerStats.wins || 0}</div>
-                                <div>Losses: {playerStats.losses || 0}</div>
-                            </div>
                         </div>
                     )}
 
@@ -2214,7 +2245,7 @@
             );
         };
     </script>
-    <h6>Version: 0.00473</h6>
+    <h6>Version: 0.00474</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
