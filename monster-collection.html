@@ -214,6 +214,7 @@
 
         .monster-card.compact {
             padding: 0.75rem;
+            align-items: flex-start; /* Changed from center to flex-start */
         }
 
         .monster-card.expanded {
@@ -235,7 +236,7 @@
         .monster-card.compact .monster-image-container {
             width: 100px;
             height: 100px;
-            margin: 0 auto 0.5rem;
+            margin: 0 0 0.25rem 0; /* Changed from auto to 0 for left alignment */
         }
 
         .monster-card.compact .monster-name {
@@ -439,13 +440,13 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start; /* Changed from center to flex-start */
         }
 
         .monster-card.compact .monster-image-container {
             width: 80px;
             height: 80px;
-            margin: 0 auto 0.5rem;
+            margin: 0 0 0.25rem 0; /* Changed from auto to 0 for left alignment */
         }
 
         .monster-card.compact .monster-image-container img {
@@ -507,7 +508,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start; /* Changed from center to flex-start */
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             margin: 0;
@@ -516,7 +517,7 @@
         .monster-card.compact .monster-image-container {
             width: 70px;
             height: 70px;
-            margin: 0 auto 0.25rem;
+            margin: 0 0 0.25rem 0; /* Changed from auto to 0 for left alignment */
         }
 
         .monster-card.compact .monster-name {
