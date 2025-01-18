@@ -272,15 +272,15 @@ class PvPBattleManager {
             
             // Update winner stats
             const winnerRef = this.db.collection('users').doc(winner.uid);
-            batch.set(winnerRef, {
+            batch.update(winnerRef, {
                 wins: firebase.firestore.FieldValue.increment(1)
-            }, { merge: true });
+            });
 
             // Update loser stats
             const loserRef = this.db.collection('users').doc(loser.uid);
-            batch.set(loserRef, {
+            batch.update(loserRef, {
                 losses: firebase.firestore.FieldValue.increment(1)
-            }, { merge: true });
+            });
 
             // Calculate XP gain
             const levelDiff = parseInt(loser.monsterData.level) - parseInt(winner.monsterData.level);
