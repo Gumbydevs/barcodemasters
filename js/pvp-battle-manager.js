@@ -458,16 +458,23 @@ class PvPBattleManager {
         }
 
         try {
+            // Instead of creating/deleting an init document,
+            // just create the battle document directly with the battleCode
             const userRef = this.db.collection('users').doc(userId);
-            const battlesRef = userRef.collection('battles');
             
-            // Just check if the collection exists without creating an init document
-            const snapshot = await battlesRef.limit(1).get();
-            
-            // If collection is empty, it will be created automatically when first battle is created
+            // Check if user document exists, create if not
+            const userDoc = await userRef.get();
+            if (!userDoc.exists) {
+                await userRef.set({
+                    battleStatus: null,
+                    activeBattle: null,
+                    activeBattleCreator: null
+                }, { merge: true });
+            }
+
             return true;
         } catch (error) {
-            console.error('Error checking battles collection:', error);
+            console.error('Error initializing battles:', error);
             throw error;
         }
     }
