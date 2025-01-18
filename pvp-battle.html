@@ -407,70 +407,30 @@
 
                 const battleDoc = groupSnapshot.docs[0];
                 const creatorId = battleDoc.ref.parent.parent.id;
-                const battleRef = battleDoc.ref;
-                const battleData = battleDoc.data();
-
-                // Verify not joining own battle
-                if (battleData.creator.uid === user.uid) {
-                    showToast('Cannot join your own battle!', false);
-                    return;
-                }
-
-                try {
-                    // First, try to lock the battle
-                    await battleRef.update({
-                        status: 'joining',
-                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } catch (error) {
-                    console.error('Error locking battle:', error);
-                    showToast('Battle already taken!', false);
-                    return;
-                }
 
                 // Get monster data
                 const monsterData = await fetchMonsterData(window.selectedMonsterId);
                 if (!monsterData) {
-                    await battleRef.update({ status: 'waiting' }); // Reset status if failed
                     showToast('Error fetching monster data!', false);
                     return;
                 }
 
-                // Update battle with opponent data
-                try {
-                    await battleRef.update({
-                        opponent: {
-                            uid: user.uid,
-                            monster: window.selectedMonsterId,
-                            monsterData: monsterData,
-                            currentHP: monsterData.HP,
-                            ready: true
-                        },
-                        status: 'in_progress',
-                        currentTurn: creatorId,
-                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                // Join battle using the manager
+                await PvPBattleManager.joinBattle(battleCode, creatorId, user.uid, monsterData);
 
-                    // Store battle info
-                    localStorage.setItem('currentBattle', JSON.stringify({
-                        battleCode,
-                        creatorId,
-                        role: 'opponent'
-                    }));
+                // Store battle info
+                localStorage.setItem('currentBattle', JSON.stringify({
+                    battleCode,
+                    creatorId,
+                    role: 'opponent'
+                }));
 
-                    showToast('Successfully joined battle!');
-                    
-                    // Redirect to battle
-                    setTimeout(() => {
-                        window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
-                    }, 1000);
-
-                } catch (error) {
-                    console.error('Error joining battle:', error);
-                    // Try to reset battle status
-                    await battleRef.update({ status: 'waiting' });
-                    showToast('Error joining battle. Please try again.', false);
-                }
+                showToast('Successfully joined battle!');
+                
+                // Redirect to battle
+                setTimeout(() => {
+                    window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${creatorId}`;
+                }, 1000);
 
             } catch (error) {
                 console.error('Error joining battle:', error);
@@ -1446,7 +1406,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0037</h6>
+    <h6>Version: 0.0038</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 

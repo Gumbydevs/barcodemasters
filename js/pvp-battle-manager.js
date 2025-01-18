@@ -101,6 +101,54 @@ class PvPBattleManager {
         }
     }
 
+    static async joinBattle(battleCode, creatorId, joiningUserId, monsterData) {
+        const db = firebase.firestore();
+        const battleRef = db
+            .collection('users')
+            .doc(creatorId)
+            .collection('battles')
+            .doc(battleCode);
+
+        try {
+            // Wrap the update in a transaction to ensure atomicity
+            return await db.runTransaction(async (transaction) => {
+                const battleDoc = await transaction.get(battleRef);
+                
+                if (!battleDoc.exists) {
+                    throw new Error('Battle not found');
+                }
+
+                const battleData = battleDoc.data();
+                if (battleData.status !== 'waiting') {
+                    throw new Error('Battle is no longer available');
+                }
+
+                if (battleData.creator.uid === joiningUserId) {
+                    throw new Error('Cannot join your own battle');
+                }
+
+                const updates = {
+                    opponent: {
+                        uid: joiningUserId,
+                        monster: monsterData.id,
+                        monsterData: monsterData,
+                        currentHP: monsterData.HP,
+                        ready: true
+                    },
+                    status: 'in_progress',
+                    currentTurn: battleData.creator.uid,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                transaction.update(battleRef, updates);
+                return updates;
+            });
+        } catch (error) {
+            console.error('Error joining battle:', error);
+            throw error;
+        }
+    }
+
     async makeMove(move, data) {
         if (!this.battleRef) throw new Error('Battle reference not initialized');
         
