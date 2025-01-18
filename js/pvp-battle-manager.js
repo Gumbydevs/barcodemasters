@@ -20,6 +20,9 @@ class PvPBattleManager {
         const db = firebase.firestore();
         
         try {
+            // First reset any existing battle state
+            await this.resetUserBattleState(user.uid);
+
             console.log('Starting battle creation for monster:', monsterId);
             
             // First check if user already has an active battle
@@ -58,7 +61,8 @@ class PvPBattleManager {
                 currentTurn: null,
                 moves: [],
                 created: firebase.firestore.FieldValue.serverTimestamp(),
-                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                battleType: 'pvp'  // Add this to identify PvP battles
             };
 
             console.log('Creating battle with data:', battleData);
@@ -75,11 +79,13 @@ class PvPBattleManager {
             // Also update user's active battle reference
             await db.collection('users').doc(user.uid).update({
                 activeBattle: battleCode,
-                battleStatus: 'waiting'
+                battleStatus: 'waiting',
+                activeBattleCreator: user.uid  // Add this to track the creator
             });
 
             console.log('Battle created successfully');
 
+            // Return immediately without any redirects
             return { 
                 battleCode, 
                 creatorId: user.uid,
@@ -88,15 +94,7 @@ class PvPBattleManager {
 
         } catch (error) {
             console.error('Error in createBattle:', error);
-            // Clean up any partial battle creation
-            try {
-                await db.collection('users').doc(user.uid).update({
-                    activeBattle: null,
-                    battleStatus: null
-                });
-            } catch (cleanupError) {
-                console.error('Error in cleanup:', cleanupError);
-            }
+            await this.resetUserBattleState(user.uid);
             throw error;
         }
     }
@@ -111,47 +109,64 @@ class PvPBattleManager {
             .doc(battleCode);
 
         try {
-            // Verify and enhance monster data
             if (!monsterData || !monsterData.id) {
                 throw new Error('Invalid monster data');
             }
 
-            // Wrap the update in a transaction to ensure atomicity
-            return await db.runTransaction(async (transaction) => {
-                const battleDoc = await transaction.get(battleRef);
-                
-                if (!battleDoc.exists) {
-                    throw new Error('Battle not found');
-                }
+            // Simple update without transaction for more reliability
+            const battleDoc = await battleRef.get();
+            if (!battleDoc.exists) {
+                throw new Error('Battle not found');
+            }
 
-                const battleData = battleDoc.data();
-                if (battleData.status !== 'waiting') {
-                    throw new Error('Battle is no longer available');
-                }
+            const battleData = battleDoc.data();
+            if (battleData.status !== 'waiting') {
+                throw new Error('Battle is no longer available');
+            }
 
-                if (battleData.creator.uid === joiningUserId) {
-                    throw new Error('Cannot join your own battle');
-                }
+            if (battleData.creator.uid === joiningUserId) {
+                throw new Error('Cannot join your own battle');
+            }
 
-                const updates = {
-                    opponent: {
-                        uid: joiningUserId,
-                        monster: monsterData.id, // Now we ensure this exists
-                        monsterData: {
-                            ...monsterData,
-                            id: monsterData.id // Explicitly include id in monsterData
-                        },
-                        currentHP: monsterData.HP || 100,
-                        ready: true
-                    },
-                    status: 'in_progress',
-                    currentTurn: battleData.creator.uid,
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-                };
+            const batch = db.batch();
 
-                transaction.update(battleRef, updates);
-                return updates;
+            // Update battle document
+            const opponentData = {
+                uid: joiningUserId,
+                monster: monsterData.id,
+                monsterData: monsterData,
+                currentHP: monsterData.HP,
+                ready: true
+            };
+
+            batch.update(battleRef, {
+                opponent: opponentData,
+                status: 'in_progress',
+                currentTurn: battleData.creator.uid,
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             });
+
+            // Update joining user's state
+            batch.update(db.collection('users').doc(joiningUserId), {
+                activeBattle: battleCode,
+                battleStatus: 'in_progress',
+                activeBattleCreator: creatorId
+            });
+
+            // Update creator's state
+            batch.update(db.collection('users').doc(creatorId), {
+                battleStatus: 'in_progress'
+            });
+
+            // Commit all updates atomically
+            await batch.commit();
+
+            return {
+                status: 'in_progress',
+                battleCode,
+                creatorId
+            };
+
         } catch (error) {
             console.error('Error joining battle:', error);
             throw error;
@@ -165,45 +180,35 @@ class PvPBattleManager {
         if (!user) throw new Error('User not authenticated');
 
         try {
-            // Use transaction to ensure atomic updates
-            return await this.db.runTransaction(async (transaction) => {
-                const battleDoc = await transaction.get(this.battleRef);
-                
-                if (!battleDoc.exists) throw new Error('Battle not found');
-                
-                const battleData = battleDoc.data();
-                if (battleData.status !== 'in_progress') throw new Error('Battle is not in progress');
-                if (battleData.currentTurn !== user.uid) throw new Error('Not your turn');
+            const battleDoc = await this.battleRef.get();
+            if (!battleDoc.exists) throw new Error('Battle not found');
+            
+            const battleData = battleDoc.data();
+            if (battleData.status !== 'in_progress') throw new Error('Battle is not in progress');
+            if (battleData.currentTurn !== user.uid) throw new Error('Not your turn');
 
-                // Calculate move outcome
-                const updates = this.calculateMoveOutcome(move, data, battleData);
+            // Calculate move outcome
+            const updates = this.calculateMoveOutcome(move, data, battleData);
 
-                // Add move to history
-                const moveHistory = battleData.moves || [];
-                moveHistory.push({
-                    userId: user.uid,
-                    move: move,
-                    data: data,
-                    timestamp: new Date()
-                });
-
-                // Update battle state with complete data
-                const fullUpdates = {
-                    ...updates,
-                    moves: moveHistory,
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-                    currentTurn: this.getNextTurn(battleData),
-                    [`${user.uid === battleData.creator.uid ? 'creator' : 'opponent'}.lastMove`]: {
-                        move,
-                        data,
-                        timestamp: new Date()
-                    }
-                };
-
-                transaction.update(this.battleRef, fullUpdates);
-                return fullUpdates;
+            // Add move to history
+            const moveHistory = battleData.moves || [];
+            moveHistory.push({
+                userId: user.uid,
+                move: move,
+                data: data,
+                timestamp: new Date()
             });
 
+            // Update battle state
+            const fullUpdates = {
+                ...updates,
+                moves: moveHistory,
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                currentTurn: this.getNextTurn(battleData)
+            };
+
+            await this.battleRef.update(fullUpdates);
+            return fullUpdates;
         } catch (error) {
             console.error('Error making move:', error);
             throw error;

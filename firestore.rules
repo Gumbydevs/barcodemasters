@@ -26,16 +26,12 @@ service cloud.firestore {
         allow update: if isAuthenticated() && (
           // Allow creator to update their own battle
           resource.data.creator.uid == request.auth.uid ||
-          // Allow any authenticated user to join as opponent if battle is waiting
-          (resource.data.status == 'waiting' && 
-           resource.data.creator.uid != request.auth.uid &&
-           request.resource.data.status in ['joining', 'in_progress']) ||
-          // Allow opponent to update battle once joined
+          // Allow opponent to update battle they're part of
           (resource.data.opponent != null && 
            resource.data.opponent.uid == request.auth.uid) ||
-          // Allow updates if user is joining an existing battle
-          (get(/databases/$(database)/documents/users/$(userId)/battles/$(battleId)).data.status == 'waiting' &&
-           request.resource.data.opponent.uid == request.auth.uid)
+          // Allow joining an available battle
+          (resource.data.status == 'waiting' && 
+           resource.data.creator.uid != request.auth.uid)
         );
         allow delete: if isOwner(userId);
       }

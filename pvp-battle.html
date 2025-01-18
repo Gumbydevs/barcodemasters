@@ -443,6 +443,66 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* Add battle result styles */
+        .battle-results {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .result-header {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-header.victory {
+            color: #2ecc71;
+        }
+
+        .result-header.defeat {
+            color: #e74c3c;
+        }
+
+        .rewards-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .exp-reward {
+            font-size: 1.2rem;
+            color: #f1c40f;
+            margin: 1rem 0;
+        }
+
+        .level-up {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(46, 204, 113, 0.2);
+            border-radius: 8px;
+        }
+
+        .level-up-header {
+            font-size: 1.3rem;
+            color: #2ecc71;
+            margin-bottom: 0.5rem;
+        }
+
+        .new-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -751,6 +811,50 @@
             // Add new state for cleanup status
             const [isCleaningUp, setIsCleaningUp] = React.useState(false);
             
+            // Add new state for battle results
+            const [battleResult, setBattleResult] = React.useState(null);
+            const [rewards, setRewards] = React.useState(null);
+            const [showingResults, setShowingResults] = React.useState(false);
+
+            // Add cleanup handler
+            const handleCleanup = React.useCallback(async () => {
+                console.log('Running cleanup...');
+                if (isCleaningUp) return;
+                
+                setIsCleaningUp(true);
+                
+                try {
+                    // Clear local storage
+                    localStorage.removeItem('currentBattle');
+                    
+                    // Reset user's battle state in Firestore
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        await PvPBattleManager.resetUserBattleState(user.uid);
+                    }
+
+                    // Show cleanup message
+                    showToast('Returning to lobby...', true);
+
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'pvp-battle.html';
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Error in cleanup:', error);
+                    // Force redirect even if cleanup fails
+                    window.location.href = 'pvp-battle.html';
+                }
+            }, [isCleaningUp]);
+
+            // Add this useEffect to handle component unmount
+            React.useEffect(() => {
+                return () => {
+                    handleCleanup();
+                };
+            }, [handleCleanup]);
+
             // Monitor battle state
             React.useEffect(() => {
                 if (!battleCode || !creatorId || isCleaningUp) return;
@@ -776,24 +880,25 @@
                         // Store battle data first
                         setBattleState(battle);
 
-                        // Handle completed or cancelled battle
-                        if (['completed', 'cancelled'].includes(battle.status)) {
-                            console.log('Battle ended with status:', battle.status);
+                        // Only handle completion if the battle was actually in progress
+                        if (battle.status === 'completed' && !isCleaningUp) {
+                            // Verify the battle should actually be over
+                            const playerData = battle.creator.uid === user.uid ? battle.creator : battle.opponent;
+                            const opponentData = battle.creator.uid === user.uid ? battle.opponent : battle.creator;
                             
-                            if (battle.status === 'completed' && !isCleaningUp) {
+                            if (playerData?.currentHP <= 0 || opponentData?.currentHP <= 0) {
                                 const isVictory = battle.winner === user.uid;
                                 handleBattleEnd(isVictory);
-                            } else {
-                                handleCleanup();
                             }
+                        } else if (battle.status === 'cancelled') {
+                            handleCleanup();
                             return;
                         }
 
-                        // Only update other state if battle is still active
-                        if (battle.status === 'in_progress') {
+                        // Update game state for active battles
+                        if (['in_progress', 'joining'].includes(battle.status)) {
                             setIsMyTurn(battle.currentTurn === user.uid);
 
-                            // Set player and opponent data based on role
                             if (battle.creator.uid === user.uid) {
                                 setPlayerMonster(battle.creator.monsterData);
                                 setPlayerHealth(battle.creator.currentHP);
@@ -1009,26 +1114,25 @@
                 
                 try {
                     setIsBattleOver(true);
-                    setBattleState(isVictory ? 'victory' : 'defeat');
+                    setBattleResult(isVictory ? 'victory' : 'defeat');
+                    setShowingResults(true);
         
                     const user = firebase.auth().currentUser;
                     if (!user) throw new Error('No authenticated user');
         
-                    // Update battle status in Firestore
-                    await battleManager.endBattle({
-                        winner: user.uid,
-                        status: 'completed',
-                        endTime: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-        
-                    // Process rewards only for the winner
+                    // Calculate rewards before updating battle status
+                    let battleRewards = null;
                     if (isVictory && playerMonster?.id) {
-                        try {
-                            const expGained = calculateXPGain(
-                                parseInt(playerMonster.level) || 1,
-                                parseInt(opponentMonster.level) || 1
-                            );
+                        const expGained = calculateXPGain(
+                            parseInt(playerMonster.level) || 1,
+                            parseInt(opponentMonster?.level) || 1
+                        );
+                        
+                        // Store rewards for display
+                        battleRewards = { exp: expGained };
+                        setRewards(battleRewards);
         
+                        try {
                             // Update monster experience
                             const monsterRef = db.collection('monsters').doc(playerMonster.id);
                             const monsterDoc = await monsterRef.get();
@@ -1046,194 +1150,172 @@
                                     updates.AP = Math.round(monsterDoc.data().AP * 1.15);
                                     updates.Speed = Math.round(monsterDoc.data().Speed * 1.1);
                                     
-                                    addToLog(`🌟 Level Up! ${playerMonster.monsterName} is now level ${updates.level}!`);
-                                    showToast(`Level Up! ${playerMonster.monsterName} reached level ${updates.level}!`, true);
+                                    battleRewards.levelUp = {
+                                        newLevel: updates.level,
+                                        newStats: {
+                                            HP: updates.HP,
+                                            AP: updates.AP,
+                                            Speed: updates.Speed
+                                        }
+                                    };
+                                    setRewards(battleRewards);
                                 }
         
                                 await monsterRef.update(updates);
-                                addToLog(`🏆 Victory! Earned ${expGained} XP!`);
-                                showToast(`Victory! Gained ${expGained} XP! 🎉`);
                             }
                         } catch (rewardError) {
                             console.error('Error processing rewards:', rewardError);
-                            showToast('Error processing rewards', false);
                         }
-                    } else if (!isVictory) {
-                        addToLog('💀 Defeat!');
-                        showToast('Defeat! Better luck next time! ❌', false);
                     }
+        
+                    // Update battle status in Firestore
+                    await battleManager.getBattleRef().update({
+                        status: 'completed',
+                        winner: user.uid,
+                        rewards: battleRewards,
+                        endTime: firebase.firestore.FieldValue.serverTimestamp()
+                    });
         
                 } catch (error) {
                     console.error('Error handling battle end:', error);
                     showToast('Error ending battle', false);
-                } finally {
-                    // Clean up battle state after short delay
-                    setTimeout(() => {
-                        handleCleanup();
-                    }, 2000);
                 }
             };
 
-            // Add cleanup handler
-            const handleCleanup = React.useCallback(async () => {
-                if (isCleaningUp) return;
-                setIsCleaningUp(true);
-        
-                try {
-                    localStorage.removeItem('currentBattle');
-                    const user = firebase.auth().currentUser;
-                    if (user) {
-                        await PvPBattleManager.resetUserBattleState(user.uid);
-                    }
-                } catch (error) {
-                    console.error('Cleanup error:', error);
-                } finally {
-                    // Redirect after short delay
-                    setTimeout(() => {
-                        window.location.href = 'pvp-battle.html';
-                    }, 1500);
-                }
-            }, [isCleaningUp]);
-        
-            // Update the victory handler
-            const handleVictory = async () => {
-                await handleBattleEnd(true);
-            };
-        
-            // Update the defeat handler
-            const handleDefeat = async () => {
-                await handleBattleEnd(false);
-            };
-        
-            // Update the effect that checks battle outcome
-            React.useEffect(() => {
-                if (!isBattleOver) {
-                    if (opponentHealth <= 0) {
-                        handleVictory();
-                    } else if (playerHealth <= 0) {
-                        handleDefeat();
-                    }
-                }
-            }, [opponentHealth, playerHealth, isBattleOver]);
+            // Add BattleResults component
+            const BattleResults = ({ result, rewards }) => (
+                <div className="battle-results">
+                    <h2 className={`result-header ${result}`}>
+                        {result === 'victory' ? '🎉 Victory!' : '💔 Defeat!'}
+                    </h2>
+                    {rewards && (
+                        <div className="rewards-container">
+                            <h3>Rewards</h3>
+                            <div className="exp-reward">Experience Gained: {rewards.exp} XP</div>
+                            {rewards.levelUp && (
+                                <div className="level-up">
+                                    <div className="level-up-header">🌟 Level Up!</div>
+                                    <div>New Level: {rewards.levelUp.newLevel}</div>
+                                    <div className="new-stats">
+                                        <div>HP: {rewards.levelUp.newStats.HP}</div>
+                                        <div>AP: {rewards.levelUp.newStats.AP}</div>
+                                        <div>Speed: {rewards.levelUp.newStats.Speed}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <div className="battle-end-controls">
+                        <button onClick={() => window.location.href='pvp-battle.html'}>
+                            Return to Lobby
+                        </button>
+                    </div>
+                </div>
+            );
 
-            // Return the battle UI
+            // Update the return statement to include battle results
             return (
                 <div className="battle-container">
-                    <div className="battle-status">
-                        <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
-                            {isMyTurn ? "Your Turn!" : "Opponent's Turn"}
-                        </div>
-                    </div>
+                    {showingResults ? (
+                        <BattleResults result={battleResult} rewards={rewards} />
+                    ) : (
+                        <>
+                            <TurnIndicator />
+                            <div className="battle-monsters">
+                                <div className="monster-section player-section">
+                                    <div className="monster-header">
+                                        <h3>{playerName}</h3>
+                                        <div className="monster-name">{playerMonster?.monsterName}</div>
+                                        <div className="monster-level">Level {playerMonster?.level}</div>
+                                    </div>
+                                    <div className="monster-display">
+                                        <MonsterImage monster={playerMonster} />
+                                        <div className="monster-info">
+                                            <div className="stats-box">
+                                                <div>Type: {playerMonster?.type}</div>
+                                                <div>HP: {playerHealth}/{playerMonster?.HP}</div>
+                                                <div>AP: {playerMonster?.AP}</div>
+                                                <div>Speed: {playerMonster?.Speed}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="health-bar-container">
+                                        <div className="health-bar">
+                                            <div className="health-fill player-health"
+                                                style={{ width: `${(playerHealth / (playerMonster?.HP || 100)) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="health-text">{playerHealth}/{playerMonster?.HP} HP</div>
+                                    </div>
+                                </div>
 
-                    {/* Player Monster Section */}
-                    <div className="battle-monsters">
-                        <div className="monster-section player-section">
-                            <div className="monster-header">
-                                <h3>{playerName}</h3>
-                                <div className="monster-name">{playerMonster?.monsterName}</div>
-                                <div className="monster-level">Level {playerMonster?.level}</div>
-                            </div>
-                            <div className="monster-display">
-                                <MonsterImage monster={playerMonster} />
-                                <div className="monster-info">
-                                    <div className="stats-box">
-                                        <div>Type: {playerMonster?.type}</div>
-                                        <div>HP: {playerHealth}/{playerMonster?.HP}</div>
-                                        <div>AP: {playerMonster?.AP}</div>
-                                        <div>Speed: {playerMonster?.Speed}</div>
+                                <div className="battle-divider">
+                                    <div className="vs-text">VS</div>
+                                </div>
+
+                                <div className="monster-section opponent-section">
+                                    <div className="monster-header">
+                                        <h3>{opponentName}</h3>
+                                        <div className="monster-name">{opponentMonster?.monsterName}</div>
+                                        <div className="monster-level">Level {opponentMonster?.level}</div>
+                                    </div>
+                                    <div className="monster-display">
+                                        <MonsterImage monster={opponentMonster} />
+                                        <div className="monster-info">
+                                            <div className="stats-box">
+                                                <div>Type: {opponentMonster?.type}</div>
+                                                <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
+                                                <div>AP: {opponentMonster?.AP}</div>
+                                                <div>Speed: {opponentMonster?.Speed}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="health-bar-container">
+                                        <div className="health-bar">
+                                            <div className="health-fill opponent-health"
+                                                style={{ width: `${(opponentHealth / (opponentMonster?.HP || 100)) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="health-text">{opponentHealth}/{opponentMonster?.HP} HP</div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="health-bar-container">
-                                <div className="health-bar">
-                                    <div 
-                                        className="health-fill player-health" 
-                                        style={{ width: `${(playerHealth / (playerMonster?.HP || 100)) * 100}%` }}
-                                    ></div>
-                                </div>
-                                <div className="health-text">
-                                    {playerHealth}/{playerMonster?.HP} HP
+
+                            <div className="battle-log">
+                                <div className="log-header">Battle Log</div>
+                                <div className="log-entries">
+                                    {battleLog.map((entry, index) => (
+                                        <div key={index} className="log-entry">{entry}</div>
+                                    ))}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="battle-divider">
-                            <div className="vs-text">VS</div>
-                        </div>
-
-                        {/* Opponent Monster Section */}
-                        <div className="monster-section opponent-section">
-                            <div className="monster-header">
-                                <h3>{opponentName}</h3>
-                                <div className="monster-name">{opponentMonster?.monsterName}</div>
-                                <div className="monster-level">Level {opponentMonster?.level}</div>
-                            </div>
-                            <div className="monster-display">
-                                <MonsterImage monster={opponentMonster} />
-                                <div className="monster-info">
-                                    <div className="stats-box">
-                                        <div>Type: {opponentMonster?.type}</div>
-                                        <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
-                                        <div>AP: {opponentMonster?.AP}</div>
-                                        <div>Speed: {opponentMonster?.Speed}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="health-bar-container">
-                                <div className="health-bar">
-                                    <div 
-                                        className="health-fill opponent-health" 
-                                        style={{ width: `${(opponentHealth / (opponentMonster?.HP || 100)) * 100}%` }}
-                                    ></div>
-                                </div>
-                                <div className="health-text">
-                                    {opponentHealth}/{opponentMonster?.HP} HP
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Battle Log */}
-                    <div className="battle-log">
-                        <div className="log-header">Battle Log</div>
-                        <div className="log-entries">
-                            {battleLog.map((entry, index) => (
-                                <div key={index} className={`log-entry ${entry.type || ''}`}>
-                                    {entry}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Battle Controls */}
-                    <div className="battle-controls">
-                        {!isBattleOver ? (
                             <div className="controls-grid">
                                 <button 
                                     className="battle-button attack" 
                                     onClick={handleAttack} 
-                                    disabled={!isMyTurn}
+                                    disabled={!isMyTurn || isBattleOver}
                                 >
                                     Attack
                                 </button>
                                 <button 
                                     className="battle-button defend" 
                                     onClick={handleDefend} 
-                                    disabled={!isMyTurn}
+                                    disabled={!isMyTurn || isBattleOver}
                                 >
                                     Defend
                                 </button>
                                 <button 
                                     className="battle-button heal" 
                                     onClick={handleHeal} 
-                                    disabled={!isMyTurn}
+                                    disabled={!isMyTurn || isBattleOver}
                                 >
                                     Heal
                                 </button>
                                 <button 
                                     className="battle-button special" 
                                     onClick={handleSpecialAttack} 
-                                    disabled={!isMyTurn || specialCooldown > 0}
+                                    disabled={!isMyTurn || isBattleOver || specialCooldown > 0}
                                 >
                                     Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
                                 </button>
@@ -1244,14 +1326,8 @@
                                     Forfeit
                                 </button>
                             </div>
-                        ) : (
-                            <div className="battle-end-controls">
-                                <button onClick={() => window.location.href='pvp-battle.html'}>
-                                    Return to Lobby
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </div>
             );
         };
@@ -1295,75 +1371,72 @@
             console.log('Initializing battle:', { battleCode, creatorId });
             
             try {
-                if (battleCode && creatorId) {
-                    // Hide lobby and show battle arena immediately
-                    document.getElementById('battleLobby').style.display = 'none';
-                    document.getElementById('monsterSelect').style.display = 'none';
-                    document.getElementById('battleArena').style.display = 'block';
+                // Important: Only check for active battles if we're not already in a battle
+                if (!battleCode && !creatorId) {
+                    // We're in the lobby, check for any active battles
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    const userData = userDoc.data();
+                    
+                    if (userData?.activeBattle && userData?.activeBattleCreator) {
+                        const activeBattleRef = await db
+                            .collection('users')
+                            .doc(userData.activeBattleCreator)
+                            .collection('battles')
+                            .doc(userData.activeBattle)
+                            .get();
 
-                    const battleRef = firebase.firestore()
-                        .collection('users')
-                        .doc(creatorId)
-                        .collection('battles')
-                        .doc(battleCode);
-
-                    // First get initial battle data
-                    const initialBattle = await battleRef.get();
-                    if (!initialBattle.exists) {
-                        throw new Error('Battle not found');
-                    }
-
-                    console.log('Initial battle data:', initialBattle.data());
-
-                    // Render battle component immediately with initial data
-                    if (!window.battleComponentMounted) {
-                        ReactDOM.render(
-                            <PvPBattle 
-                                battleCode={battleCode} 
-                                creatorId={creatorId}
-                                initialData={initialBattle.data()}
-                            />, 
-                            document.getElementById('root')
-                        );
-                        window.battleComponentMounted = true;
-                    }
-
-                    // Then set up the listener for updates
-                    const unsubscribe = battleRef.onSnapshot((doc) => {
-                        if (!doc.exists) {
-                            console.error('Battle document no longer exists');
-                            showToast('Battle not found!', false);
-                            localStorage.removeItem('currentBattle');
-                            window.location.href = 'pvp-battle.html';
+                        if (activeBattleRef.exists && !['completed', 'cancelled'].includes(activeBattleRef.data()?.status)) {
+                            // Only redirect if battle exists and is active
+                            window.location.href = `pvp-battle.html?battle=${userData.activeBattle}&creator=${userData.activeBattleCreator}`;
                             return;
+                        } else {
+                            // Clean up invalid battle state
+                            await PvPBattleManager.resetUserBattleState(user.uid);
                         }
-
-                        const battleData = doc.data();
-                        console.log('Battle update received:', battleData);
-                        
-                        if (['cancelled', 'completed'].includes(battleData.status)) {
-                            console.log('Battle ended with status:', battleData.status);
-                            localStorage.removeItem('currentBattle');
-                            showToast('Battle ended!', false);
-                            setTimeout(() => {
-                                window.location.href = 'pvp-battle.html';
-                            }, 1500);
-                            return;
-                        }
-                    });
-
-                    // Store unsubscribe function
-                    window.battleUnsubscribe = unsubscribe;
-                } else {
-                    // We're in the lobby
-                    console.log('No battle parameters, showing lobby');
+                    }
+                    // Show lobby and available battles
                     await PvPBattleManager.cleanupStuckBattles(user.uid);
                     loadActiveBattles();
+                    return;
                 }
+
+                // We have battle parameters, initialize battle arena
+                document.getElementById('battleLobby').style.display = 'none';
+                document.getElementById('monsterSelect').style.display = 'none';
+                document.getElementById('battleArena').style.display = 'block';
+
+                const battleRef = db
+                    .collection('users')
+                    .doc(creatorId)
+                    .collection('battles')
+                    .doc(battleCode);
+
+                const battleDoc = await battleRef.get();
+                if (!battleDoc.exists) {
+                    throw new Error('Battle not found');
+                }
+
+                console.log('Initial battle data:', battleDoc.data());
+
+                // Initialize React component
+                if (!window.battleComponentMounted) {
+                    ReactDOM.render(
+                        <PvPBattle 
+                            battleCode={battleCode} 
+                            creatorId={creatorId}
+                            initialData={battleDoc.data()}
+                        />, 
+                        document.getElementById('root')
+                    );
+                    window.battleComponentMounted = true;
+                }
+
             } catch (error) {
                 console.error('Error in battle initialization:', error);
-                showToast('Error starting battle: ' + error.message, false);
+                showToast('Error: ' + error.message, false);
+                await PvPBattleManager.resetUserBattleState(user.uid);
                 localStorage.removeItem('currentBattle');
+                // Don't redirect here, let user stay on current page
             }
         };
 
@@ -1894,7 +1967,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0042</h6>
+    <h6>Version: 0.0044</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
