@@ -268,6 +268,8 @@
             justify-content: space-between;
             align-items: center;
             backdrop-filter: blur(5px);
+            margin-right: 0.5rem; /* Add right margin to pull content in */
+            box-sizing: border-box; /* Ensure padding is included in width */
         }
 
         .monster-card.compact .monster-quick-stats {
@@ -275,8 +277,9 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 0.25rem;
             font-size: 0.75rem;
-            width: 100%;
+            width: calc(100% - 0.5rem); /* Adjust width to prevent overflow */
             margin-bottom: 0.25rem;
+            padding-right: 0.5rem; /* Add right padding to keep content inside */
         }
 
         /* Add hover effect for better visibility */
