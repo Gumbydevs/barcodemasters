@@ -458,19 +458,13 @@ class PvPBattleManager {
         }
 
         try {
-            // Instead of creating/deleting an init document,
-            // just create the battle document directly with the battleCode
+            // Just ensure the user document exists with proper battle fields
             const userRef = this.db.collection('users').doc(userId);
-            
-            // Check if user document exists, create if not
-            const userDoc = await userRef.get();
-            if (!userDoc.exists) {
-                await userRef.set({
-                    battleStatus: null,
-                    activeBattle: null,
-                    activeBattleCreator: null
-                }, { merge: true });
-            }
+            await userRef.set({
+                battleStatus: null,
+                activeBattle: null,
+                activeBattleCreator: null
+            }, { merge: true });
 
             return true;
         } catch (error) {
