@@ -572,9 +572,60 @@
         }
 
         function generateName(seed) {
-            const prefixes = ['Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon', 'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra', 'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon'];
-            const suffixes = ['beast', 'walker', 'striker', 'hunter', 'claw', 'fang', 'wing', 'scale', 'spirit', 'soul', 'heart', 'blade', 'stalker', 'guard', 'sentinel', 'warden', 'keeper', 'slayer', 'bringer', 'weaver'];
+            const prefixes = [
+                // Elemental
+                'Shadow', 'Crystal', 'Storm', 'Flame', 'Frost', 'Thunder', 'Mystic', 'Chaos', 'Cosmic', 'Dragon',
+                'Night', 'Star', 'Moon', 'Sun', 'Blood', 'Iron', 'Steel', 'Cyber', 'Quantum', 'Void', 'Terra',
+                'Pyro', 'Hydro', 'Aero', 'Geo', 'Necro', 'Tech', 'Pixel', 'Glitch', 'Neon', 'Astral', 'Plasma',
+                'Onyx', 'Azure', 'Crimson', 'Ember', 'Zephyr', 'Nova', 'Pulse', 'Vapor', 'Echo', 'Flux',
+                // Mythical
+                'Phoenix', 'Griffin', 'Hydra', 'Wraith', 'Spectre', 'Oracle', 'Titan', 'Kraken', 'Leviathan',
+                'Wyvern', 'Chimera', 'Basilisk', 'Sphinx', 'Manticore', 'Behemoth', 'Djinn', 'Valkyrie',
+                // Ancient
+                'Rune', 'Glyph', 'Tome', 'Epoch', 'Elder', 'Prime', 'Ancient', 'Primal', 'Archaic', 'Mythic',
+                // Cosmic
+                'Nebula', 'Quasar', 'Pulsar', 'Vortex', 'Stellar', 'Galactic', 'Celestial', 'Meteor', 'Comet',
+                // Tech
+                'Binary', 'Matrix', 'Vector', 'Neural', 'Cyber', 'Mecha', 'Nexus', 'Vertex', 'Circuit', 'Photon',
+                // Nature
+                'Thorn', 'Feral', 'Savage', 'Wild', 'Forest', 'Mountain', 'Ocean', 'Desert', 'Jungle', 'Arctic',
+                // New Additions - Mystical
+                'Aegis', 'Raven', 'Phoenix', 'Oracle', 'Mystic', 'Spirit', 'Soul', 'Ethereal', 'Astral', 'Celestial',
+                // New Additions - Elemental
+                'Inferno', 'Tsunami', 'Cyclone', 'Quake', 'Voltage', 'Glacier', 'Magma', 'Tempest', 'Vortex', 'Plasma',
+                // New Additions - Tech Advanced
+                'Quantum', 'Nano', 'Cyber', 'Techno', 'Digital', 'Virtual', 'Binary', 'Neural', 'Synth', 'Mecha',
+                // New Additions - Cosmic
+                'Cosmos', 'Galaxy', 'Nebula', 'Pulsar', 'Stellar', 'Solar', 'Lunar', 'Astro', 'Nova', 'Void'
+            ];
             
+            const suffixes = [
+                // Creature Types
+                'beast', 'walker', 'striker', 'hunter', 'claw', 'fang', 'wing', 'scale', 'spirit', 'soul',
+                'heart', 'blade', 'stalker', 'guard', 'sentinel', 'warden', 'keeper', 'slayer', 'bringer', 'weaver',
+                'drake', 'wyrm', 'spawn', 'fiend', 'demon', 'angel', 'titan', 'giant', 'colossus', 'lord',
+                // Actions
+                'crusher', 'breaker', 'smasher', 'reaver', 'render', 'caller', 'seeker', 'shifter', 'prowler',
+                'dancer', 'weaver', 'singer', 'howler', 'screamer', 'whisper', 'gazer', 'binder', 'maker',
+                // Attributes
+                'master', 'king', 'queen', 'prince', 'knight', 'sage', 'mage', 'wizard', 'witch', 'warrior',
+                'champion', 'overlord', 'sovereign', 'emperor', 'divine', 'legend', 'myth', 'ancient', 'eternal',
+                // Elements
+                'flame', 'frost', 'storm', 'quake', 'tide', 'spark', 'shade', 'light', 'void', 'star',
+                // Tech
+                'tron', 'byte', 'core', 'mind', 'pulse', 'wave', 'flux', 'form', 'shift', 'sync',
+                // Cosmic
+                'nova', 'pulsar', 'nebula', 'comet', 'star', 'void', 'warp', 'rift', 'space', 'time',
+                // New Additions - Combat
+                'striker', 'slasher', 'piercer', 'crusher', 'slicer', 'puncher', 'grappler', 'bomber', 'sniper', 'duelist',
+                // New Additions - Mystical
+                'shaman', 'druid', 'mystic', 'oracle', 'seer', 'prophet', 'ascendant', 'transcendent', 'enlightened', 'blessed',
+                // New Additions - Tech Advanced
+                'bot', 'droid', 'mech', 'unit', 'prime', 'core', 'drive', 'matrix', 'system', 'protocol',
+                // New Additions - Cosmic
+                'dweller', 'wanderer', 'voyager', 'drifter', 'walker', 'strider', 'glider', 'surfer', 'runner', 'racer'
+            ];
+
             const prefixIndex = Math.floor(seededRandom(seed) * prefixes.length);
             const suffixIndex = Math.floor(seededRandom(seed + 1) * suffixes.length);
             
