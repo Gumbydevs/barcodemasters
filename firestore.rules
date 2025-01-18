@@ -17,30 +17,34 @@ service cloud.firestore {
     // Users collection rules
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) || 
+        // Allow battle-related updates from opponents
+        (isAuthenticated() && 
+         request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['activeBattle', 'battleStatus', 'activeBattleCreator']));
 
       // Battles subcollection rules - UPDATED
       match /battles/{battleId} {
         allow read: if isAuthenticated();
         allow create: if isOwner(userId);
         allow update: if isAuthenticated() && (
-          // Allow creator to update their own battle
+          // Creator can update their own battle
           resource.data.creator.uid == request.auth.uid ||
-          // Allow opponent to update battle they're part of
+          // Opponent can update if they're part of the battle
           (resource.data.opponent != null && 
            resource.data.opponent.uid == request.auth.uid) ||
           // Allow joining an available battle
           (resource.data.status == 'waiting' && 
-           resource.data.creator.uid != request.auth.uid)
+           resource.data.creator.uid != request.auth.uid &&
+           request.resource.data.status == 'in_progress')
         );
         allow delete: if isOwner(userId);
       }
     }
 
-    // Collection group query rule for battles - UPDATED
+    // Collection group query rule for battles
     match /{path=**}/battles/{battleId} {
       allow read: if isAuthenticated();
-      // Allow listing battles for matchmaking
       allow list: if isAuthenticated();
     }
 
