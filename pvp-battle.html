@@ -488,6 +488,11 @@
             const [isDefending, setIsDefending] = React.useState(false);
             const [specialCooldown, setSpecialCooldown] = React.useState(3);
 
+            // Add new state for player names and roles
+            const [playerRole, setPlayerRole] = React.useState(null);
+            const [playerName, setPlayerName] = React.useState('');
+            const [opponentName, setOpponentName] = React.useState('');
+
             // Monitor battle state
             React.useEffect(() => {
                 if (!battleCode || !creatorId) return;
@@ -536,6 +541,34 @@
 
                 return () => unsubscribe();
             }, [battleCode, creatorId]);
+
+            React.useEffect(() => {
+                if (!battleState) return;
+
+                const user = firebase.auth().currentUser;
+                const isCreator = user.uid === battleState.creator.uid;
+                setPlayerRole(isCreator ? 'creator' : 'opponent');
+
+                // Fetch player names
+                const fetchNames = async () => {
+                    try {
+                        const creatorDoc = await db.collection('users').doc(battleState.creator.uid).get();
+                        const opponentDoc = battleState.opponent?.uid ? 
+                            await db.collection('users').doc(battleState.opponent.uid).get() : null;
+
+                        if (isCreator) {
+                            setPlayerName(creatorDoc.data()?.username || 'Player 1');
+                            setOpponentName(opponentDoc?.data()?.username || 'Player 2');
+                        } else {
+                            setPlayerName(opponentDoc?.data()?.username || 'Player 2');
+                            setOpponentName(creatorDoc.data()?.username || 'Player 1');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching player names:', error);
+                    }
+                };
+                fetchNames();
+            }, [battleState?.creator?.uid, battleState?.opponent?.uid]);
 
             // Add this helper function at the top
             const addToLog = (message, battleLog, setBattleLog) => {
@@ -689,46 +722,86 @@
                 }
             };
 
+            // Add turn indicator component
+            const TurnIndicator = () => (
+                <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
+                    {isMyTurn ? "Your Turn!" : "Opponent's Turn"}
+                </div>
+            );
+
             // Return the battle UI
             return (
                 <div className="battle-container">
-                    <h2>PVP Battle</h2>
+                    <TurnIndicator />
                     
-                    {/* Player Monster */}
-                    <div className="monster">
+                    {/* Player Monster Section */}
+                    <div className="monster player-monster">
+                        <div className="monster-header">
+                            <h3>{playerName}'s {playerMonster?.monsterName}</h3>
+                            <div className="monster-level">Level {playerMonster?.level}</div>
+                        </div>
                         <MonsterImage monster={playerMonster} />
                         <div className="monster-info">
-                            {/* ...same monster info structure as battle.html... */}
+                            <div className="stats-grid">
+                                <div>HP: {playerHealth}/{playerMonster?.HP}</div>
+                                <div>AP: {playerMonster?.AP}</div>
+                                <div>Type: {playerMonster?.type}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="health-bar">
-                        <div 
-                            className="health-fill player-health" 
-                            style={{ width: `${(playerHealth / playerMonster?.HP || 1) * 100}%` }}
-                        ></div>
+                        <div className="health-bar-container">
+                            <div className="health-bar">
+                                <div 
+                                    className="health-fill player-health" 
+                                    style={{ width: `${(playerHealth / playerMonster?.HP) * 100}%` }}
+                                ></div>
+                            </div>
+                            <div className="health-text">{playerHealth}/{playerMonster?.HP}</div>
+                        </div>
                     </div>
 
-                    {/* Opponent Monster */}
-                    <div className="monster">
+                    {/* VS Section */}
+                    <div className="battle-vs">
+                        <div className="vs-text">VS</div>
+                    </div>
+
+                    {/* Opponent Monster Section */}
+                    <div className="monster opponent-monster">
+                        <div className="monster-header">
+                            <h3>{opponentName}'s {opponentMonster?.monsterName}</h3>
+                            <div className="monster-level">Level {opponentMonster?.level}</div>
+                        </div>
                         <MonsterImage monster={opponentMonster} />
                         <div className="monster-info">
-                            {/* ...same monster info structure as battle.html... */}
+                            <div className="stats-grid">
+                                <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
+                                <div>AP: {opponentMonster?.AP}</div>
+                                <div>Type: {opponentMonster?.type}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="health-bar">
-                        <div 
-                            className="health-fill opponent-health" 
-                            style={{ width: `${(opponentHealth / opponentMonster?.HP || 1) * 100}%` }}
-                        ></div>
+                        <div className="health-bar-container">
+                            <div className="health-bar">
+                                <div 
+                                    className="health-fill opponent-health" 
+                                    style={{ width: `${(opponentHealth / opponentMonster?.HP) * 100}%` }}
+                                ></div>
+                            </div>
+                            <div className="health-text">{opponentHealth}/{opponentMonster?.HP}</div>
+                        </div>
                     </div>
 
                     {/* Battle Log */}
                     <div className="battle-log">
-                        <ul>
+                        <h4>Battle Log</h4>
+                        <div className="log-container">
                             {battleLog.map((entry, index) => (
-                                <li key={index}>{entry}</li>
+                                <div 
+                                    key={index} 
+                                    className={`log-entry ${entry.type || ''}`}
+                                >
+                                    {entry.message}
+                                </div>
                             ))}
-                        </ul>
+                        </div>
                     </div>
 
                     {/* Battle Controls */}
@@ -1410,7 +1483,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0039</h6>
+    <h6>Version: 0.0040</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 

@@ -164,39 +164,68 @@ class PvPBattleManager {
         const user = firebase.auth().currentUser;
         if (!user) throw new Error('User not authenticated');
 
-        const battle = await this.battleRef.get();
-        if (!battle.exists) throw new Error('Battle not found');
+        try {
+            // Use transaction to ensure atomic updates
+            return await this.db.runTransaction(async (transaction) => {
+                const battleDoc = await transaction.get(this.battleRef);
+                
+                if (!battleDoc.exists) throw new Error('Battle not found');
+                
+                const battleData = battleDoc.data();
+                if (battleData.status !== 'in_progress') throw new Error('Battle is not in progress');
+                if (battleData.currentTurn !== user.uid) throw new Error('Not your turn');
 
-        const battleData = battle.data();
-        if (battleData.currentTurn !== user.uid) throw new Error('Not your turn');
+                // Calculate move outcome
+                const updates = this.calculateMoveOutcome(move, data, battleData);
 
-        // Calculate the move outcome
-        const updates = this.calculateMoveOutcome(move, data, battleData);
+                // Add move to history
+                const moveHistory = battleData.moves || [];
+                moveHistory.push({
+                    userId: user.uid,
+                    move: move,
+                    data: data,
+                    timestamp: new Date()
+                });
 
-        // Update battle state
-        return await this.battleRef.update({
-            ...updates,
-            lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-            currentTurn: this.getNextTurn(battleData),
-            [`${user.uid === battleData.creator.uid ? 'creator' : 'opponent'}.lastMove`]: {
-                move,
-                data,
-                timestamp: new Date()
-            }
-        });
+                // Update battle state with complete data
+                const fullUpdates = {
+                    ...updates,
+                    moves: moveHistory,
+                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                    currentTurn: this.getNextTurn(battleData),
+                    [`${user.uid === battleData.creator.uid ? 'creator' : 'opponent'}.lastMove`]: {
+                        move,
+                        data,
+                        timestamp: new Date()
+                    }
+                };
+
+                transaction.update(this.battleRef, fullUpdates);
+                return fullUpdates;
+            });
+
+        } catch (error) {
+            console.error('Error making move:', error);
+            throw error;
+        }
     }
 
     calculateMoveOutcome(move, data, battleState) {
-        const updates = {};
         const user = firebase.auth().currentUser;
         const isCreator = user.uid === battleState.creator.uid;
         const attacker = isCreator ? battleState.creator : battleState.opponent;
         const defender = isCreator ? battleState.opponent : battleState.creator;
+        const updates = {};
+
+        // Add debugging
+        console.log('Move calculation:', { move, data, isCreator, attacker, defender });
 
         switch (move) {
             case 'attack':
                 const newHealth = Math.max(0, defender.currentHP - data.damage);
                 updates[`${isCreator ? 'opponent' : 'creator'}.currentHP`] = newHealth;
+                // Reset defender's defending state
+                updates[`${isCreator ? 'opponent' : 'creator'}.isDefending`] = false;
                 break;
 
             case 'defend':
@@ -216,10 +245,11 @@ class PvPBattleManager {
                 break;
         }
 
-        // Check for battle end
+        // Add battle status check
         if (updates[`${isCreator ? 'opponent' : 'creator'}.currentHP`] === 0) {
             updates.status = 'completed';
             updates.winner = user.uid;
+            updates.endTime = firebase.firestore.FieldValue.serverTimestamp();
             this.handleBattleEnd(battleState, user.uid);
         }
 
