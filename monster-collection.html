@@ -616,6 +616,30 @@
         body.dark-mode .monster-card.expanded {
             background: rgba(18, 18, 18, 0.95); /* Dark background with 0.95 opacity */
         }
+
+        .battle-button {
+            background: linear-gradient(135deg, #3498db, #e74c3c);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .battle-button:hover {
+            background: linear-gradient(135deg, #2980b9, #c0392b);
+            transform: translateY(-2px);
+        }
+
+        .battle-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -1308,6 +1332,17 @@
                                 <div class="created-date">Created By: ${ownerUsername}</div>
                             </div>
                         </div>
+                        <button class="battle-button" onclick="event.stopPropagation(); document.dispatchEvent(new CustomEvent('selectForBattle', { detail: {
+                            id: '${monster.id}',
+                            monsterName: '${monster.monsterName}',
+                            type: '${monster.type}',
+                            level: ${monster.level},
+                            HP: ${monster.HP},
+                            AP: ${monster.AP},
+                            Speed: ${monster.Speed}
+                        } }))" ${monster.isOccupied ? 'disabled' : ''}>
+                            ${monster.isOccupied ? 'Monster is Busy' : 'Select for Battle'}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1519,6 +1554,19 @@
                     document.removeEventListener('keydown', escListener);
                 }
             });
+        });
+
+        document.addEventListener('selectForBattle', (e) => {
+            const params = new URLSearchParams({
+                id: e.detail.id,
+                monsterName: e.detail.monsterName,
+                type: e.detail.type,
+                level: e.detail.level,
+                HP: e.detail.HP,
+                AP: e.detail.AP,
+                Speed: e.detail.Speed
+            });
+            window.location.href = `battle.html?${params.toString()}`;
         });
     }
 
