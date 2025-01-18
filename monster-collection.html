@@ -1132,6 +1132,18 @@
                 return;
             }
 
+            // Close expanded card if it exists
+            const expandedCard = document.querySelector('.monster-card.expanded');
+            const overlay = document.querySelector('.overlay');
+            if (expandedCard && overlay) {
+                overlay.classList.remove('active');
+                expandedCard.classList.remove('active');
+                setTimeout(() => {
+                    expandedCard.remove();
+                    overlay.remove();
+                }, 300);
+            }
+
             await deleteDoc(monsterRef);
             showToast('Monster deleted successfully!', false, true); // Removed refresh parameter, kept error style
             await fetchMonsters();
