@@ -360,6 +360,10 @@
         font-weight: 500;  /* Make it slightly bold */
         color: #3498db;    /* Match the monster name color */
     }
+    #trainingPreview, #trainingTimerContainer {
+        margin: 1rem 0;
+        min-height: 3rem; /* Ensures consistent height during transition */
+    }
     </style>
     <script src="monsterStats.js"></script>
     <script type="module">
@@ -676,6 +680,9 @@ function getTrainingState() {
 
 // Modify startTraining function
 async function startTraining() {
+    // Hide the training preview
+    document.getElementById('trainingPreview').style.display = 'none';
+    
     const selectedMonsterId = document.getElementById('monsterSelect').value;
     const selectedStat = document.getElementById('statSelect').value;
     
@@ -736,12 +743,13 @@ function startTrainingProgress() {
     document.getElementById('statSelect').disabled = true;
     document.getElementById('monsterSelect').disabled = true;
     
+    // Hide preview and show timer
+    document.getElementById('trainingPreview').style.display = 'none';
     const timerContainer = document.getElementById('trainingTimerContainer');
+    timerContainer.style.display = 'block';
+    
     const progressFill = document.getElementById('trainingProgressFill');
     const timeRemaining = document.getElementById('trainingTimeRemaining');
-    
-    // Show timer container
-    timerContainer.style.display = 'block';
     
     const updateProgress = () => {
         const now = Date.now();
@@ -847,6 +855,12 @@ function resetTrainingUI() {
     document.getElementById('statSelect').disabled = false;
     document.getElementById('monsterSelect').disabled = false;
     document.getElementById('statSelect').value = '';
+    
+    // Show the training preview again if a stat is selected
+    const selectedStat = document.getElementById('statSelect').value;
+    if (selectedStat) {
+        document.getElementById('trainingPreview').style.display = 'block';
+    }
 }
 
 // Modify initialization code
@@ -926,6 +940,25 @@ darkModeToggle.addEventListener("click", function() {
     localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
 });
 
+        // Add this event listener after other event listeners
+        document.getElementById('statSelect').addEventListener('change', async () => {
+            const selectedMonsterId = document.getElementById('monsterSelect').value;
+            const selectedStat = document.getElementById('statSelect').value;
+            const previewDiv = document.getElementById('trainingPreview');
+            
+            if (selectedStat && selectedMonsterId) {
+                const monsterRef = doc(db, 'monsters', selectedMonsterId);
+                const monsterDoc = await getDoc(monsterRef);
+                if (monsterDoc.exists()) {
+                    const currentStatValue = monsterDoc.data()[selectedStat];
+                    const trainingDuration = calculateTrainingDuration(currentStatValue);
+                    document.getElementById('previewTime').textContent = formatTrainingTime(trainingDuration);
+                    previewDiv.style.display = 'block';
+                }
+            } else {
+                previewDiv.style.display = 'none';
+            }
+        });
         
     </script>
 </head>
@@ -955,7 +988,9 @@ darkModeToggle.addEventListener("click", function() {
         <option value="Speed">Speed</option>
     </select>
     <button class="nav-button" id="startTrainingButton">Start Training</button>
-    
+    <div id="trainingPreview" style="margin: 1rem 0; color: #a8b3cf; display: none;">
+            Estimated training time: <span id="previewTime"></span>
+        </div>
         <div id="trainingTimerContainer" class="training-timer-container">
         <div class="training-progress-bar">
         <div id="trainingProgressFill" class="training-progress-fill"></div>
@@ -985,7 +1020,7 @@ darkModeToggle.addEventListener("click", function() {
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.041</span></p>
+        <p>Version: <span id="versionNumber">1.0.042                                                                                                    </span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
 
