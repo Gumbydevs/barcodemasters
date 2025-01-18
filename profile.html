@@ -420,6 +420,7 @@
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { updateGameTip } from "./assets/js/tooltips.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -436,84 +437,10 @@
         const auth = getAuth(app);
         const storage = getStorage(app);
 
-        // Game tips array
-        const gameTips = [
-            "Scan codes to find powerful monsters!",
-            "Scanning codes is an artform. It takes practice to get good results everytime!",
-            "Most QR codes will contain DNA and scanable monsters.",
-            "Not all barcodes contain DNA, we are constantly adding new barcode libraries to unlock more scannable codes.",
-            "Most QR codes will contain DNA and scanable monsters.",
-            "Not all barcodes contain DNA, we are constantly adding new barcode libraries to unlock more scannable codes.",
-            "We are trying to remove useless tips... but we keep adding more.",
-            "Fetching monsters... please wait.",
-            "The Global Monster Index shows all monsters created by players worldwide.",
-            "Train your monsters daily to increase their strength.",
-            "Different barcodes can yield different monster types.",
-            "Challenge other players to climb the rankings!",
-            "Combine DNA from different monsters to create new species!(Coming Soon)",
-            "Your MVP monster gains bonus in battles!(Coming Soon)",
-            "Check your monster collection daily for rewards!",
-            "Scan barcodes to collect powerful items and unlock new abilities!(Coming Soon)",
-            "Use your monster types wisely to overcome and defeat foes.",
-            "The more barcodes you scan, the stronger your character becomes.(Maybe?)",
-            "Each barcode you scan brings you closer to uncovering the game’s secrets.",
-            "Some barcodes unlock special challenges that reward you with rare items.",
-            "Scan bardcodes to extract DNA and create your unique monster team!",
-            "Spend scanned DNA to create powerful upgrades and boost your stats!(Coming Soon)",
-            "Don’t forget to manage your energy – scanning barcodes consumes it! (Maybe?)",
-            "Be careful! Some barcodes may trigger traps or dangerous encounters.",
-            "Discover the lore of Barcode Masters as you scan ancient barcodes scattered throughout the world.",
-            "Look for hidden codes in the environment to unlock extra content and secrets.",
-            "Training your monsters will give you an edge in battles.",
-            "In play for keeps mode, you can win your opponents monster, or lose yours!",
-            "All-in Mode: Risk it all by playing for keeps, put your monster up for bet and battle for the ultimate prize.",
-            "Each barcode has a story – scan them all to piece together the mystery!",
-            "Some barcodes for powerful boosts and unique abilities!",
-            "Your adventure in Barcode Masters is filled with both danger and discovery.",
-            "The monsters you create are unique to you – no two players will have the same monsters!",
-            "Each monster is synthesized from the DNA of the barcodes you scan.",
-            "Each monster is unique, it has its own appearence, strengths and weaknesses.",
-            "As you progress, your scanning abilities evolve, unlocking new possibilities!",
-            "The world of Barcode Masters is full of mysteries waiting to be uncovered with the right scan.",
-            "Keep an eye on your scanner’s cooldown – timing is everything!",
-            "Warning: Scanning barcodes may cause uncontrollable excitement.",
-            "We know you’re here for the action, but don’t forget to read these tooltips... they’re here for your own good!",
-            "This game doesn’t have any microtransactions... yet.",
-            "Scan more barcodes...",
-            "Your scanner is powered by pure curiosity. And maybe a little magic.",
-            "This tooltip was added just for you, because we know you’ll read it.",
-            "Not all tooltips are helpful... but they can be entertaining!",
-            "Just when you thought scanning barcodes couldn’t get more exciting... it does. Probably.",
-            "We hope this tooltip helps. If not, blame Canada",
-            "If you think these tooltips are too long, just wait until you get the manual!",
-            "Tip: Barcodes are actually the secret to life, the universe, and everything. Scan wisely.",
-            "Don't worry, this tooltip won't spoil the plot... mostly because we haven't finished writing it.",
-            "Did you know? 87% of players ignore tooltips. Don't be one of them!",
-            "Just when you thought you were done with tutorials, here we are again.",
-            "This tooltip is like the game itself – unexpected and full of surprises!",
-            "Some say scanning barcodes is the key to greatness... others just say it's fun.",
-            "Our developers are working hard to make this game better. We promise. Probably.",
-            "Scan the barcode, get the reward. Or maybe a plot twist... we’ll see!",
-            "This tooltip is for informational purposes only. No, seriously, we’re not sure what it means either.",
-            "We put this tooltip here for comedic effect... hopefully it worked.",
-            "Some barcodes lead to special bosses – defeat them for epic rewards!",
-            "This game does not waste your time with 2-factor authentication. You’re welcome.",
-            "Warming up the DNA extractor…",
-            "Please stand by while we gather all the monster DNA you never asked for.", 
-            "Making sure the monsters don’t break free… again. This time we promise it won’t happen.",
-            "Updating leaderboard...",
-            "Initiating world domination protocol… just kidding, we’re only fixing bugs.",
-            "Preparing your scanner for the next big thing…",
-            "Checking if all monsters are still behaving… so far, so good. We’ll update you if they start a rebellion.",
-            "Leaderboard’s looking suspiciously quiet…",
-            "Brief pause to upgrade your scanner… we’ve added a ‘snarky comment’ filter.",
-            "Running diagnostics… we’re 99% sure the game is working as intended.",
-            "Checking to make sure no monsters are hiding in the code…",
-            "Powering up your scanner... hope it can handle all the awesome you’re about to scan.",
-            "Scanning barcodes is like opening a box of chocolates… you never know what you’re gonna get.",     
-            "Performing system update… we’re trying to make the game more fun...’",
-            "Eventually we will add more game tips... but for now, just scan barcodes and have fun!",
-        ];
+        // Remove the old gameTips array and updateGameTip function
+        // Replace with new tooltip implementation
+        updateGameTip('gameTip', 20000); // Updates every 20 seconds instead of 10
+        setInterval(() => updateGameTip('gameTip', 20000), 20000);
 
         // Function to find highest level monster
         async function findMVPMonster(userId) {
@@ -566,17 +493,6 @@
             document.getElementById('mvpMonsterWins').textContent = "0";
             document.getElementById('mvpMonsterXP').textContent = "0";
         }
-
-        // Function to update game tip
-        function updateGameTip() {
-            const tipElement = document.getElementById('gameTip');
-            const randomTip = gameTips[Math.floor(Math.random() * gameTips.length)];
-            tipElement.textContent = randomTip;
-        }
-
-        // Update tip every 10 seconds
-        updateGameTip();
-        setInterval(updateGameTip, 10000);
 
         // Function to show error message
         function showError(message) {

@@ -640,6 +640,24 @@
             cursor: not-allowed;
             transform: none;
         }
+
+        .tooltip-box {
+            margin: 1rem auto;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            backdrop-filter: blur(10px);
+            color: inherit;
+        }
+
+        body.dark-mode .tooltip-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -667,6 +685,11 @@
                 <h3>Unique Types</h3>
                 <p id="uniqueTypes">0</p>
             </div>
+        </div>
+
+        <!-- Add tooltips section here -->
+        <div class="tooltip-box" id="gameTip">
+            Loading tip...
         </div>
 
         <div class="filters">
@@ -715,7 +738,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.06</span></p>
+        <p>Version: <span id="versionNumber">1.0.07</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
     <style>
@@ -1078,6 +1101,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, query, where, orderBy, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { updateGameTip } from "./assets/js/tooltips.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -1591,6 +1615,14 @@
         } else {
             window.location.href = 'index.html';
         }
+    });
+
+    // Initialize tooltips with longer duration and store interval ID for cleanup
+    const tooltipInterval = updateGameTip('gameTip', 20000);
+
+    // Clean up tooltip interval when page unloads
+    window.addEventListener('unload', () => {
+        if (tooltipInterval) clearInterval(tooltipInterval);
     });
 </script>
 </body>
