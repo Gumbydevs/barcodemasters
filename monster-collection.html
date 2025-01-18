@@ -194,8 +194,9 @@
         }
 
         .monsters-grid {
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
         }
 
         .monster-card {
@@ -205,6 +206,112 @@
             border-radius: 12px;
             overflow: hidden;
             height: fit-content;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            height: auto;
+        }
+
+        .monster-card.compact {
+            padding: 0.75rem;
+        }
+
+        .monster-card.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 1.5rem;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.95); /* Updated from 0.05 to 0.95 */
+        }
+
+        /* Compact view styles */
+        .monster-card.compact .monster-image-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 0.5rem;
+        }
+
+        .monster-card.compact .monster-name {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        .monster-card.compact .stat-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Hide expanded content in compact view */
+        .monster-card.compact .expanded-content {
+            display: none;
+        }
+
+        /* Show expanded content in expanded view */
+        .monster-card.expanded .expanded-content {
+            display: block;
+        }
+
+        /* Hide compact content in expanded view */
+        .monster-card.expanded .compact-content {
+            display: none;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: background 0.2s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
         }
 
         /* Update image container styles for tighter wrapping */
@@ -309,6 +416,165 @@
             color: #ecf0f1; /* Changed from #ffffff to a slightly softer white */
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Added subtle text shadow for better contrast */
         }
+
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .monster-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            height: auto;
+            cursor: pointer;
+        }
+
+        .monster-card.compact {
+            padding: 0.75rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .monster-card.compact .monster-image-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 0.5rem;
+        }
+
+        .monster-card.compact .monster-image-container img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .monster-card.compact .monster-name {
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+
+        .monster-card.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 1.5rem;
+            opacity: 0;
+            background: rgba(255, 255, 255, 0.95); /* Updated from 0.05 to 0.95 */
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 480px) {
+            .monsters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 0.5rem;
+            }
+        }
+
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+            padding: 0.75rem;
+            width: 100%;
+        }
+
+        .monster-card.compact {
+            padding: 0.5rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 0;
+        }
+
+        .monster-card.compact .monster-image-container {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 0.25rem;
+        }
+
+        .monster-card.compact .monster-name {
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            color: #fff;
+            text-shadow: none;
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+
+        .monster-card.expanded {
+            position: fixed;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+            transform-origin: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95); /* Updated from 0.05 to 0.95 */
+        }
+
+        .monster-card.expanded.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            z-index: 999;
+            transition: background-color 0.3s ease;
+        }
+
+        .overlay.active {
+            display: block;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Update dark mode version as well */
+        body.dark-mode .monster-card.expanded {
+            background: rgba(18, 18, 18, 0.95); /* Dark background with 0.95 opacity */
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -384,7 +650,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.05</span></p>
+        <p>Version: <span id="versionNumber">1.0.06</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
     <style>
@@ -888,12 +1154,11 @@
         }
     }
 
-    // Modify the createMonsterCard function
+    // Update the createMonsterCard function
     async function createMonsterCard(monster) {
         const ownerUsername = await getUsernameById(monster.ownerId);
         const typeDescription = await getMonsterTypeDescription(monster.type);
         
-        // Create image HTML based on whether the monster has an imageUrl
         const imageHTML = monster.imageUrl ? 
             `<div class="monster-image-container">
                 <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
@@ -901,62 +1166,94 @@
             </div>` : 
             `<div class="monster-image-placeholder"></div>`;
         
-        // Calculate only next level XP requirement
         const xpInfo = monsterStats.getXPInfo(monster);
-        
-        // Use raw experience value directly from monster data for current XP
-        const xpDisplay = `
-            <div class="stat-item">
-                <span>XP</span>
-                <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
+
+        const compactContent = `
+            <div class="compact-content">
+                ${imageHTML}
+                <div class="monster-name">${monster.monsterName}</div>
+                <div class="monster-quick-stats">
+                    <div class="stat-badge">
+                        <span>${monster.type}</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span>Lvl</span>
+                        <span>${monster.level}</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span>HP</span>
+                        <span>${monster.HP}</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span>AP</span>
+                        <span>${monster.AP}</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span>SPD</span>
+                        <span>${monster.Speed}</span>
+                    </div>
+                </div>
+                <div class="xp-info">
+                    XP: ${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}
+                </div>
+                <div class="xp-progress">
+                    <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
+                </div>
             </div>
         `;
 
         return `
-            <div class="monster-card" data-id="${monster.id}">
-                <div class="monster-info">
-                    <div class="monster-name">${monster.monsterName}</div>
-                    ${imageHTML}
-                    <div class="monster-type-container">
-                        <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                        <div class="type-description">${typeDescription}</div>
-                    </div>
-                    
-                    <div class="monster-stats">
-                        <div class="stat-item">
-                            <span>Level</span>
-                            <span>${monster.level}</span>
+            <div class="monster-card compact" data-id="${monster.id}">
+                ${compactContent}
+                <div class="expanded-content">
+                    <button class="close-button">&times;</button>
+                    <div class="monster-info">
+                        <div class="monster-name">${monster.monsterName}</div>
+                        ${imageHTML}
+                        <div class="monster-type-container">
+                            <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
+                            <div class="type-description">${typeDescription}</div>
                         </div>
-                        <div class="stat-item">
-                            <span>HP</span>
-                            <span>${monster.HP}</span>
+                        
+                        <div class="monster-stats">
+                            <div class="stat-item">
+                                <span>Level</span>
+                                <span>${monster.level}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>HP</span>
+                                <span>${monster.HP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>AP</span>
+                                <span>${monster.AP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Speed</span>
+                                <span>${monster.Speed}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>XP</span>
+                                <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Owner</span>
+                                <span>${ownerUsername}</span>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span>AP</span>
-                            <span>${monster.AP}</span>
+                        <div class="xp-progress">
+                            <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
                         </div>
-                        <div class="stat-item">
-                            <span>Speed</span>
-                            <span>${monster.Speed}</span>
-                        </div>
-                        ${xpDisplay}
-                        <div class="stat-item">
-                            <span>Owner</span>
-                            <span>${ownerUsername}</span>
-                        </div>
-                    </div>
-                    <div class="xp-progress">
-                        <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div class="monster-actions">
-                            <button class="action-button rename-button" onclick="document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
-                            <button class="action-button regen-button" disabled>Regen</button>
-                            <button class="action-button delete-button" onclick="document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
-                        </div>
-                        <div>
-                            <div class="created-date">${formatDate(monster.dateCreated)}</div>
-                            <div class="created-date">Created By: ${ownerUsername}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="monster-actions">
+                                <button class="action-button rename-button" onclick="event.stopPropagation(); document.dispatchEvent(new CustomEvent('renameMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Rename</button>
+                                <button class="action-button regen-button" disabled>Regen</button>
+                                <button class="action-button delete-button" onclick="event.stopPropagation(); document.dispatchEvent(new CustomEvent('deleteMonster', { detail: { id: '${monster.id}', name: '${monster.monsterName}' }}))">Delete</button>
+                            </div>
+                            <div>
+                                <div class="created-date">${formatDate(monster.dateCreated)}</div>
+                                <div class="created-date">Created By: ${ownerUsername}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1118,6 +1415,56 @@
                 window.location.href = 'index.html';
             }).catch((error) => {
                 showError('Logout failed: ' + error.message);
+            });
+        });
+
+        // Add click handler for monster cards
+        document.getElementById('monstersGrid').addEventListener('click', (e) => {
+            const card = e.target.closest('.monster-card');
+            if (!card) return;
+
+            // Create a clone of the card for the expanded view
+            const expandedCard = card.cloneNode(true);
+            expandedCard.classList.remove('compact');
+            expandedCard.classList.add('expanded');
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            document.body.appendChild(overlay);
+            document.body.appendChild(expandedCard);
+
+            requestAnimationFrame(() => {
+                overlay.classList.add('active');
+                expandedCard.classList.add('active');
+            });
+
+            const closeCard = () => {
+                overlay.classList.remove('active');
+                expandedCard.classList.remove('active');
+                
+                setTimeout(() => {
+                    expandedCard.remove();
+                    overlay.remove();
+                }, 300);
+            };
+
+            expandedCard.querySelector('.close-button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeCard();
+            });
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closeCard();
+                }
+            });
+
+            // Close on escape key
+            document.addEventListener('keydown', function escListener(e) {
+                if (e.key === 'Escape') {
+                    closeCard();
+                    document.removeEventListener('keydown', escListener);
+                }
             });
         });
     }

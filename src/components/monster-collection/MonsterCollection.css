@@ -1,0 +1,11 @@
+.monster-collection {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.monster-card {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
