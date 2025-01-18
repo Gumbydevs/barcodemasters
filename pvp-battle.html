@@ -784,7 +784,11 @@
                     throw new Error('Monster not found');
                 }
 
-                return monsterDoc.data();
+                // Include the document ID in the monster data
+                return {
+                    id: monsterDoc.id,
+                    ...monsterDoc.data()
+                };
             } catch (error) {
                 console.error('Error fetching monster data:', error);
                 showToast('Error fetching monster data!', false);
@@ -1406,7 +1410,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0038</h6>
+    <h6>Version: 0.0039</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 

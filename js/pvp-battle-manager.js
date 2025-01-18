@@ -111,6 +111,11 @@ class PvPBattleManager {
             .doc(battleCode);
 
         try {
+            // Verify and enhance monster data
+            if (!monsterData || !monsterData.id) {
+                throw new Error('Invalid monster data');
+            }
+
             // Wrap the update in a transaction to ensure atomicity
             return await db.runTransaction(async (transaction) => {
                 const battleDoc = await transaction.get(battleRef);
@@ -131,9 +136,12 @@ class PvPBattleManager {
                 const updates = {
                     opponent: {
                         uid: joiningUserId,
-                        monster: monsterData.id,
-                        monsterData: monsterData,
-                        currentHP: monsterData.HP,
+                        monster: monsterData.id, // Now we ensure this exists
+                        monsterData: {
+                            ...monsterData,
+                            id: monsterData.id // Explicitly include id in monsterData
+                        },
+                        currentHP: monsterData.HP || 100,
                         ready: true
                     },
                     status: 'in_progress',
