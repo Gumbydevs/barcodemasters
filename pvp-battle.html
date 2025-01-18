@@ -188,6 +188,131 @@
                 opacity: 1;
             }
         }
+
+        .battle-monsters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            gap: 20px;
+        }
+
+        .monster-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .monster-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .monster-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .monster-info {
+            flex: 1;
+        }
+
+        .stats-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .health-bar-container {
+            margin-top: 1rem;
+        }
+
+        .health-bar {
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .player-health {
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+        }
+
+        .opponent-health {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .health-text {
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 0.25rem;
+        }
+
+        .battle-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .vs-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e74c3c;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 1rem;
+        }
+
+        .battle-button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .battle-button.attack { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .battle-button.defend { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .battle-button.heal { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .battle-button.special { background: linear-gradient(135deg, #f1c40f, #f39c12); }
+        .battle-button.forfeit { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+
+        .battle-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .battle-monsters {
+                flex-direction: column;
+            }
+
+            .monster-display {
+                flex-direction: column;
+            }
+
+            .battle-divider {
+                transform: rotate(90deg);
+                padding: 1rem 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -732,73 +857,87 @@
             // Return the battle UI
             return (
                 <div className="battle-container">
-                    <TurnIndicator />
-                    
+                    <div className="battle-status">
+                        <div className={`turn-indicator ${isMyTurn ? 'my-turn' : ''}`}>
+                            {isMyTurn ? "Your Turn!" : "Opponent's Turn"}
+                        </div>
+                    </div>
+
                     {/* Player Monster Section */}
-                    <div className="monster player-monster">
-                        <div className="monster-header">
-                            <h3>{playerName}'s {playerMonster?.monsterName}</h3>
-                            <div className="monster-level">Level {playerMonster?.level}</div>
-                        </div>
-                        <MonsterImage monster={playerMonster} />
-                        <div className="monster-info">
-                            <div className="stats-grid">
-                                <div>HP: {playerHealth}/{playerMonster?.HP}</div>
-                                <div>AP: {playerMonster?.AP}</div>
-                                <div>Type: {playerMonster?.type}</div>
+                    <div className="battle-monsters">
+                        <div className="monster-section player-section">
+                            <div className="monster-header">
+                                <h3>{playerName}</h3>
+                                <div className="monster-name">{playerMonster?.monsterName}</div>
+                                <div className="monster-level">Level {playerMonster?.level}</div>
+                            </div>
+                            <div className="monster-display">
+                                <MonsterImage monster={playerMonster} />
+                                <div className="monster-info">
+                                    <div className="stats-box">
+                                        <div>Type: {playerMonster?.type}</div>
+                                        <div>HP: {playerHealth}/{playerMonster?.HP}</div>
+                                        <div>AP: {playerMonster?.AP}</div>
+                                        <div>Speed: {playerMonster?.Speed}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="health-bar-container">
+                                <div className="health-bar">
+                                    <div 
+                                        className="health-fill player-health" 
+                                        style={{ width: `${(playerHealth / (playerMonster?.HP || 100)) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <div className="health-text">
+                                    {playerHealth}/{playerMonster?.HP} HP
+                                </div>
                             </div>
                         </div>
-                        <div className="health-bar-container">
-                            <div className="health-bar">
-                                <div 
-                                    className="health-fill player-health" 
-                                    style={{ width: `${(playerHealth / playerMonster?.HP) * 100}%` }}
-                                ></div>
-                            </div>
-                            <div className="health-text">{playerHealth}/{playerMonster?.HP}</div>
-                        </div>
-                    </div>
 
-                    {/* VS Section */}
-                    <div className="battle-vs">
-                        <div className="vs-text">VS</div>
-                    </div>
+                        <div className="battle-divider">
+                            <div className="vs-text">VS</div>
+                        </div>
 
-                    {/* Opponent Monster Section */}
-                    <div className="monster opponent-monster">
-                        <div className="monster-header">
-                            <h3>{opponentName}'s {opponentMonster?.monsterName}</h3>
-                            <div className="monster-level">Level {opponentMonster?.level}</div>
-                        </div>
-                        <MonsterImage monster={opponentMonster} />
-                        <div className="monster-info">
-                            <div className="stats-grid">
-                                <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
-                                <div>AP: {opponentMonster?.AP}</div>
-                                <div>Type: {opponentMonster?.type}</div>
+                        {/* Opponent Monster Section */}
+                        <div className="monster-section opponent-section">
+                            <div className="monster-header">
+                                <h3>{opponentName}</h3>
+                                <div className="monster-name">{opponentMonster?.monsterName}</div>
+                                <div className="monster-level">Level {opponentMonster?.level}</div>
                             </div>
-                        </div>
-                        <div className="health-bar-container">
-                            <div className="health-bar">
-                                <div 
-                                    className="health-fill opponent-health" 
-                                    style={{ width: `${(opponentHealth / opponentMonster?.HP) * 100}%` }}
-                                ></div>
+                            <div className="monster-display">
+                                <MonsterImage monster={opponentMonster} />
+                                <div className="monster-info">
+                                    <div className="stats-box">
+                                        <div>Type: {opponentMonster?.type}</div>
+                                        <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
+                                        <div>AP: {opponentMonster?.AP}</div>
+                                        <div>Speed: {opponentMonster?.Speed}</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="health-text">{opponentHealth}/{opponentMonster?.HP}</div>
+                            <div className="health-bar-container">
+                                <div className="health-bar">
+                                    <div 
+                                        className="health-fill opponent-health" 
+                                        style={{ width: `${(opponentHealth / (opponentMonster?.HP || 100)) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <div className="health-text">
+                                    {opponentHealth}/{opponentMonster?.HP} HP
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Battle Log */}
                     <div className="battle-log">
-                        <h4>Battle Log</h4>
-                        <div className="log-container">
+                        <div className="log-header">Battle Log</div>
+                        <div className="log-entries">
                             {battleLog.map((entry, index) => (
-                                <div 
-                                    key={index} 
-                                    className={`log-entry ${entry.type || ''}`}
-                                >
-                                    {entry.message}
+                                <div key={index} className={`log-entry ${entry.type || ''}`}>
+                                    {entry}
                                 </div>
                             ))}
                         </div>
@@ -807,36 +946,46 @@
                     {/* Battle Controls */}
                     <div className="battle-controls">
                         {!isBattleOver ? (
-                            <div>
-                                <button onClick={handleAttack} disabled={!isMyTurn}>Attack</button>
-                                <button onClick={handleDefend} disabled={!isMyTurn}>Defend</button>
-                                <button onClick={handleHeal} disabled={!isMyTurn}>Heal</button>
+                            <div className="controls-grid">
                                 <button 
+                                    className="battle-button attack" 
+                                    onClick={handleAttack} 
+                                    disabled={!isMyTurn}
+                                >
+                                    Attack
+                                </button>
+                                <button 
+                                    className="battle-button defend" 
+                                    onClick={handleDefend} 
+                                    disabled={!isMyTurn}
+                                >
+                                    Defend
+                                </button>
+                                <button 
+                                    className="battle-button heal" 
+                                    onClick={handleHeal} 
+                                    disabled={!isMyTurn}
+                                >
+                                    Heal
+                                </button>
+                                <button 
+                                    className="battle-button special" 
                                     onClick={handleSpecialAttack} 
                                     disabled={!isMyTurn || specialCooldown > 0}
-                                    style={{
-                                        background: specialCooldown > 0 ? 
-                                            'linear-gradient(135deg, #666, #999)' : 
-                                            'linear-gradient(135deg, #c0392b, #e74c3c)'
-                                    }}
                                 >
                                     Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
                                 </button>
                                 <button 
+                                    className="battle-button forfeit" 
                                     onClick={handleForfeit}
-                                    className="forfeit-button"
-                                    style={{
-                                        background: 'linear-gradient(135deg, #95a5a6, #7f8c8d)',
-                                        marginLeft: '10px'
-                                    }}
                                 >
-                                    Forfeit Battle
+                                    Forfeit
                                 </button>
                             </div>
                         ) : (
-                            <div>
-                                <button className="nav-button" onClick={() => location.href='monster-collection.html'}>
-                                    Return to Collection
+                            <div className="battle-end-controls">
+                                <button onClick={() => window.location.href='pvp-battle.html'}>
+                                    Return to Lobby
                                 </button>
                             </div>
                         )}
@@ -1483,7 +1632,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0040</h6>
+    <h6>Version: 0.0041</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
