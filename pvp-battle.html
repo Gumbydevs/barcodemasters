@@ -311,11 +311,24 @@
 
             try {
                 showToast('Creating battle...'); 
+                console.log('Creating battle with monsterId:', window.selectedMonsterId);
                 
                 const battleCode = generateBattleCode();
-                const result = await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
+                console.log('Generated battle code:', battleCode);
+
+                // First initialize the battles collection
+                const battleManager = new PvPBattleManager(null, user.uid);
+                await battleManager.initializeBattlesCollection(user.uid);
                 
-                // Store battle info
+                // Create the battle
+                const result = await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
+                console.log('Battle created:', result);
+                
+                if (!result || !result.battleCode || !result.creatorId) {
+                    throw new Error('Invalid battle creation response');
+                }
+                
+                // Store battle info in localStorage
                 const battleInfo = {
                     battleCode: result.battleCode,
                     creatorId: result.creatorId,
@@ -325,14 +338,23 @@
                 };
                 
                 localStorage.setItem('currentBattle', JSON.stringify(battleInfo));
+                console.log('Battle info stored:', battleInfo);
+                
+                showToast('Battle created! Entering battle...');
+                
+                // Wait a moment before redirect
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check if battle exists before redirecting
+                const battleCheck = await PvPBattleManager.getBattleById(result.creatorId, result.battleCode);
+                if (!battleCheck.exists) {
+                    throw new Error('Battle creation failed - battle document not found');
+                }
                 
                 // Redirect with proper URL parameters
                 const redirectURL = `pvp-battle.html?battle=${result.battleCode}&creator=${result.creatorId}`;
-                
-                // Add a small delay before redirect to ensure data is saved
-                setTimeout(() => {
-                    window.location.href = redirectURL;
-                }, 500);
+                console.log('Redirecting to:', redirectURL);
+                window.location.href = redirectURL;
 
             } catch (error) {
                 console.error('Error creating battle:', error);

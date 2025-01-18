@@ -20,6 +20,8 @@ class PvPBattleManager {
         const db = firebase.firestore();
         
         try {
+            console.log('Starting battle creation for monster:', monsterId);
+            
             // First check if user already has an active battle
             const existingBattles = await db
                 .collection('users')
@@ -39,6 +41,8 @@ class PvPBattleManager {
             const monsterData = monsterDoc.data();
             if (monsterData.ownerId !== user.uid) throw new Error('Not your monster');
 
+            console.log('Monster data fetched:', monsterData);
+
             // Create battle with proper initialization
             const battleData = {
                 battleCode,
@@ -57,6 +61,8 @@ class PvPBattleManager {
                 lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             };
 
+            console.log('Creating battle with data:', battleData);
+
             // Create in user's battles subcollection
             const battleRef = db
                 .collection('users')
@@ -72,9 +78,25 @@ class PvPBattleManager {
                 battleStatus: 'waiting'
             });
 
-            return { battleCode, creatorId: user.uid }; // Return both pieces of information
+            console.log('Battle created successfully');
+
+            return { 
+                battleCode, 
+                creatorId: user.uid,
+                status: 'waiting'
+            };
+
         } catch (error) {
-            console.error('Error creating battle:', error);
+            console.error('Error in createBattle:', error);
+            // Clean up any partial battle creation
+            try {
+                await db.collection('users').doc(user.uid).update({
+                    activeBattle: null,
+                    battleStatus: null
+                });
+            } catch (cleanupError) {
+                console.error('Error in cleanup:', cleanupError);
+            }
             throw error;
         }
     }
