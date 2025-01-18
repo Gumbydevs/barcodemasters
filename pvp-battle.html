@@ -1711,7 +1711,10 @@
             }
 
             try {
-                showToast('Loading monsters...'); // Add feedback
+                // Only show loading toast if we're in the lobby
+                if (!window.location.search.includes('battle=')) {
+                    showToast('Loading monsters...');
+                }
                 
                 // Get user's monsters
                 const monstersRef = firebase.firestore()
@@ -1757,10 +1760,16 @@
                 }
 
                 displayMonsters(monsters);
-                showToast(`Loaded ${monsters.length} monsters!`);
+                // Only show success toast if we're in the lobby
+                if (!window.location.search.includes('battle=')) {
+                    showToast(`Loaded ${monsters.length} monsters!`);
+                }
             } catch (error) {
                 console.error('Error loading monsters:', error);
-                showToast('Error loading monsters! ' + error.message, false);
+                // Only show error toast if we're in the lobby
+                if (!window.location.search.includes('battle=')) {
+                    showToast('Error loading monsters! ' + error.message, false);
+                }
                 document.getElementById('monsterList').innerHTML = 
                     '<div class="error-message">Error loading monsters. Please try again.</div>';
             }
@@ -2193,59 +2202,61 @@
             
             return (
                 <div className="battle-results">
-                    <h1 className={`result-header ${result}`}>
-                        {isVictory ? 'VICTORY!' : 'DEFEAT!'}
-                    </h1>
+                    <div className="battle-results-content">
+                        <h1 className={`result-header ${result}`}>
+                            {isVictory ? 'VICTORY!' : 'DEFEAT!'}
+                        </h1>
 
-                    <div className="player-info">
-                        <h2>Battle Record</h2>
-                        <p>Wins: {playerStats?.wins || 0}</p>
-                        <p>Losses: {playerStats?.losses || 0}</p>
-                    </div>
-
-                    {monster && (
-                        <div className="monster-card">
-                            <img src={monster.imageUrl || 'placeholder.png'} 
-                                 alt={monster.monsterName} />
-                            <div>
-                                <h2>{monster.monsterName}</h2>
-                                <p>Level: {monster.level}</p>
-                                <p>Type: {monster.type}</p>
-                                <p>XP: {monster.experience || 0}</p>
-                                <p>HP: {monster.HP}</p>
-                                <p>AP: {monster.AP}</p>
-                                <p>Speed: {monster.Speed}</p>
-                            </div>
+                        <div className="player-info">
+                            <h2>Battle Record</h2>
+                            <p>Wins: {playerStats?.wins || 0}</p>
+                            <p>Losses: {playerStats?.losses || 0}</p>
                         </div>
-                    )}
 
-                    {rewards && (
-                        <div className="xp-info">
-                            <h2>Battle Rewards</h2>
-                            <p>Experience {isVictory ? 'Gained' : 'Lost'}: {rewards.exp} XP</p>
-                            {rewards.levelUp && (
+                        {monster && (
+                            <div className="monster-card">
+                                <img src={monster.imageUrl || 'placeholder.png'} 
+                                     alt={monster.monsterName} />
                                 <div>
-                                    <h3>LEVEL UP!</h3>
-                                    <p>New Level: {rewards.levelUp.newLevel}</p>
-                                    <p>New HP: {rewards.levelUp.newStats.HP}</p>
-                                    <p>New AP: {rewards.levelUp.newStats.AP}</p>
-                                    <p>New Speed: {rewards.levelUp.newStats.Speed}</p>
+                                    <h2>{monster.monsterName}</h2>
+                                    <p>Level: {monster.level}</p>
+                                    <p>Type: {monster.type}</p>
+                                    <p>XP: {monster.experience || 0}</p>
+                                    <p>HP: {monster.HP}</p>
+                                    <p>AP: {monster.AP}</p>
+                                    <p>Speed: {monster.Speed}</p>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                            </div>
+                        )}
 
-                    <button 
-                        className="return-button"
-                        onClick={() => window.location.href='pvp-battle.html'}
-                    >
-                        Return to Lobby
-                    </button>
+                        {rewards && (
+                            <div className="xp-info">
+                                <h2>Battle Rewards</h2>
+                                <p>Experience {isVictory ? 'Gained' : 'Lost'}: {rewards.exp} XP</p>
+                                {rewards.levelUp && (
+                                    <div>
+                                        <h3>LEVEL UP!</h3>
+                                        <p>New Level: {rewards.levelUp.newLevel}</p>
+                                        <p>New HP: {rewards.levelUp.newStats.HP}</p>
+                                        <p>New AP: {rewards.levelUp.newStats.AP}</p>
+                                        <p>New Speed: {rewards.levelUp.newStats.Speed}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <button 
+                            className="return-button"
+                            onClick={() => window.location.href='pvp-battle.html'}
+                        >
+                            Return to Lobby
+                        </button>
+                    </div>
                 </div>
             );
         };
     </script>
-    <h6>Version: 0.00474</h6>
+    <h6>Version: 0.00475</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
