@@ -119,25 +119,26 @@ const staticTips = [
 async function getGlobalStats(db) {
     try {
         const monstersRef = collection(db, "monsters");
-        const monsterTypesRef = collection(db, "monsterTypes");
         const usersRef = collection(db, "users");
         
-        const [monsterSnapshot, typeSnapshot, userSnapshot] = await Promise.all([
+        const [monsterSnapshot, userSnapshot] = await Promise.all([
             getDocs(monstersRef),
-            getDocs(monsterTypesRef),
             getDocs(usersRef)
         ]);
 
-        // Get highest level monster
+        // Get highest level monster and count unique types
         let highestLevel = 0;
+        const uniqueTypes = new Set();
         monsterSnapshot.forEach(doc => {
             const level = doc.data().level || 0;
+            const type = doc.data().type;
             if (level > highestLevel) highestLevel = level;
+            if (type) uniqueTypes.add(type);
         });
 
         return {
             totalMonsters: monsterSnapshot.size,
-            totalTypes: typeSnapshot.size,
+            discoveredTypes: uniqueTypes.size,
             totalPlayers: userSnapshot.size,
             highestLevel: highestLevel
         };
@@ -154,7 +155,7 @@ async function getDynamicTips(db) {
 
     return [
         `There are currently ${stats.totalMonsters.toLocaleString()} monsters discovered worldwide!`,
-        `There are ${stats.totalTypes} unique monster types so far`,
+        `Players have discovered ${stats.discoveredTypes} unique monster types so far`,
         `You are part of a growing community of ${stats.totalPlayers} active monster hunters`,
         `The highest level monster discovered so far is level ${stats.highestLevel}!`
     ];
