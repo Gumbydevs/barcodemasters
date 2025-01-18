@@ -101,6 +101,7 @@ class PvPBattleManager {
         }
     }
 
+    // Change from instance method to static method
     static async joinBattle(battleCode, creatorId, joiningUserId, monsterData) {
         const db = firebase.firestore();
         const battleRef = db

@@ -11,7 +11,7 @@ service cloud.firestore {
     }
 
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isAuthenticated() && request.auth.uid == userId;
     }
 
     // Users collection rules
@@ -32,7 +32,10 @@ service cloud.firestore {
            request.resource.data.status in ['joining', 'in_progress']) ||
           // Allow opponent to update battle once joined
           (resource.data.opponent != null && 
-           resource.data.opponent.uid == request.auth.uid)
+           resource.data.opponent.uid == request.auth.uid) ||
+          // Allow updates if user is joining an existing battle
+          (get(/databases/$(database)/documents/users/$(userId)/battles/$(battleId)).data.status == 'waiting' &&
+           request.resource.data.opponent.uid == request.auth.uid)
         );
         allow delete: if isOwner(userId);
       }
@@ -53,7 +56,7 @@ service cloud.firestore {
 
     // Integrated monsters collection rules
     match /monsters/{monsterId} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
                     request.resource.data.ownerId == request.auth.uid;
       allow update, delete: if isAuthenticated() &&
