@@ -503,6 +503,96 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* Add enhanced battle result styles */
+        .battle-results {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            animation: fadeInScale 0.5s ease-in;
+            width: 90%;
+            max-width: 600px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 2px solid;
+        }
+
+        .battle-results.victory {
+            border-color: #2ecc71;
+        }
+
+        .battle-results.defeat {
+            border-color: #e74c3c;
+        }
+
+        @keyframes fadeInScale {
+            0% { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            100% { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .result-header {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .monster-result-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .monster-result-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .monster-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            text-align: left;
+            margin-top: 1rem;
+        }
+
+        .xp-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #f39c12);
+            transition: width 1s ease;
+        }
+
+        .player-stats {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
     </style>
 </head>
 <body>
@@ -1930,12 +2020,12 @@
 
         // Add experience calculation utilities
         const calculateXPGain = (playerLevel, opponentLevel) => {
-            const baseXP = 20;
+            const baseXP = 20 * Math.pow(1.2, Math.max(0, opponentLevel - 5));
             const levelDifference = opponentLevel - playerLevel;
-            const levelScaling = Math.pow(1.15, opponentLevel - 1);
-            const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.75 : 0));
+            const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.85 : 0));
+            const levelScaling = Math.pow(1.25, opponentLevel - 1);
             const scaledBaseXP = Math.floor(baseXP * levelScaling);
-            const randomBonus = Math.floor(Math.random() * 15);
+            const randomBonus = Math.floor(Math.random() * (baseXP * 0.2));
             return scaledBaseXP + levelBonus + randomBonus;
         };
 
@@ -1966,8 +2056,111 @@
         });
 
         // ...rest of your existing code...
+
+        // Update the BattleResults component in the script section:
+        const BattleResults = ({ result, rewards, playerStats, monster }) => {
+            const [showStats, setShowStats] = React.useState(false);
+
+            React.useEffect(() => {
+                setTimeout(() => setShowStats(true), 500);
+            }, []);
+
+            // Calculate XP progress
+            const xpProgress = React.useMemo(() => {
+                if (!monster?.experience || !monster?.level) return null;
+
+                const currentExp = parseInt(monster.experience);
+                const currentLevel = parseInt(monster.level);
+                const xpInfo = monsterStats.getXPInfo(monster);
+
+                return {
+                    currentLevelXP: xpInfo.currentLevelXP,
+                    nextLevelXP: xpInfo.nextLevelXP,
+                    progress: xpInfo.progress,
+                    totalXP: currentExp
+                };
+            }, [monster]);
+
+            return (
+                <div className={`battle-results ${result}`}>
+                    <h2 className={`result-header ${result}`}>
+                        {result === 'victory' ? '🏆 Victory!' : '💔 Defeat!'}
+                    </h2>
+                    
+                    {monster && (
+                        <div className="monster-result-card">
+                            <img src={monster.imageUrl || 'placeholder.png'} 
+                                 alt={monster.monsterName} />
+                            <div className="monster-info">
+                                <h3>{monster.monsterName}</h3>
+                                <div className="monster-stats-grid">
+                                    <div>Level: {monster.level}</div>
+                                    <div>Type: {monster.type}</div>
+                                    {showStats && (
+                                        <>
+                                            <div>HP: {monster.HP}</div>
+                                            <div>AP: {monster.AP}</div>
+                                            <div>Speed: {monster.Speed}</div>
+                                        </>
+                                    )}
+                                </div>
+                                {xpProgress && (
+                                    <div className="xp-info">
+                                        <div className="xp-bar">
+                                            <div 
+                                                className="xp-fill"
+                                                style={{ width: `${xpProgress.progress}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="xp-text">
+                                            {xpProgress.currentLevelXP} / {xpProgress.nextLevelXP} XP
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {rewards && (
+                        <div className="rewards-container">
+                            <div className="exp-reward">+{rewards.exp} XP Gained!</div>
+                            {rewards.levelUp && (
+                                <div className="level-up">
+                                    <div className="level-up-header">🌟 Level Up!</div>
+                                    <div className="level-change">
+                                        Level {rewards.levelUp.oldLevel} → {rewards.levelUp.newLevel}
+                                    </div>
+                                    <div className="new-stats">
+                                        <div>HP: {rewards.levelUp.newStats.HP}</div>
+                                        <div>AP: {rewards.levelUp.newStats.AP}</div>
+                                        <div>Speed: {rewards.levelUp.newStats.Speed}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {playerStats && (
+                        <div className="player-stats">
+                            <h3>Battle Record</h3>
+                            <div className="stats-grid">
+                                <div>Wins: {playerStats.wins || 0}</div>
+                                <div>Losses: {playerStats.losses || 0}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    <button 
+                        className="return-button"
+                        onClick={() => window.location.href='pvp-battle.html'}
+                    >
+                        Return to Lobby
+                    </button>
+                </div>
+            );
+        };
     </script>
-    <h6>Version: 0.0044</h6>
+    <h6>Version: 0.0045</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
