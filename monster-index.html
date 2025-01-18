@@ -497,12 +497,8 @@
         <div class="filters">
             <select id="levelFilter" class="filter-select">
                 <option value="">All Levels</option>
-                <script>
-                    // Generate options for levels 1-99
-                    for (let i = 1; i <= 99; i++) {
-                        document.write(`<option value="${i}">Level ${i}</option>`);
-                    }
-                </script>
+                <option value="asc">Level (Low to High)</option>
+                <option value="desc">Level (High to Low)</option>
             </select>
             <select id="sortBy" class="sort-select">
                 <option value="dateCreated">Date Created</option>
@@ -1027,36 +1023,40 @@ async function updateCollectionStats(monsters) {
 // ...existing code...
 
     async function filterAndSortMonsters() {
-    let filtered = [...currentMonsters];
-    
-    const levelFilter = document.getElementById('levelFilter').value;
-    const sortBy = document.getElementById('sortBy').value;
-    
-    if (levelFilter) {
-        filtered = filtered.filter(m => m.level === parseInt(levelFilter));
-    }
-
-    filtered.sort((a, b) => {
-        switch(sortBy) {
-            case 'dateCreated':
-                return new Date(b.dateCreated) - new Date(a.dateCreated);
-            case 'level':
-                return b.level - a.level;
-            case 'HP':
-                return b.HP - a.HP;
-            case 'AP':
-                return b.AP - a.AP;
-            case 'Speed':
-                return b.Speed - a.Speed;
-            default:
-                return 0;
+        let filtered = [...currentMonsters];
+        
+        const levelFilter = document.getElementById('levelFilter').value;
+        const sortBy = document.getElementById('sortBy').value;
+        
+        if (levelFilter) {
+            if (levelFilter === 'asc') {
+                filtered.sort((a, b) => a.level - b.level);
+            } else if (levelFilter === 'desc') {
+                filtered.sort((a, b) => b.level - a.level);
+            }
+        } else {
+            filtered.sort((a, b) => {
+                switch(sortBy) {
+                    case 'dateCreated':
+                        return new Date(b.dateCreated) - new Date(a.dateCreated);
+                    case 'level':
+                        return b.level - a.level;
+                    case 'HP':
+                        return b.HP - a.HP;
+                    case 'AP':
+                        return b.AP - a.AP;
+                    case 'Speed':
+                        return b.Speed - a.Speed;
+                    default:
+                        return 0;
+                }
+            });
         }
-    });
 
-   // duplicate / possibly redundant: const monstersGrid = document.getElementById('monstersGrid');
-    const cards = await Promise.all(filtered.map(monster => createMonsterCard(monster)));
-    monstersGrid.innerHTML = cards.join('');
-}
+        const monstersGrid = document.getElementById('monstersGrid');
+        const cards = await Promise.all(filtered.map(monster => createMonsterCard(monster)));
+        monstersGrid.innerHTML = cards.join('');
+    }
 
     async function fetchMonsters() {
         try {
