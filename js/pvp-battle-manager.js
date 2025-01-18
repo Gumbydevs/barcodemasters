@@ -461,23 +461,13 @@ class PvPBattleManager {
             const userRef = this.db.collection('users').doc(userId);
             const battlesRef = userRef.collection('battles');
             
-            // Check if collection exists
+            // Just check if the collection exists without creating an init document
             const snapshot = await battlesRef.limit(1).get();
             
-            if (snapshot.empty) {
-                // Create initialization document
-                await battlesRef.doc('__init__').set({
-                    created: firebase.firestore.FieldValue.serverTimestamp(),
-                    type: 'initialization'
-                });
-                
-                // Clean up initialization document
-                await battlesRef.doc('__init__').delete();
-            }
-            
+            // If collection is empty, it will be created automatically when first battle is created
             return true;
         } catch (error) {
-            console.error('Error initializing battles collection:', error);
+            console.error('Error checking battles collection:', error);
             throw error;
         }
     }
