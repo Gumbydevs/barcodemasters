@@ -154,8 +154,8 @@ async function getDynamicTips(db) {
 
     return [
         `There are currently ${stats.totalMonsters.toLocaleString()} monsters discovered worldwide!`,
-        `Hunters have discovered ${stats.totalTypes} unique monster types so far`,
-        `Join our community of ${stats.totalPlayers} active monster hunters`,
+        `There are ${stats.totalTypes} unique monster types so far`,
+        `You are part of a growing community of ${stats.totalPlayers} active monster hunters`,
         `The highest level monster discovered so far is level ${stats.highestLevel}!`
     ];
 }

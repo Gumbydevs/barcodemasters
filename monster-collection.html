@@ -761,6 +761,103 @@
                 font-size: 1.2rem; /* Smaller font size for numbers on mobile */
             }
         }
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, max-content));
+            gap: 1rem;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .monster-card.compact {
+            width: fit-content;
+            min-width: 140px;
+            max-width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .monster-card.compact .monster-name {
+            width: 100%;
+            font-size: 0.85rem;
+            text-align: left;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .monster-card.compact .monster-image-container {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        .monster-card.compact .stat-badge {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0.1rem 0.25rem;
+            background: inherit;
+        }
+
+        @media (max-width: 480px) {
+            .monsters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, max-content));
+                gap: 0.5rem;
+            }
+
+            .monster-card.compact {
+                min-width: 120px;
+            }
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .monster-card.compact .stat-badge {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0.1rem 0.25rem;
+            background: inherit;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .monster-card.compact .stat-badge:last-child {
+            border-bottom: none;
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            grid-template-columns: unset;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .monster-card.compact .monster-quick-stats {
+            padding: 0.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
@@ -1382,10 +1479,11 @@
                 <div class="monster-name">${monster.monsterName}</div>
                 <div class="monster-quick-stats">
                     <div class="stat-badge">
+                        <span>Type</span>
                         <span>${monster.type}</span>
                     </div>
                     <div class="stat-badge">
-                        <span>Lvl</span>
+                        <span>Level</span>
                         <span>${monster.level}</span>
                     </div>
                     <div class="stat-badge">
@@ -1397,12 +1495,13 @@
                         <span>${monster.AP}</span>
                     </div>
                     <div class="stat-badge">
-                        <span>SPD</span>
+                        <span>Speed</span>
                         <span>${monster.Speed}</span>
                     </div>
-                </div>
-                <div class="xp-info">
-                    XP: ${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}
+                    <div class="stat-badge">
+                        <span>XP</span>
+                        <span>${xpInfo.currentLevelXP}/${xpInfo.nextLevelXP}</span>
+                    </div>
                 </div>
                 <div class="xp-progress">
                     <div class="xp-progress-bar" style="width: ${xpInfo.progress}%"></div>
