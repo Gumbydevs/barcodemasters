@@ -313,12 +313,12 @@
                 showToast('Creating battle...'); 
                 
                 const battleCode = generateBattleCode();
-                const battleData = await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
+                const result = await PvPBattleManager.createBattle(window.selectedMonsterId, battleCode);
                 
-                // Store battle info with more details
+                // Store battle info
                 const battleInfo = {
-                    battleCode,
-                    creatorId: user.uid,
+                    battleCode: result.battleCode,
+                    creatorId: result.creatorId,
                     role: 'creator',
                     timestamp: Date.now(),
                     monsterId: window.selectedMonsterId
@@ -326,9 +326,12 @@
                 
                 localStorage.setItem('currentBattle', JSON.stringify(battleInfo));
                 
-                // Redirect with slight delay and proper error handling
+                // Redirect with proper URL parameters
+                const redirectURL = `pvp-battle.html?battle=${result.battleCode}&creator=${result.creatorId}`;
+                
+                // Add a small delay before redirect to ensure data is saved
                 setTimeout(() => {
-                    window.location.href = `pvp-battle.html?battle=${battleCode}&creator=${user.uid}`;
+                    window.location.href = redirectURL;
                 }, 500);
 
             } catch (error) {

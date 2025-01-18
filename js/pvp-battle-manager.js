@@ -72,7 +72,7 @@ class PvPBattleManager {
                 battleStatus: 'waiting'
             });
 
-            return battleData;
+            return { battleCode, creatorId: user.uid }; // Return both pieces of information
         } catch (error) {
             console.error('Error creating battle:', error);
             throw error;
