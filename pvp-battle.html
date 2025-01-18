@@ -313,6 +313,136 @@
                 padding: 1rem 0;
             }
         }
+
+        /* Update battle-monsters layout for mobile */
+        @media (max-width: 768px) {
+            .battle-monsters {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0.5rem;
+            }
+
+            .monster-section {
+                width: 100%;
+                padding: 0.75rem;
+            }
+
+            .monster-display {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .monster-header {
+                margin-bottom: 0.5rem;
+            }
+
+            .monster-info {
+                width: 100%;
+                text-align: center;
+            }
+
+            .stats-box {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.25rem;
+                font-size: 0.9rem;
+                margin-top: 0.5rem;
+            }
+
+            .health-bar-container {
+                margin: 0.5rem 0;
+            }
+
+            .health-bar {
+                height: 15px;
+            }
+
+            .battle-divider {
+                display: none; /* Hide VS divider on mobile */
+            }
+
+            /* Adjust controls for better mobile layout */
+            .controls-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+
+            .battle-button {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+
+            /* Make battle log more compact on mobile */
+            .battle-log {
+                max-height: 100px;
+                font-size: 0.85rem;
+                margin: 0.5rem 0;
+            }
+
+            /* Ensure images are properly sized */
+            .monster-display img {
+                width: 100px;
+                height: 100px;
+                object-fit: contain;
+            }
+
+            /* Add spacing between opponent and player sections */
+            .opponent-section {
+                margin-top: 1rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 1rem;
+            }
+
+            /* Make health text more visible */
+            .health-text {
+                font-size: 0.8rem;
+                margin: 0.25rem 0;
+            }
+
+            /* Adjust stats display for better readability */
+            .monster-info .stats-box div {
+                padding: 0.25rem;
+                background: rgba(0, 0, 0, 0.1);
+                border-radius: 4px;
+                margin: 0.1rem;
+            }
+        }
+
+        /* Add extra small device optimizations */
+        @media (max-width: 480px) {
+            .monster-section {
+                padding: 0.5rem;
+            }
+
+            .monster-display img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .stats-box {
+                font-size: 0.8rem;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.25rem;
+            }
+
+            .battle-button {
+                padding: 6px;
+                font-size: 0.8rem;
+            }
+
+            .monster-header h3 {
+                font-size: 1rem;
+            }
+
+            .monster-name, .monster-level {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
