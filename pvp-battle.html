@@ -984,6 +984,108 @@
                 </div>
             );
 
+            // Add new handler for battle end
+            const handleBattleEnd = async (isVictory) => {
+                if (isBattleOver) return; // Prevent multiple executions
+                
+                try {
+                    setIsBattleOver(true);
+                    setBattleState(isVictory ? 'victory' : 'defeat');
+        
+                    const user = firebase.auth().currentUser;
+                    if (!user) throw new Error('No authenticated user');
+        
+                    // Update battle status in Firestore
+                    await battleManager.endBattle({
+                        winner: user.uid,
+                        status: 'completed',
+                        endTime: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+        
+                    // Process rewards only for the winner
+                    if (isVictory && playerMonster?.id) {
+                        try {
+                            const expGained = calculateXPGain(
+                                parseInt(playerMonster.level) || 1,
+                                parseInt(opponentMonster.level) || 1
+                            );
+        
+                            // Update monster experience
+                            const monsterRef = db.collection('monsters').doc(playerMonster.id);
+                            const monsterDoc = await monsterRef.get();
+                            
+                            if (monsterDoc.exists) {
+                                const currentExp = parseInt(monsterDoc.data().experience) || 0;
+                                const currentLevel = parseInt(monsterDoc.data().level) || 1;
+                                const newExp = currentExp + expGained;
+                                
+                                const updates = { experience: newExp };
+                                
+                                if (monsterStats.canLevelUp(currentLevel, newExp)) {
+                                    updates.level = currentLevel + 1;
+                                    updates.HP = Math.round(monsterDoc.data().HP * 1.2);
+                                    updates.AP = Math.round(monsterDoc.data().AP * 1.15);
+                                    updates.Speed = Math.round(monsterDoc.data().Speed * 1.1);
+                                    
+                                    addToLog(`🌟 Level Up! ${playerMonster.monsterName} is now level ${updates.level}!`);
+                                    showToast(`Level Up! ${playerMonster.monsterName} reached level ${updates.level}!`, true);
+                                }
+        
+                                await monsterRef.update(updates);
+                                addToLog(`🏆 Victory! Earned ${expGained} XP!`);
+                                showToast(`Victory! Gained ${expGained} XP! 🎉`);
+                            }
+                        } catch (rewardError) {
+                            console.error('Error processing rewards:', rewardError);
+                            showToast('Error processing rewards', false);
+                        }
+                    } else if (!isVictory) {
+                        addToLog('💀 Defeat!');
+                        showToast('Defeat! Better luck next time! ❌', false);
+                    }
+        
+                } catch (error) {
+                    console.error('Error handling battle end:', error);
+                    showToast('Error ending battle', false);
+                } finally {
+                    // Clean up battle state
+                    localStorage.removeItem('currentBattle');
+                    
+                    // Show return to lobby button after short delay
+                    setTimeout(() => {
+                        const battleControls = document.querySelector('.battle-controls');
+                        if (battleControls) {
+                            battleControls.innerHTML = `
+                                <button class="battle-button" onclick="window.location.href='pvp-battle.html'">
+                                    Return to Lobby
+                                </button>
+                            `;
+                        }
+                    }, 2000);
+                }
+            };
+        
+            // Update the victory handler
+            const handleVictory = async () => {
+                await handleBattleEnd(true);
+            };
+        
+            // Update the defeat handler
+            const handleDefeat = async () => {
+                await handleBattleEnd(false);
+            };
+        
+            // Update the effect that checks battle outcome
+            React.useEffect(() => {
+                if (!isBattleOver) {
+                    if (opponentHealth <= 0) {
+                        handleVictory();
+                    } else if (playerHealth <= 0) {
+                        handleDefeat();
+                    }
+                }
+            }, [opponentHealth, playerHealth, isBattleOver]);
+
             // Return the battle UI
             return (
                 <div className="battle-container">
@@ -1762,7 +1864,7 @@
 
         // ...rest of your existing code...
     </script>
-    <h6>Version: 0.0041</h6>
+    <h6>Version: 0.0042</h6>
     <button 
         id="emergencyReset" 
         onclick="emergencyResetBattle()" 
