@@ -674,14 +674,14 @@
                         const user = firebase.auth().currentUser;
                         if (!user) return;
             
-                        const battle = await pvpBattleManager.getBattleRef().get();
+                        const battle = await battleManager.getBattleRef().get();
                         if (!battle.exists) return;
             
                         const battleData = battle.data();
                         const opponent = battleData.creator.uid === user.uid ? 
                             battleData.opponent : battleData.creator;
             
-                        await pvpBattleManager.getBattleRef().update({
+                        await battleManager.getBattleRef().update({
                             status: 'completed',
                             winner: opponent.uid,
                             lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
@@ -693,6 +693,15 @@
                     } catch (error) {
                         console.error('Error forfeiting battle:', error);
                         showToast('Error forfeiting battle!', false);
+                        
+                        // Emergency cleanup if needed
+                        try {
+                            await PvPBattleManager.resetUserBattleState(user.uid);
+                            localStorage.removeItem('currentBattle');
+                            window.location.href = 'pvp-battle.html';
+                        } catch (cleanupError) {
+                            console.error('Error in emergency cleanup:', cleanupError);
+                        }
                     }
                 }
             };
