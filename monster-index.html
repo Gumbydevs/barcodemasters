@@ -518,10 +518,8 @@
             <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
             <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
             <button class="nav-button" onclick="location.href='profile.html'">Player Profile</button>
-            <button class="nav-button" onclick="location.href='help.html'">Help</button>
             <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
             <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
-            <button class="nav-button" id="logoutButton">Logout</button>
         </div>
 
         <div class="monsters-grid" id="monstersGrid">
@@ -535,6 +533,43 @@
         <p>Version: <span id="versionNumber">1.0.02</span></p>
         <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
     </footer>
+
+    <div class="bottom-nav">
+        <button class="nav-button" onclick="location.href='help.html'">Help</button>
+        <button class="nav-button" id="logoutButton" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">Logout</button>
+    </div>
+
+    <style>
+        /* Add bottom navigation styles */
+        .bottom-nav {
+            position: relative;
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+            margin-top: 2rem;
+        }
+
+        .bottom-nav .nav-button {
+            margin: 0;
+            min-width: 100px;
+        }
+
+        @media screen and (max-width: 480px) {
+            .bottom-nav {
+                padding: 10px;
+            }
+            
+            .bottom-nav .nav-button {
+                min-width: 80px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+
     <style>
         footer {
             width: 100%;
@@ -657,7 +692,7 @@
         }
 
         .nav-button {
-            padding: 1rem;
+            padding: 0.55rem;
             border: none;
             border-radius: 8px;
             background: linear-gradient(135deg, #2c3e50, #3498db);

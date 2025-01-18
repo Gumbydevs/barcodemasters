@@ -529,10 +529,10 @@
                 
                 switch(sortValue) {
                     case 'dateDesc':
-                        filtered.sort((a, b) => b.dateCreated - a.dateCreated);
+                        filtered.sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
                         break;
                     case 'dateAsc':
-                        filtered.sort((a, b) => a.dateCreated - b.dateCreated);
+                        filtered.sort((a, b) => new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime());
                         break;
                     case 'nameAsc':
                         filtered.sort((a, b) => a.monsterName.localeCompare(b.monsterName));
