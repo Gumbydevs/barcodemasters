@@ -722,6 +722,45 @@
                 padding: 0.6rem; /* Match the main nav buttons */
             }
         }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.25rem 0.75rem; /* Adjusted padding to be more compact */
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-width: 0;
+            word-wrap: normal; /* Changed from break-word */
+        }
+
+        .stat-box h3 {
+            font-size: clamp(0.8rem, 2vw, 1.1rem); /* Adjusted minimum font size */
+            margin: 0 0 0.5rem 0;
+            color: #a8b3cf;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Add responsive adjustments for mobile */
+        @media (max-width: 480px) {
+            .collection-stats {
+                gap: 0.5rem; /* Reduced gap for mobile */
+            }
+            
+            .stat-box {
+                padding: 1rem 0.5rem; /* Further reduced padding for mobile */
+            }
+
+            .stat-box h3 {
+                font-size: 0.8rem; /* Fixed size for mobile */
+            }
+
+            .stat-box p {
+                font-size: 1.2rem; /* Smaller font size for numbers on mobile */
+            }
+        }
     </style>
     <script src="monsterStats.js"></script>
 </head>
