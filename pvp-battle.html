@@ -115,22 +115,23 @@
 
         .monster-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Reduced from 150px */
+            gap: 0.25rem; /* Reduced from 0.5rem */
             max-height: 300px;
             overflow-y: auto;
-            padding: 1rem;
+            padding: 0.5rem; /* Reduced from 0.75rem */
             background: rgba(0, 0, 0, 0.1);
             border-radius: 8px;
         }
 
         .monster-card {
             background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 8px;
+            padding: 0.4rem; /* Reduced from 0.75rem */
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+            font-size: 0.85em; /* Slightly smaller text */
         }
 
         .monster-card:hover {
@@ -144,10 +145,28 @@
         }
 
         .monster-card img {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
+            width: 50px; /* Reduced from 60px */
+            height: 50px; /* Reduced from 60px */
+            border-radius: 4px; /* Reduced from 6px */
+            margin-bottom: 0.15rem; /* Reduced from 0.25rem */
+        }
+
+        .monster-card .monster-name {
+            font-size: 0.9em;
+            margin: 2px 0; /* Reduced from 3px */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .monster-card .monster-level,
+        .monster-card .monster-type,
+        .monster-card .monster-stats {
+            font-size: 0.8em;
+            margin: 1px 0; /* Reduced from 2px */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .selected-monster-info {
