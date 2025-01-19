@@ -323,26 +323,43 @@ class PvPBattleManager {
 
             batch.update(winnerMonsterRef, monsterUpdates);
 
-            // Fix toast notifications - Must be after XP calculation but before batch.commit()
+            // Get current user for proper message display
             const currentUser = firebase.auth().currentUser;
-
-            // Only show notifications based on the current user's role
             const isWinner = currentUser.uid === winner.uid;
-            const isLoser = currentUser.uid === loser.uid;
+
+            // Get random victory/defeat message
+            const victoryMessages = [
+                `Amazing victory! Gained ${totalExp} XP! 🎉`,
+                `Fantastic win! Earned ${totalExp} XP! 🌟`,
+                `Great battle! Gained ${totalExp} XP! 🏆`,
+                `Spectacular win! Earned ${totalExp} XP! ⭐`,
+                `Epic victory! Gained ${totalExp} XP! 🎯`
+            ];
+
+            const defeatMessages = [
+                "Don't give up! You'll win next time! 💪",
+                "Close battle! Keep training! 🔥",
+                "Good effort! Try again! 🎯",
+                "Almost had it! Next time! 💫",
+                "Keep going! Victory awaits! 🌟"
+            ];
 
             if (isWinner) {
-                // Only winner sees victory and XP messages
-                window.showToast(`Victory! Gained ${totalExp} XP! 🎉`, true);
+                // Show victory message
+                const randomVictory = victoryMessages[Math.floor(Math.random() * victoryMessages.length)];
+                window.showToast(randomVictory, true);
+
+                // Show level up message if applicable
                 if (levelUpData) {
                     setTimeout(() => {
-                        window.showToast(`Level Up! ${winner.monsterData.monsterName} is now level ${levelUpData.newLevel}! 🌟`, true);
+                        const levelUpMessage = `Level Up! ${winner.monsterData.monsterName} is now level ${levelUpData.newLevel}! 🌟`;
+                        window.showToast(levelUpMessage, true);
                     }, 1500);
                 }
-            }
-
-            if (isLoser) {
-                // Only loser sees defeat message
-                window.showToast('Defeat! Better luck next time! 💪', false);
+            } else {
+                // Show defeat message
+                const randomDefeat = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
+                window.showToast(randomDefeat, false);
             }
 
             await batch.commit();
