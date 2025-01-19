@@ -1676,37 +1676,46 @@
                                 <button 
                                     className="battle-button attack" 
                                     onClick={handleAttack} 
-                                    disabled={!isMyTurn || isBattleOver}
+                                    disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
                                 >
                                     Attack
                                 </button>
                                 <button 
                                     className="battle-button defend" 
                                     onClick={handleDefend} 
-                                    disabled={!isMyTurn || isBattleOver}
+                                    disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
                                 >
                                     Defend
                                 </button>
                                 <button 
                                     className="battle-button heal" 
                                     onClick={handleHeal} 
-                                    disabled={!isMyTurn || isBattleOver}
+                                    disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
                                 >
                                     Heal
                                 </button>
                                 <button 
                                     className="battle-button special" 
                                     onClick={handleSpecialAttack} 
-                                    disabled={!isMyTurn || isBattleOver || specialCooldown > 0}
+                                    disabled={!isMyTurn || isBattleOver || specialCooldown > 0 || !battleState?.opponent}
                                 >
                                     Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
                                 </button>
-                                <button 
-                                    className="battle-button forfeit" 
-                                    onClick={handleForfeit}
-                                >
-                                    Forfeit
-                                </button>
+                                {!battleState?.opponent ? (
+                                    <button 
+                                        className="battle-button forfeit" 
+                                        onClick={handleCancelBattle}
+                                    >
+                                        Cancel Battle
+                                    </button>
+                                ) : (
+                                    <button 
+                                        className="battle-button forfeit" 
+                                        onClick={handleForfeit}
+                                    >
+                                        Forfeit
+                                    </button>
+                                )}
                             </div>
                         </>
                     )}
@@ -2416,6 +2425,42 @@
                     </div>
                 </div>
             );
+        };
+
+        // Add this new function near your other battle handlers:
+        const handleCancelBattle = async () => {
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                showToast('You must be logged in!', false);
+                return;
+            }
+
+            if (window.confirm('Are you sure you want to cancel this battle? No one has joined yet.')) {
+                try {
+                    const battle = await battleManager.getBattleRef().get();
+                    if (!battle.exists) {
+                        showToast('Battle not found!', false);
+                        return;
+                    }
+
+                    await battleManager.getBattleRef().update({
+                        status: 'cancelled',
+                        lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+                        cancellationReason: 'creator_cancelled'
+                    });
+
+                    showToast('Battle cancelled');
+                    localStorage.removeItem('currentBattle');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'pvp-battle.html';
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('Error cancelling battle:', error);
+                    showToast('Error cancelling battle!', false);
+                }
+            }
         };
     </script>
     <button 
