@@ -2437,6 +2437,13 @@
 
             if (window.confirm('Are you sure you want to cancel this battle? No one has joined yet.')) {
                 try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const battleCode = urlParams.get('battle');
+                    const creatorId = urlParams.get('creator');
+
+                    // Create a new instance of PvPBattleManager
+                    const battleManager = new PvPBattleManager(battleCode, creatorId);
+                    
                     const battle = await battleManager.getBattleRef().get();
                     if (!battle.exists) {
                         showToast('Battle not found!', false);
@@ -2459,6 +2466,11 @@
                 } catch (error) {
                     console.error('Error cancelling battle:', error);
                     showToast('Error cancelling battle!', false);
+                    // Emergency cleanup
+                    localStorage.removeItem('currentBattle');
+                    setTimeout(() => {
+                        window.location.href = 'pvp-battle.html';
+                    }, 1000);
                 }
             }
         };
