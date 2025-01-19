@@ -1951,29 +1951,36 @@
             }
         });
 
-        // Update the loadActiveBattles function
+        // Update the loadActiveBattles function with creator username support
         const loadActiveBattles = async () => {
             const user = firebase.auth().currentUser;
             if (!user) return;
 
             try {
-                // Temporary solution while index builds
                 const battlesQuery = await firebase.firestore()
                     .collectionGroup('battles')
-                    .orderBy('created', 'desc')  // This might need its own index but usually exists by default
+                    .orderBy('created', 'desc')
                     .limit(10)
                     .get();
 
-                const table = document.querySelector('.battle-table tbody');
-                const battles = battlesQuery.docs
+                const battlesData = await Promise.all(battlesQuery.docs
                     .filter(doc => doc.data().status === 'waiting' && doc.data().creator.uid !== user.uid)
-                    .map(doc => {
+                    .map(async doc => {
                         const battle = doc.data();
                         const creatorId = doc.ref.parent.parent.id;
+                        
+                        // Fetch creator's username from users collection
+                        const creatorDoc = await firebase.firestore()
+                            .collection('users')
+                            .doc(creatorId)
+                            .get();
+                        
+                        const creatorUsername = creatorDoc.exists ? creatorDoc.data().username : 'Unknown';
+                        
                         return `
                             <tr>
                                 <td>${battle.battleCode}</td>
-                                <td>${battle.creator?.username || 'Unknown'}</td>
+                                <td>${creatorUsername}</td>
                                 <td>${battle.creator?.monsterData?.monsterName || 'Unknown'}</td>
                                 <td>${battle.creator?.monsterData?.level || '1'}</td>
                                 <td>
@@ -1983,10 +1990,11 @@
                                 </td>
                             </tr>
                         `;
-                    }).join('');
+                    }));
 
-                if (battles) {
-                    table.innerHTML = battles;
+                const table = document.querySelector('.battle-table tbody');
+                if (battlesData.length > 0) {
+                    table.innerHTML = battlesData.join('');
                 } else {
                     table.innerHTML = `
                         <tr>
