@@ -30,13 +30,12 @@ service cloud.firestore {
         allow update: if isAuthenticated() && (
           // Creator can update their own battle
           resource.data.creator.uid == request.auth.uid ||
-          // Opponent can update if they're part of the battle
+          // Allow joining any waiting battle (this is the key fix)
+          (resource.data.status == 'waiting' &&
+           resource.data.creator.uid != request.auth.uid) ||
+          // Opponent can update once they're part of the battle
           (resource.data.opponent != null && 
-           resource.data.opponent.uid == request.auth.uid) ||
-          // Allow joining an available battle
-          (resource.data.status == 'waiting' && 
-           resource.data.creator.uid != request.auth.uid &&
-           request.resource.data.status == 'in_progress')
+           resource.data.opponent.uid == request.auth.uid)
         );
         allow delete: if isOwner(userId);
       }
