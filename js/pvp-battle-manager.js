@@ -322,6 +322,31 @@ class PvPBattleManager {
             }
 
             batch.update(winnerMonsterRef, monsterUpdates);
+
+            // After calculating XP and before the batch commit, add these toast notifications
+            if (winner.uid === firebase.auth().currentUser.uid) {
+                // Show victory XP toast
+                const victoryMessage = `Victory! Gained ${totalExp} XP! 🎉`;
+                if (window.showToast) {
+                    window.showToast(victoryMessage, true);
+                }
+
+                // If there's a level up, show that toast after a delay
+                if (levelUpData) {
+                    setTimeout(() => {
+                        const levelUpMessage = `Level Up! Your monster is now level ${levelUpData.newLevel}! 🌟`;
+                        if (window.showToast) {
+                            window.showToast(levelUpMessage, true);
+                        }
+                    }, 1500);
+                }
+            } else {
+                // Show defeat toast
+                if (window.showToast) {
+                    window.showToast('Defeat! Better luck next time! 💪', false);
+                }
+            }
+
             await batch.commit();
 
             // Add these updates to ensure both players see results
