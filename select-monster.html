@@ -352,7 +352,7 @@
         <button id="startBattleBottom" class="start-battle-button" disabled>Start Battle</button>
 
         <footer>
-            <p>Version: <span id="versionNumber">1.0.07</span></p>
+            <p>Version: <span id="versionNumber">1.0.08</span></p>
             <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p>
         </footer>
     </div>
@@ -522,9 +522,10 @@
                 }));
             };
 
-            // Sort handler
+            // Modified sort handler with localStorage
             document.getElementById('sortBy').addEventListener('change', (e) => {
                 const sortValue = e.target.value;
+                localStorage.setItem('monsterSortPreference', sortValue);
                 const type = document.getElementById('filterType').value;
                 
                 let filtered = type === 'all' ? [...monsters] : monsters.filter(m => m.type === type);
@@ -553,14 +554,27 @@
                 renderMonsters(filtered);
             });
 
-            // Type filter handler
+            // Modified type filter handler with localStorage
             document.getElementById('filterType').addEventListener('change', (e) => {
                 const type = e.target.value;
+                localStorage.setItem('monsterTypePreference', type);
                 const filtered = type === 'all' ? monsters : monsters.filter(m => m.type === type);
                 document.getElementById('sortBy').dispatchEvent(new Event('change'));
             });
 
-            // Initial render
+            // Add this code right before the initial render
+            // Restore saved preferences
+            const savedSort = localStorage.getItem('monsterSortPreference');
+            const savedType = localStorage.getItem('monsterTypePreference');
+            
+            if (savedSort) {
+                document.getElementById('sortBy').value = savedSort;
+            }
+            if (savedType) {
+                document.getElementById('filterType').value = savedType;
+            }
+
+            // Initial render with saved preferences
             await renderMonsters(monsters);
         }
 
