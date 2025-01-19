@@ -325,18 +325,23 @@ class PvPBattleManager {
 
             // Fix toast notifications - Must be after XP calculation but before batch.commit()
             const currentUser = firebase.auth().currentUser;
-            if (currentUser.uid === winner.uid) {
-                // Winner sees victory and XP notification
+
+            // Only show notifications based on the current user's role
+            const isWinner = currentUser.uid === winner.uid;
+            const isLoser = currentUser.uid === loser.uid;
+
+            if (isWinner) {
+                // Only winner sees victory and XP messages
                 window.showToast(`Victory! Gained ${totalExp} XP! 🎉`, true);
-                
-                // Show level up toast if applicable
                 if (levelUpData) {
                     setTimeout(() => {
                         window.showToast(`Level Up! ${winner.monsterData.monsterName} is now level ${levelUpData.newLevel}! 🌟`, true);
                     }, 1500);
                 }
-            } else if (currentUser.uid === loser.uid) {
-                // Loser sees defeat notification
+            }
+
+            if (isLoser) {
+                // Only loser sees defeat message
                 window.showToast('Defeat! Better luck next time! 💪', false);
             }
 
