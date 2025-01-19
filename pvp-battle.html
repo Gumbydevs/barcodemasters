@@ -921,6 +921,106 @@
                 min-width: 120px;
             }
         }
+
+        /* Add new leaderboard-style battle list styles */
+        .battle-list {
+            width: 100%;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .battle-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .battle-table th,
+        .battle-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .battle-table th {
+            background: rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        }
+
+        .battle-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .battle-table button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .battle-table button:hover {
+            transform: translateY(-2px);
+        }
+
+        .no-battles {
+            padding: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+        }
+
+        /* Update battle list table responsive styles */
+        .battle-list {
+            width: 100%;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow-x: auto; /* Enable horizontal scroll */
+            -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+        }
+
+        .battle-table {
+            min-width: 600px; /* Ensure minimum width to prevent squishing */
+            width: 100%;
+        }
+
+        /* Add subtle scroll indicator on mobile */
+        @media screen and (max-width: 768px) {
+            .battle-list {
+                position: relative;
+            }
+
+            .battle-list::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 20px;
+                background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.2));
+                pointer-events: none;
+                opacity: 0.5;
+            }
+
+            .battle-table td {
+                white-space: nowrap; /* Prevent text wrapping */
+                padding: 12px 15px; /* Slightly adjust padding for touch */
+            }
+
+            .battle-table button {
+                min-width: 80px; /* Ensure button remains clickable */
+            }
+        }
     </style>
 </head>
 <body>
@@ -965,7 +1065,20 @@
             </div>
 
             <div id="activeBattles" class="battle-list">
-                <!-- Active battles will be listed here -->
+                <table class="battle-table">
+                    <thead>
+                        <tr>
+                            <th>Battle Code</th>
+                            <th>Creator</th>
+                            <th>Monster</th>
+                            <th>Level</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Battles will be populated here -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -1851,22 +1964,36 @@
                     .limit(10)
                     .get();
 
-                const battlesHTML = battlesQuery.docs
+                const table = document.querySelector('.battle-table tbody');
+                const battles = battlesQuery.docs
                     .filter(doc => doc.data().status === 'waiting' && doc.data().creator.uid !== user.uid)
                     .map(doc => {
                         const battle = doc.data();
                         const creatorId = doc.ref.parent.parent.id;
                         return `
-                            <div class="battle-item">
-                                <span>Battle #${battle.battleCode}</span>
-                                <span>Creator: ${battle.creator?.monsterData?.monsterName || 'Unknown'}</span>
-                                <button onclick="joinBattle('${battle.battleCode}', '${creatorId}')">Join Battle</button>
-                            </div>
+                            <tr>
+                                <td>${battle.battleCode}</td>
+                                <td>${battle.creator?.username || 'Unknown'}</td>
+                                <td>${battle.creator?.monsterData?.monsterName || 'Unknown'}</td>
+                                <td>${battle.creator?.monsterData?.level || '1'}</td>
+                                <td>
+                                    <button onclick="joinBattle('${battle.battleCode}', '${creatorId}')">
+                                        Join Battle
+                                    </button>
+                                </td>
+                            </tr>
                         `;
                     }).join('');
 
-                document.getElementById('activeBattles').innerHTML = battlesHTML || 
-                    '<div class="no-battles">No active battles found</div>';
+                if (battles) {
+                    table.innerHTML = battles;
+                } else {
+                    table.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="no-battles">No active battles found</td>
+                        </tr>
+                    `;
+                }
             } catch (error) {
                 console.error('Error loading battles:', error);
                 showToast('Error loading battles!', false);
