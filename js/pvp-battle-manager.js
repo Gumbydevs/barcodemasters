@@ -327,17 +327,17 @@ class PvPBattleManager {
             const currentUser = firebase.auth().currentUser;
             if (currentUser.uid === winner.uid) {
                 // Winner sees victory and XP notification
-                showToast(`Victory! Gained ${totalExp} XP! 🎉`, true);
+                window.showToast(`Victory! Gained ${totalExp} XP! 🎉`, true);
                 
                 // Show level up toast if applicable
                 if (levelUpData) {
                     setTimeout(() => {
-                        showToast(`Level Up! ${winner.monsterData.monsterName} is now level ${levelUpData.newLevel}! 🌟`, true);
+                        window.showToast(`Level Up! ${winner.monsterData.monsterName} is now level ${levelUpData.newLevel}! 🌟`, true);
                     }, 1500);
                 }
             } else if (currentUser.uid === loser.uid) {
                 // Loser sees defeat notification
-                showToast('Defeat! Better luck next time! 💪', false);
+                window.showToast('Defeat! Better luck next time! 💪', false);
             }
 
             await batch.commit();
