@@ -282,88 +282,67 @@ class PvPBattleManager {
                 losses: firebase.firestore.FieldValue.increment(1)
             });
 
-            // Calculate XP gain
-            const levelDiff = parseInt(loser.monsterData.level) - parseInt(winner.monsterData.level);
-            const baseXP = 50;
-            const xpGain = Math.max(baseXP + (levelDiff * 10), Math.floor(baseXP * 0.5));
+            // Calculate XP gains with enhanced feedback
+            const baseXP = 20 * Math.pow(1.2, Math.max(0, loser.monsterData.level - 5));
+            const levelDifference = loser.monsterData.level - winner.monsterData.level;
+            const levelBonus = Math.floor(baseXP * (levelDifference > 0 ? levelDifference * 0.85 : 0));
+            const levelScaling = Math.pow(1.25, loser.monsterData.level - 1);
+            const scaledBaseXP = Math.floor(baseXP * levelScaling);
+            const randomBonus = Math.floor(Math.random() * (baseXP * 0.2));
+            const totalExp = scaledBaseXP + levelBonus + randomBonus;
 
-            // Update winner's monster
+            // Get current monster data
             const winnerMonsterRef = this.db.collection('monsters').doc(winner.monster);
             const monsterDoc = await winnerMonsterRef.get();
             const currentExp = parseInt(monsterDoc.data().experience) || 0;
             const currentLevel = parseInt(monsterDoc.data().level) || 1;
-            const newExp = currentExp + xpGain;
-            const requiredXP = this.calculateRequiredXP(currentLevel);
+            const newExp = currentExp + totalExp;
 
             const monsterUpdates = {
                 experience: newExp
             };
 
             // Check for level up
-            if (newExp >= requiredXP) {
-                monsterUpdates.level = currentLevel + 1;
+            let levelUpData = null;
+            if (window.monsterStats && window.monsterStats.canLevelUp(currentLevel, newExp)) {
+                const newLevel = currentLevel + 1;
+                monsterUpdates.level = newLevel;
                 monsterUpdates.HP = Math.round(monsterDoc.data().HP * 1.2);
                 monsterUpdates.AP = Math.round(monsterDoc.data().AP * 1.15);
                 monsterUpdates.Speed = Math.round(monsterDoc.data().Speed * 1.1);
-            }
 
-            batch.update(winnerMonsterRef, monsterUpdates);
-
-            // Commit all updates
-            await batch.commit();
-
-            return {
-                xpGained: xpGain,
-                currentXP: newExp,
-                requiredXP,
-                levelUp: monsterUpdates.level ? {
+                levelUpData = {
                     oldLevel: currentLevel,
-                    newLevel: monsterUpdates.level,
+                    newLevel: newLevel,
                     newStats: {
                         HP: monsterUpdates.HP,
                         AP: monsterUpdates.AP,
                         Speed: monsterUpdates.Speed
                     }
-                } : null
+                };
+            }
+
+            batch.update(winnerMonsterRef, monsterUpdates);
+            await batch.commit();
+
+            // Return complete battle results
+            return {
+                winner: {
+                    uid: winner.uid,
+                    monsterName: winner.monsterData.monsterName,
+                },
+                xpGained: totalExp,
+                levelUp: levelUpData,
+                battleStats: {
+                    finalPlayerHP: winner.currentHP,
+                    finalOpponentHP: loser.currentHP
+                }
             };
 
         } catch (error) {
             console.error('Error handling battle end:', error);
             throw error;
         }
-    }
-
-    calculateRequiredXP(level) {
-        return Math.floor(100 * Math.pow(1.5, level - 1));
-    }
-
-    async handleBattleEnd(battleState, winnerId) {
-        const winner = winnerId === battleState.creator.uid ? 
-            battleState.creator : battleState.opponent;
-        const loser = winnerId === battleState.creator.uid ? 
-            battleState.opponent : battleState.creator;
-
-        // Calculate and award XP
-        const levelDiff = loser.monsterData.level - winner.monsterData.level;
-        const baseXP = 50;
-        const xpGain = Math.max(baseXP + (levelDiff * 10), Math.floor(baseXP * 0.5));
-
-        // Update winner's monster
-        const winnerMonsterRef = db.collection('monsters').doc(winner.monster);
-        await winnerMonsterRef.update({
-            experience: firebase.firestore.FieldValue.increment(xpGain)
-        });
-    }
-
-    getNextTurn(battleState) {
-        // Switch turns between creator and opponent
-        return battleState.currentTurn === battleState.creator.uid ?
-            battleState.opponent.uid : battleState.creator.uid;
-    }
-
-    // Add new method to get battle reference
-    getBattleRef() {
-        return this.battleRef;
     }
 
     static async cleanupStuckBattles(userId) {

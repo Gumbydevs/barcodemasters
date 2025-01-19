@@ -1021,6 +1021,28 @@
                 min-width: 80px; /* Ensure button remains clickable */
             }
         }
+
+        /* Update battle results overlay style */
+        .battle-results {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Make battle container visible behind overlay */
+        .battle-container {
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
@@ -1106,6 +1128,67 @@
                 }, 300);
             }, 3000);
         }
+
+        // Add these message arrays after the existing showToast function
+        const victoryMessages = [
+            "Great win, {username}! Gained {xp} XP! 🎉",
+            "Awesome job, {username}! Earned {xp} XP! 🌟",
+            "Well done, {username}! Gained {xp} XP! 🏆",
+            "Nice work, {username}! Earned {xp} XP! ⭐",
+            "You did it, {username}! Gained {xp} XP! 🎯"  
+        ];
+
+        const levelUpMessages = [
+            "Level up! {monsterName} is now level {level}! 🌟",
+            "Congrats! {monsterName} reached level {level}! 🎉",
+            "Amazing! {monsterName} is now level {level}! 🚀",
+            "Great stuff! {monsterName} hit level {level}! ⭐",
+            "Fantastic! {monsterName} hit level {level}! 💫"
+        ];
+
+        const defeatMessages = [
+            "Tough luck, {username}! Try again! 💪",
+            "Train harder, {username}! You'll win next time! 🔥",
+            "Almost, {username}! Keep going! 🎯",
+            "Close one, {username}! Don't give up! 💫",
+            "Not this time, {username}! Keep trying! 🌟",
+            "You'll get it, {username}! Stay strong! 💪"
+        ];
+
+        // Add showBattleToast function (in addition to existing showToast)
+        const showBattleToast = (message, isLevelUp = false, isDefeat = false) => {
+            const toastId = isLevelUp ? 'levelUpToast' : 'battleToast';
+            let toast = document.getElementById(toastId);
+            
+            if (toast) {
+                toast.remove();
+            }
+            
+            toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast${isLevelUp ? ' level-up' : ''}${isDefeat ? ' defeat' : ''}`;
+            toast.innerHTML = message;
+            
+            document.body.appendChild(toast);
+            
+            void toast.offsetWidth;
+            
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            });
+
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                toast.style.opacity = '0';
+                
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                }, 300);
+            }, 10000);
+        };
 
         // Define MonsterImage component
         function MonsterImage({ monster }) {
@@ -1644,7 +1727,6 @@
                 if (isBattleOver || isCleaningUp) return;
                 
                 try {
-                    setIsBattleOver(true);
                     const user = firebase.auth().currentUser;
                     if (!user) throw new Error('No authenticated user');
             
@@ -1654,19 +1736,46 @@
                     const isActuallyVictory = battleData.winner === user.uid;
                     
                     setBattleResult(isActuallyVictory ? 'victory' : 'defeat');
+                    
+                    // Don't hide battle UI, just show overlay
                     setShowingResults(true);
             
-                    // Only calculate rewards for the winner
+                    // Show appropriate toast message
                     if (isActuallyVictory && playerMonster?.id) {
                         const expGained = calculateXPGain(
                             parseInt(playerMonster.level) || 1,
                             parseInt(opponentMonster?.level) || 1
                         );
                         
-                        const battleRewards = { exp: expGained };
-                        setRewards(battleRewards);
+                        // Show victory message with XP
+                        const randomVictoryMessage = victoryMessages[Math.floor(Math.random() * victoryMessages.length)]
+                            .replace('{username}', playerName)
+                            .replace('{xp}', expGained);
+                        showBattleToast(randomVictoryMessage);
                         
-                        // Rest of your reward processing code...
+                        setRewards({ exp: expGained });
+                        
+                        // Process rewards and check for level up
+                        const battleResults = await battleManager.handleBattleEnd(battleData, user.uid);
+                        if (battleResults.levelUp) {
+                            // Show level up message after a short delay
+                            setTimeout(() => {
+                                const levelUpMessage = levelUpMessages[Math.floor(Math.random() * levelUpMessages.length)]
+                                    .replace('{monsterName}', playerMonster.monsterName)
+                                    .replace('{level}', battleResults.levelUp.newLevel);
+                                showBattleToast(levelUpMessage, true);
+                            }, 1500);
+                            
+                            setRewards(prev => ({
+                                ...prev,
+                                levelUp: battleResults.levelUp
+                            }));
+                        }
+                    } else {
+                        // Show defeat message
+                        const randomDefeatMessage = defeatMessages[Math.floor(Math.random() * defeatMessages.length)]
+                            .replace('{username}', playerName);
+                        showBattleToast(randomDefeatMessage, false, true);
                     }
                 } catch (error) {
                     console.error('Error handling battle end:', error);
@@ -1711,126 +1820,128 @@
             // Update the return statement to include battle results
             return (
                 <div className="battle-container">
-                    {showingResults ? (
-                        <BattleResults result={battleResult} rewards={rewards} />
-                    ) : (
-                        <>
-                            <TurnIndicator />
-                            <div className="battle-monsters">
-                                <div className="monster-section player-section">
-                                    <div className="monster-header">
-                                        <h3>{playerName}</h3>
-                                        <div className="monster-name">{playerMonster?.monsterName}</div>
-                                        <div className="monster-level">Level {playerMonster?.level}</div>
-                                    </div>
-                                    <div className="monster-display">
-                                        <MonsterImage monster={playerMonster} />
-                                        <div className="monster-info">
-                                            <div className="stats-box">
-                                                <div>Type: {playerMonster?.type}</div>
-                                                <div>HP: {playerHealth}/{playerMonster?.HP}</div>
-                                                <div>AP: {playerMonster?.AP}</div>
-                                                <div>Speed: {playerMonster?.Speed}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="health-bar-container">
-                                        <div className="health-bar">
-                                            <div className="health-fill player-health"
-                                                style={{ width: `${(playerHealth / (playerMonster?.HP || 100)) * 100}%` }}
-                                            ></div>
-                                        </div>
-                                        <div className="health-text">{playerHealth}/{playerMonster?.HP} HP</div>
-                                    </div>
-                                </div>
-
-                                <div className="battle-divider">
-                                    <div className="vs-text">VS</div>
-                                </div>
-
-                                <div className="monster-section opponent-section">
-                                    <div className="monster-header">
-                                        <h3>{opponentName}</h3>
-                                        <div className="monster-name">{opponentMonster?.monsterName}</div>
-                                        <div className="monster-level">Level {opponentMonster?.level}</div>
-                                    </div>
-                                    <div className="monster-display">
-                                        <MonsterImage monster={opponentMonster} />
-                                        <div className="monster-info">
-                                            <div className="stats-box">
-                                                <div>Type: {opponentMonster?.type}</div>
-                                                <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
-                                                <div>AP: {opponentMonster?.AP}</div>
-                                                <div>Speed: {opponentMonster?.Speed}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="health-bar-container">
-                                        <div className="health-bar">
-                                            <div className="health-fill opponent-health"
-                                                style={{ width: `${(opponentHealth / (opponentMonster?.HP || 100)) * 100}%` }}
-                                            ></div>
-                                        </div>
-                                        <div className="health-text">{opponentHealth}/{opponentMonster?.HP} HP</div>
+                    <TurnIndicator />
+                    <div className="battle-monsters">
+                        <div className="monster-section player-section">
+                            <div className="monster-header">
+                                <h3>{playerName}</h3>
+                                <div className="monster-name">{playerMonster?.monsterName}</div>
+                                <div className="monster-level">Level {playerMonster?.level}</div>
+                            </div>
+                            <div className="monster-display">
+                                <MonsterImage monster={playerMonster} />
+                                <div className="monster-info">
+                                    <div className="stats-box">
+                                        <div>Type: {playerMonster?.type}</div>
+                                        <div>HP: {playerHealth}/{playerMonster?.HP}</div>
+                                        <div>AP: {playerMonster?.AP}</div>
+                                        <div>Speed: {playerMonster?.Speed}</div>
                                     </div>
                                 </div>
                             </div>
+                            <div className="health-bar-container">
+                                <div className="health-bar">
+                                    <div className="health-fill player-health"
+                                        style={{ width: `${(playerHealth / (playerMonster?.HP || 100)) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <div className="health-text">{playerHealth}/{playerMonster?.HP} HP</div>
+                            </div>
+                        </div>
 
-                            <div className="battle-log">
-                                <div className="log-header">Battle Log</div>
-                                <div className="log-entries">
-                                    {battleLog.map((entry, index) => (
-                                        <div key={index} className="log-entry">{entry}</div>
-                                    ))}
+                        <div className="battle-divider">
+                            <div className="vs-text">VS</div>
+                        </div>
+
+                        <div className="monster-section opponent-section">
+                            <div className="monster-header">
+                                <h3>{opponentName}</h3>
+                                <div className="monster-name">{opponentMonster?.monsterName}</div>
+                                <div className="monster-level">Level {opponentMonster?.level}</div>
+                            </div>
+                            <div className="monster-display">
+                                <MonsterImage monster={opponentMonster} />
+                                <div className="monster-info">
+                                    <div className="stats-box">
+                                        <div>Type: {opponentMonster?.type}</div>
+                                        <div>HP: {opponentHealth}/{opponentMonster?.HP}</div>
+                                        <div>AP: {opponentMonster?.AP}</div>
+                                        <div>Speed: {opponentMonster?.Speed}</div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div className="controls-grid">
-                                <button 
-                                    className="battle-button attack" 
-                                    onClick={handleAttack} 
-                                    disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
-                                >
-                                    Attack
-                                </button>
-                                <button 
-                                    className="battle-button defend" 
-                                    onClick={handleDefend} 
-                                    disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
-                                >
-                                    Defend
-                                </button>
-                                <button 
-                                    className="battle-button heal" 
-                                    onClick={handleHeal} 
-                                    disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
-                                >
-                                    Heal
-                                </button>
-                                <button 
-                                    className="battle-button special" 
-                                    onClick={handleSpecialAttack} 
-                                    disabled={!isMyTurn || isBattleOver || specialCooldown > 0 || !battleState?.opponent}
-                                >
-                                    Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
-                                </button>
-                                {!battleState?.opponent ? (
-                                    <button 
-                                        className="battle-button forfeit" 
-                                        onClick={handleCancelBattle}
-                                    >
-                                        Cancel Battle
-                                    </button>
-                                ) : (
-                                    <button 
-                                        className="battle-button forfeit" 
-                                        onClick={handleForfeit}
-                                    >
-                                        Forfeit
-                                    </button>
-                                )}
+                            <div className="health-bar-container">
+                                <div className="health-bar">
+                                    <div className="health-fill opponent-health"
+                                        style={{ width: `${(opponentHealth / (opponentMonster?.HP || 100)) * 100}%` }}
+                                    ></div>
+                                </div>
+                                <div className="health-text">{opponentHealth}/{opponentMonster?.HP} HP</div>
                             </div>
-                        </>
+                        </div>
+                    </div>
+
+                    <div className="battle-log">
+                        <div className="log-header">Battle Log</div>
+                        <div className="log-entries">
+                            {battleLog.map((entry, index) => (
+                                <div key={index} className="log-entry">{entry}</div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="controls-grid">
+                        <button 
+                            className="battle-button attack" 
+                            onClick={handleAttack} 
+                            disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
+                        >
+                            Attack
+                        </button>
+                        <button 
+                            className="battle-button defend" 
+                            onClick={handleDefend} 
+                            disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
+                        >
+                            Defend
+                        </button>
+                        <button 
+                            className="battle-button heal" 
+                            onClick={handleHeal} 
+                            disabled={!isMyTurn || isBattleOver || !battleState?.opponent}
+                        >
+                            Heal
+                        </button>
+                        <button 
+                            className="battle-button special" 
+                            onClick={handleSpecialAttack} 
+                            disabled={!isMyTurn || isBattleOver || specialCooldown > 0 || !battleState?.opponent}
+                        >
+                            Special {specialCooldown > 0 ? `(${specialCooldown})` : ''}
+                        </button>
+                        {!battleState?.opponent ? (
+                            <button 
+                                className="battle-button forfeit" 
+                                onClick={handleCancelBattle}
+                            >
+                                Cancel Battle
+                            </button>
+                        ) : (
+                            <button 
+                                className="battle-button forfeit" 
+                                onClick={handleForfeit}
+                            >
+                                Forfeit
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Add results overlay that shows/hides based on showingResults */}
+                    {showingResults && (
+                        <BattleResults 
+                            result={battleResult} 
+                            rewards={rewards}
+                        />
                     )}
                 </div>
             );
