@@ -867,6 +867,60 @@
                 max-height: 140px;
             }
         }
+
+        /* Replace the existing navigation-grid and nav-button styles with these */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .nav-button {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Update battle-button class to match nav-button style */
+        .battle-button {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .battle-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .battle-button.attack { background: linear-gradient(135deg, #2c3e50, #3498db); }
+        .battle-button.defend { background: linear-gradient(135deg, #2c3e50, #3498db); }
+        .battle-button.heal { background: linear-gradient(135deg, #2c3e50, #3498db); }
+        .battle-button.special { background: linear-gradient(135deg, #2c3e50, #3498db); }
+        .battle-button.forfeit { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+
+        /* Add media queries for consistent mobile experience */
+        @media screen and (max-width: 480px) {
+            .nav-button, .battle-button {
+                padding: 8px;
+                font-size: 0.9em;
+                min-width: 120px;
+            }
+        }
     </style>
 </head>
 <body>
