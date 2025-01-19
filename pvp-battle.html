@@ -781,6 +781,92 @@
                 max-width: 1400px;
             }
         }
+
+        /* Update monster display and battle container styles */
+        .battle-monsters {
+            max-width: 1000px; /* Reduced from 1200px */
+            margin: 10px auto; /* Reduced margin */
+            gap: 10px; /* Reduced gap */
+        }
+
+        .monster-section {
+            max-width: 42%; /* Slightly narrower sections */
+            padding: 0.75rem;
+        }
+
+        .monster-display img {
+            max-width: 120px; /* Consistent max size across all screens */
+            max-height: 120px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .battle-monsters {
+                gap: 5px; /* Even smaller gap on mobile */
+                padding: 0.25rem;
+            }
+
+            .monster-section {
+                padding: 0.5rem;
+                margin-bottom: 0.5rem; /* Reduce vertical spacing */
+            }
+
+            .monster-display {
+                gap: 0.25rem;
+            }
+
+            .monster-display img {
+                max-width: 80px; /* Smaller images on mobile */
+                max-height: 80px;
+            }
+
+            .monster-header {
+                margin-bottom: 0.25rem;
+            }
+
+            .stats-box {
+                padding: 0.5rem;
+                margin-top: 0.25rem;
+            }
+
+            .health-bar-container {
+                margin: 0.25rem 0;
+            }
+
+            /* Make opponent section closer */
+            .opponent-section {
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+            }
+
+            /* Adjust battle controls position */
+            .controls-grid {
+                position: sticky;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                padding: 0.5rem;
+                margin: 0;
+                z-index: 100;
+            }
+        }
+
+        /* Update larger screen sizes */
+        @media screen and (min-width: 1080px) {
+            .monster-display img {
+                max-width: 120px; /* Consistent size */
+                max-height: 120px;
+            }
+        }
+
+        @media screen and (min-width: 1440px) {
+            .monster-display img {
+                max-width: 140px; /* Slightly larger but not too big */
+                max-height: 140px;
+            }
+        }
     </style>
 </head>
 <body>
