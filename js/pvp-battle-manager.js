@@ -255,7 +255,6 @@ class PvPBattleManager {
             updates.status = 'completed';
             updates.winner = user.uid;
             updates.endTime = firebase.firestore.FieldValue.serverTimestamp();
-            this.handleBattleEnd(battleState, user.uid);
         }
 
         return updates;
@@ -324,6 +323,14 @@ class PvPBattleManager {
 
             batch.update(winnerMonsterRef, monsterUpdates);
             await batch.commit();
+
+            // Add these updates to ensure both players see results
+            const updates = {
+                status: 'completed',
+                winner: winnerId,
+                endTime: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await this.getBattleRef().update(updates);
 
             // Return complete battle results
             return {
@@ -476,6 +483,27 @@ class PvPBattleManager {
         }
         
         return { damage, isCritical: false };
+    }
+
+    getNextTurn(battleState) {
+        const currentUserId = firebase.auth().currentUser.uid;
+        
+        if (currentUserId === battleState.creator.uid) {
+            return battleState.opponent.uid;
+        }
+        else if (currentUserId === battleState.opponent.uid) {
+            return battleState.creator.uid;
+        }
+        
+        return battleState.creator.uid;
+    }
+
+    // Add this method to get battle reference
+    getBattleRef() {
+        if (!this.battleRef) {
+            throw new Error('Battle reference not initialized');
+        }
+        return this.battleRef;
     }
 }
 
