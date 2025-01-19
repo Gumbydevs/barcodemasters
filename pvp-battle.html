@@ -750,6 +750,37 @@
                 padding: 8px;
             }
         }
+
+        /* Add responsive styles for larger desktop screens */
+        @media screen and (min-width: 1080px) {
+            .monster-display img {
+                max-width: 150px;
+                max-height: 150px;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+            }
+
+            .battle-monsters {
+                max-width: 1200px;
+                margin: 20px auto;
+            }
+
+            .monster-section {
+                max-width: 40%;
+            }
+        }
+
+        @media screen and (min-width: 1440px) {
+            .monster-display img {
+                max-width: 180px;
+                max-height: 180px;
+            }
+
+            .battle-monsters {
+                max-width: 1400px;
+            }
+        }
     </style>
 </head>
 <body>
