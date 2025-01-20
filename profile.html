@@ -344,6 +344,33 @@
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-1px);
         }
+
+        .account-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .account-badge.free {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .account-badge.premium {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+        }
+
+        .account-badge.vip {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .account-badge .emoji {
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
@@ -364,6 +391,10 @@
                 </div>
                 <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
                 <div class="player-details">
+                    <div class="account-badge" id="accountBadge">
+                        <span class="emoji"></span>
+                        <span class="type"></span>
+                    </div>
                     <h2 id="userName">Loading...</h2>
                     <div class="stats-container">
                         <div class="stat-box">
@@ -562,6 +593,19 @@
 
                     // Update player stats
                     await updatePlayerStats(user.uid);
+
+                    // Update account badge
+                    const badge = document.getElementById('accountBadge');
+                    const accountType = userData.accountType || 'free';
+                    const badges = {
+                        'free': { emoji: '🌱', label: 'Free Account' },
+                        'premium': { emoji: '⭐', label: 'Premium' },
+                        'vip': { emoji: '👑', label: 'VIP' }
+                    };
+                    
+                    badge.querySelector('.emoji').textContent = badges[accountType].emoji;
+                    badge.querySelector('.type').textContent = badges[accountType].label;
+                    badge.className = `account-badge ${accountType}`;
                 } else {
                     console.log("No such document!");
                 }
