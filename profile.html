@@ -471,6 +471,9 @@
 
             <!-- Player Info -->
             <div class="player-info">
+                <!-- Hidden file input for profile image -->
+                <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
+                
                 <div class="player-header">
                     <div class="avatar-placeholder" id="avatarPlaceholder">
                         👤
@@ -850,21 +853,27 @@
             }
         }
 
-        // Handle upload image button click
-        document.getElementById('uploadImageButton').addEventListener('click', () => {
-            document.getElementById('profileImageInput').click();
-        });
-
-        // Handle file input change
-        document.getElementById('profileImageInput').addEventListener('change', async (event) => {
-            const user = auth.currentUser;
-            if (user && event.target.files.length > 0) {
-                const file = event.target.files[0];
-                if (file.size > 2 * 1024 * 1024) { // Limit file size to 2MB
-                    showToast("File size exceeds 2MB. Please choose a smaller file.", true);
-                    return;
-                }
-                await uploadProfileImage(file, user.uid);
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadButton = document.getElementById('uploadImageButton');
+            const fileInput = document.getElementById('profileImageInput');
+            
+            if (uploadButton && fileInput) {
+                uploadButton.addEventListener('click', () => {
+                    fileInput.click();
+                });
+                
+                fileInput.addEventListener('change', async (event) => {
+                    const user = auth.currentUser;
+                    if (user && event.target.files.length > 0) {
+                        const file = event.target.files[0];
+                        if (file.size > 2 * 1024 * 1024) {
+                            showToast("File size exceeds 2MB. Please choose a smaller file.", true);
+                            return;
+                        }
+                        await uploadProfileImage(file, user.uid);
+                    }
+                });
             }
         });
     </script>
