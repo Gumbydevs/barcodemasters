@@ -467,6 +467,22 @@
                 font-size: 1rem;
             }
         }
+
+        .support-link {
+            display: inline-flex;
+            align-items: center;
+            color: inherit;
+            text-decoration: none;
+            padding: 2px 8px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            font-size: 0.9em;
+        }
+
+        .support-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -527,7 +543,17 @@
 
     <footer>
         <p>Version: <span id="versionNumber">1.0.02</span></p>
-        <p>&copy; 2025 Barcode Masters | <a href="changelog.html">Change Log</a> | <a href="privacy-policy.html">Privacy Policy</a></p> 
+        <p>&copy; 2025 Barcode Masters | 
+            <a href="changelog.html" class="support-link">
+                📝 Change Log
+            </a> | 
+            <a href="privacy-policy.html" class="support-link">
+                🔒 Privacy Policy
+            </a> | 
+            <a href="https://buymeacoffee.com/gumbydev" target="_blank" class="support-link">
+                ☕ Support the Game
+            </a>
+        </p> 
     </footer>
 
     <div class="bottom-nav">
