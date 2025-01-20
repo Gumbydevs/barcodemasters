@@ -296,7 +296,7 @@
                 <p style="font-size: 0.9em; color: #666; margin-bottom: 1rem;">
                     Premium members get increased daily scan limits and exclusive features.
                 </p>
-                <a href="https://buymeacoffee.com/GumbyDev" 
+                <a href="https://buymeacoffee.com/GumbyDev/membership" 
                    target="_blank" 
                    class="nav-button" 
                    style="
@@ -310,29 +310,22 @@
             </div>
         </div>
 
-        <div id="upgradePrompt" style="display: none;" class="upgrade-prompt">
+        <div id="vipUpgradePrompt" style="display: none;" class="upgrade-prompt">
             <div style="
-                background: rgba(52, 152, 219, 0.1);
+                background: rgba(155, 89, 182, 0.1);
                 border-radius: 8px;
-                padding: 1rem;
-                margin: 1rem 0;
+                padding: 0.5rem;
+                margin: 0.5rem 0;
                 text-align: center;
-                border: 1px solid rgba(52, 152, 219, 0.3);">
-                <p style="margin-bottom: 0.5rem;">🌟 Upgrade to Premium for more daily DNA extractions!</p>
-                <p style="font-size: 0.9em; color: #666; margin-bottom: 1rem;">
-                    Premium members get increased daily scan limits and exclusive features.
-                </p>
-                <a href="https://buymeacoffee.com/GumbyDev" 
-                   target="_blank" 
-                   class="nav-button" 
-                   style="
-                    display: inline-block;
-                    text-decoration: none;
-                    background: linear-gradient(135deg, #ff9f43, #ff7f50);
-                    margin: 0.5rem;
-                    transition: transform 0.2s;">
-                    Upgrade Now 🚀
-                </a>
+                border: 1px solid rgba(155, 89, 182, 0.3);">
+                <small style="color: #9b59b6;">
+                    ⭐  Upgrade to VIP for 8 Daily Extractions & Exclusive Features! 
+                    <a href="https://buymeacoffee.com/GumbyDev/membership" 
+                       target="_blank"
+                       style="color: #8e44ad; text-decoration: underline;">
+                       <span style="color: #ffeb3b;">Learn more</span>
+                    </a>
+                </small>
             </div>
         </div>
 
@@ -1264,6 +1257,7 @@
             try {
                 const display = document.getElementById('scanLimitDisplay');
                 const upgradePrompt = document.getElementById('upgradePrompt');
+                const vipUpgradePrompt = document.getElementById('vipUpgradePrompt');
                 if (!display) return;
 
                 const user = auth.currentUser;
@@ -1282,14 +1276,19 @@
                     <span class="scan-limit-count">${remaining}</span> DNA extractions remaining today
                     <br>
                     <small>(${usedToday}/${dailyScanLimit} used)</small>
-                    ${accountType === 'free' ? '<br><small style="color: #ff9f43;">✨ Upgrade to increase your daily limit!</small>' : ''}
+                    ${accountType === 'free' ? '<br><small style="color: #ff9f43;">✨ Upgrade to Premium for more daily extractions!</small>' : ''}
                 `;
 
-                // Show/hide upgrade prompt based on account type
+                // Show appropriate upgrade prompt based on account type
                 if (accountType === 'free') {
                     upgradePrompt.style.display = 'block';
+                    vipUpgradePrompt.style.display = 'none';
+                } else if (accountType === 'premium') {
+                    upgradePrompt.style.display = 'none';
+                    vipUpgradePrompt.style.display = 'block';
                 } else {
                     upgradePrompt.style.display = 'none';
+                    vipUpgradePrompt.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error updating scan limit display:', error);
