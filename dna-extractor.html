@@ -284,6 +284,58 @@
             Loading scan limit...
         </div>
 
+        <div id="upgradePrompt" style="display: none;" class="upgrade-prompt">
+            <div style="
+                background: rgba(52, 152, 219, 0.1);
+                border-radius: 8px;
+                padding: 1rem;
+                margin: 1rem 0;
+                text-align: center;
+                border: 1px solid rgba(52, 152, 219, 0.3);">
+                <p style="margin-bottom: 0.5rem;">🌟 Upgrade to Premium for more daily DNA extractions!</p>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 1rem;">
+                    Premium members get increased daily scan limits and exclusive features.
+                </p>
+                <a href="https://buymeacoffee.com/GumbyDev" 
+                   target="_blank" 
+                   class="nav-button" 
+                   style="
+                    display: inline-block;
+                    text-decoration: none;
+                    background: linear-gradient(135deg, #ff9f43, #ff7f50);
+                    margin: 0.5rem;
+                    transition: transform 0.2s;">
+                    Upgrade Now 🚀
+                </a>
+            </div>
+        </div>
+
+        <div id="upgradePrompt" style="display: none;" class="upgrade-prompt">
+            <div style="
+                background: rgba(52, 152, 219, 0.1);
+                border-radius: 8px;
+                padding: 1rem;
+                margin: 1rem 0;
+                text-align: center;
+                border: 1px solid rgba(52, 152, 219, 0.3);">
+                <p style="margin-bottom: 0.5rem;">🌟 Upgrade to Premium for more daily DNA extractions!</p>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 1rem;">
+                    Premium members get increased daily scan limits and exclusive features.
+                </p>
+                <a href="https://buymeacoffee.com/GumbyDev" 
+                   target="_blank" 
+                   class="nav-button" 
+                   style="
+                    display: inline-block;
+                    text-decoration: none;
+                    background: linear-gradient(135deg, #ff9f43, #ff7f50);
+                    margin: 0.5rem;
+                    transition: transform 0.2s;">
+                    Upgrade Now 🚀
+                </a>
+            </div>
+        </div>
+
         <div id="scanGuide" style="text-align: center; margin: 0.5rem 0; display: none;">
             <div style="background: rgba(52, 152, 219, 0.1); border-left: 3px solid #3498db; padding: 0.5rem; border-radius: 4px;">
                 <p style="margin: 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-around; gap: 0.5rem;">
@@ -540,7 +592,7 @@
                 );
 
                 updateDebugMessage('Scanner active - point at a barcode or QR code');
-                await refreshScanLimits(); // Add this line at the beginning
+                await refreshScanLimits(); // Update scan limit display
             } catch (err) {
                 console.error('Error starting scanner:', err);
                 showError('Scanning failed: ' + err.message);
@@ -1189,7 +1241,7 @@
                 const updates = {};
                 
                 // Default values for required fields
-                if (!userData.dailyScanLimit) updates.dailyScanLimit = 3;
+                if (!userData.dailyScanLimit) updates.dailyScanLimit = 2;
                 if (!userData.dailyScans) updates.dailyScans = {};
                 if (!userData.usedHash) updates.usedHash = [];
                 if (!userData.accountType) updates.accountType = 'free';
@@ -1208,19 +1260,40 @@
         }
 
         // Modify the updateScanLimitDisplay function
-        function updateScanLimitDisplay(dailyScans, dailyScanLimit) {
-            const display = document.getElementById('scanLimitDisplay');
-            if (!display) return;
+        async function updateScanLimitDisplay(dailyScans, dailyScanLimit) {
+            try {
+                const display = document.getElementById('scanLimitDisplay');
+                const upgradePrompt = document.getElementById('upgradePrompt');
+                if (!display) return;
 
-            const today = new Date().toLocaleDateString('en-US');
-            const usedToday = (dailyScans[today] || 0);
-            const remaining = dailyScanLimit - usedToday;
+                const user = auth.currentUser;
+                if (!user) return;
 
-            display.innerHTML = `
-                <span class="scan-limit-count">${remaining}</span> DNA extractions remaining today
-                <br>
-                <small>(${usedToday}/${dailyScanLimit} used)</small>
-            `;
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                const userData = userDoc.data();
+                const accountType = userData.accountType || 'free';
+
+                const today = new Date().toLocaleDateString('en-US');
+                const usedToday = (dailyScans[today] || 0);
+                const remaining = dailyScanLimit - usedToday;
+
+                display.innerHTML = `
+                    <span class="scan-limit-count">${remaining}</span> DNA extractions remaining today
+                    <br>
+                    <small>(${usedToday}/${dailyScanLimit} used)</small>
+                    ${accountType === 'free' ? '<br><small style="color: #ff9f43;">✨ Upgrade to increase your daily limit!</small>' : ''}
+                `;
+
+                // Show/hide upgrade prompt based on account type
+                if (accountType === 'free') {
+                    upgradePrompt.style.display = 'block';
+                } else {
+                    upgradePrompt.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error updating scan limit display:', error);
+            }
         }
 
         // Add a function to clean up old scan data
