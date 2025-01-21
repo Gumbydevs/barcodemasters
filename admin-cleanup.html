@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Image Cleanup Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .login-section {
+            max-width: 300px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .results-section {
+            margin-top: 20px;
+            display: none;
+        }
+        .orphaned-images {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .image-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .image-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin-right: 10px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .scan-btn { background: #3498db; color: white; }
+        .delete-btn { background: #e74c3c; color: white; }
+        .stats {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        #log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .hidden { display: none; }
+        .debug-info {
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+        }
+        .verify-mode { background: #2ecc71; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Monster Image Cleanup Tool</h1>
+    
+    <div id="loginSection" class="login-section">
+        <h2>Admin Login Required</h2>
+        <input type="email" id="email" placeholder="Admin Email" />
+        <input type="password" id="password" placeholder="Password" />
+        <div id="loginError" style="color: red; margin-top: 10px;"></div>
+        <button id="loginButton" class="button scan-btn" style="margin-top: 10px;">Login</button>
+    </div>
+
+    <div id="resultsSection" class="results-section">
+        <div class="controls">
+            <button id="scanButton" class="button scan-btn">Scan for Orphaned Images</button>
+            <button id="deleteAllButton" class="button delete-btn" disabled>Delete All Orphaned Images</button>
+            <button id="verifyButton" class="button verify-mode">Toggle Verification Mode</button>
+        </div>
+        
+        <div class="stats">
+            <div>Total Images: <span id="totalImages">0</span></div>
+            <div>Orphaned Images: <span id="orphanedCount">0</span></div>
+        </div>
+        
+        <div id="orphanedImages" class="orphaned-images">
+            <!-- Orphaned images will be listed here -->
+        </div>
+        
+        <div id="log"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getStorage, ref, listAll, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+        const db = getFirestore(app);
+
+        let orphanedImages = [];
+        let debugMode = false;
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += `<div>${new Date().toLocaleTimeString()} - ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function checkAdminStatus(userId) {
+            return userId === 'Ngi2V2EdcFUeALSJjmY6XxfyxqL2';
+        }
+
+        async function scanForOrphanedImages() {
+            orphanedImages = [];
+            const orphanedContainer = document.getElementById('orphanedImages');
+            orphanedContainer.innerHTML = 'Scanning...';
+            log('Starting scan...');
+
+            try {
+                // Step 1: Get active monsters and their image data
+                const activeMonsterData = new Map();
+                const activeImageUrls = new Set();
+                const monstersSnapshot = await getDocs(collection(db, 'monsters'));
+                
+                // Create debug info for verification
+                let debugInfo = {};
+                
+                monstersSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    activeMonsterData.set(doc.id, data);
+                    debugInfo[doc.id] = {
+                        imageUrl: data.imageUrl || 'none',
+                        barcode: doc.id.split('-')[0],
+                        userId: doc.id.split('-')[1]
+                    };
+                    
+                    if (data.imageUrl) {
+                        const filename = data.imageUrl.split('/').pop();
+                        activeImageUrls.add(filename);
+                        log(`Active Monster: ${doc.id} uses image: ${filename}`);
+                    } else {
+                        log(`Warning: Monster ${doc.id} has no imageUrl`);
+                    }
+                });
+
+                // Step 2: Get all storage images
+                const storageRef = ref(storage, 'monster-images');
+                const imagesList = await listAll(storageRef);
+
+                log(`\nFound ${activeMonsterData.size} active monsters`);
+                log(`Found ${imagesList.items.length} total images`);
+                log(`Found ${activeImageUrls.size} referenced images\n`);
+                
+                // Step 3: Find truly orphaned images
+                orphanedContainer.innerHTML = '';
+                
+                for (const imageRef of imagesList.items) {
+                    const filename = imageRef.name;
+                    const [barcode, userId] = filename.split('.')[0].split('-');
+                    
+                    // An image is orphaned if:
+                    // 1. It's not referenced in any monster's imageUrl
+                    // 2. Its filename doesn't match any active monster ID pattern
+                    const isReferenced = activeImageUrls.has(filename);
+                    const matchesActiveMonster = Array.from(activeMonsterData.keys()).some(id => 
+                        filename.startsWith(id.split('-')[0] + '-')
+                    );
+
+                    if (!isReferenced && !matchesActiveMonster) {
+                        orphanedImages.push(imageRef);
+                        try {
+                            const url = await getDownloadURL(imageRef);
+                            const div = document.createElement('div');
+                            div.className = 'image-item';
+                            
+                            // Add debug information for verification
+                            const debugDetails = debugMode ? `
+                                <div class="debug-info">
+                                    Image Details:
+                                    - Filename: ${filename}
+                                    - Barcode: ${barcode}
+                                    - UserID: ${userId}
+                                    
+                                    Verification Steps:
+                                    1. Matches active monster ID? ${matchesActiveMonster}
+                                    2. Referenced in monster data? ${isReferenced}
+                                    
+                                    Related Monsters:
+                                    ${Object.entries(debugInfo)
+                                        .filter(([id, data]) => id.includes(barcode) || id.includes(userId))
+                                        .map(([id, data]) => `
+                                        ${id}:
+                                        - ImageUrl: ${data.imageUrl}
+                                        - Barcode: ${data.barcode}
+                                        - UserID: ${data.userId}
+                                        `).join('\n')}
+                                </div>
+                            ` : '';
+
+                            div.innerHTML = `
+                                <img src="${url}" alt="${filename}">
+                                <span>${filename}</span>
+                                <span style="color: #666; margin-left: 10px;">
+                                    (Not referenced by any active monster)
+                                </span>
+                                <button class="button delete-btn" 
+                                    onclick="if(confirm('VERIFY: This image is not used by any monster?\\n\\nDelete: ${filename}?')) deleteImage('${imageRef.fullPath}')">
+                                    Delete Image
+                                </button>
+                                ${debugDetails}
+                            `;
+                            orphanedContainer.appendChild(div);
+                            log(`Found orphaned image: ${filename}`);
+                        } catch (error) {
+                            log(`Error displaying image ${filename}: ${error.message}`);
+                        }
+                    } else {
+                        log(`Skipping ${isReferenced ? 'referenced' : 'matching'} image: ${filename}`);
+                    }
+                }
+
+                // Final stats
+                document.getElementById('totalImages').textContent = imagesList.items.length;
+                document.getElementById('orphanedCount').textContent = orphanedImages.length;
+                document.getElementById('deleteAllButton').disabled = orphanedImages.length === 0;
+
+                log('\nFinal Verification:');
+                log(`Active monsters in database: ${activeMonsterData.size}`);
+                log(`Active monster images referenced: ${activeImageUrls.size}`);
+                log(`Total images in storage: ${imagesList.items.length}`);
+                log(`Orphaned images found: ${orphanedImages.length}`);
+                log(`Expected orphans: ${imagesList.items.length - activeMonsterData.size}`);
+
+                if (orphanedImages.length === 0) {
+                    orphanedContainer.innerHTML = '<p>No orphaned images found!</p>';
+                }
+
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                orphanedContainer.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Make deleteImage function globally available
+        window.deleteImage = async function(imagePath) {
+            try {
+                const monsterId = imagePath.split('/').pop().split('-')[0];
+                const imagesForMonster = orphanedImages.filter(img => 
+                    img.name.startsWith(monsterId + '-')
+                );
+                
+                log(`Preparing to delete ${imagesForMonster.length} images for monster ${monsterId}...`);
+                
+                for (const imageRef of imagesForMonster) {
+                    try {
+                        await deleteObject(imageRef);
+                        log(`Successfully deleted: ${imageRef.name}`);
+                    } catch (err) {
+                        log(`Failed to delete ${imageRef.name}: ${err.message}`);
+                        throw err; // Stop the process if any deletion fails
+                    }
+                }
+                
+                log(`Successfully deleted all images for monster ${monsterId}`);
+                await scanForOrphanedImages(); // Refresh the list
+            } catch (error) {
+                log(`Error in deletion process: ${error.message}`);
+                alert(`Error deleting images: ${error.message}`);
+            }
+        };
+
+        async function deleteAllOrphaned() {
+            if (!confirm('Are you sure you want to delete all orphaned images?')) return;
+            
+            const deleteButton = document.getElementById('deleteAllButton');
+            deleteButton.disabled = true;
+            
+            try {
+                log('Starting batch deletion...');
+                let successCount = 0;
+                
+                for (const imageRef of orphanedImages) {
+                    try {
+                        await deleteObject(imageRef);
+                        successCount++;
+                        log(`Deleted ${imageRef.name}`);
+                    } catch (error) {
+                        log(`Failed to delete ${imageRef.name}: ${error.message}`);
+                    }
+                }
+                
+                log(`Batch deletion complete. Deleted ${successCount} of ${orphanedImages.length} images`);
+                await scanForOrphanedImages(); // Refresh the list
+                
+            } catch (error) {
+                log(`Batch deletion error: ${error.message}`);
+            } finally {
+                deleteButton.disabled = false;
+            }
+        }
+
+        // Add verification mode toggle
+        document.getElementById('verifyButton').addEventListener('click', () => {
+            debugMode = !debugMode;
+            scanForOrphanedImages();
+            log(`Verification mode ${debugMode ? 'enabled' : 'disabled'}`);
+        });
+
+        // Event Listeners
+        document.getElementById('loginButton').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                if (!checkAdminStatus(userCredential.user.uid)) {
+                    await auth.signOut();
+                    throw new Error('Admin access required');
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message === 'Admin access required' ? 
+                    'Admin access required' : 'Invalid login credentials';
+            }
+        });
+
+        document.getElementById('scanButton').addEventListener('click', scanForOrphanedImages);
+        document.getElementById('deleteAllButton').addEventListener('click', deleteAllOrphaned);
+
+        onAuthStateChanged(auth, (user) => {
+            const isAdmin = user && checkAdminStatus(user.uid);
+            document.getElementById('loginSection').style.display = isAdmin ? 'none' : 'block';
+            document.getElementById('resultsSection').style.display = isAdmin ? 'block' : 'none';
+            if (isAdmin) {
+                log('Logged in as admin');
+            }
+        });
+    </script>
+</body>
+</html>

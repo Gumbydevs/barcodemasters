@@ -34,16 +34,13 @@
         }
 
         .profile-container {
-            width: 100%;
-            max-width: 100%;
-            padding: 1rem;
-            box-sizing: border-box;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-            
+            max-width: 1400px;
+            min-height: calc(100vh - 4rem);
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr; /* Reduced from 300px */
+            gap: 2rem;
         }
 
         .profile-layout {
@@ -61,11 +58,8 @@
 
         .logo-container {
             width: 100%;
-            max-width: 200px;
-            display: flex;
-            justify-content: center;
-            padding: 1rem;
-            box-sizing: border-box;
+            max-width: 180px;
+            margin: 0 auto 2rem;
         }
 
         .logo-container img {
@@ -456,6 +450,305 @@
                 margin-bottom: 0;
             }
         }
+
+        /* Main Layout */
+        .profile-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar-placeholder {
+            width: 120px;
+            height: 120px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Main Content Section */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Stats Card */
+        .stats-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Navigation Grid */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* MVP Monster Card */
+        .mvp-monster {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-section {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                padding: 1rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .navigation-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Modern Layout */
+        .profile-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 280px 1fr; /* Reduced from 300px */
+            gap: 2rem;
+        }
+
+        /* Sleek Sidebar */
+        .profile-sidebar {
+            background: rgba(20, 20, 35, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 1.5rem; /* Reduced padding */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 2rem;
+            height: calc(100vh - 4rem);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center children */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 120px; /* Slightly smaller */
+            height: 120px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .account-badge {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-height: calc(100vh - 4rem);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: rgba(30, 30, 45, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            background: rgba(40, 40, 55, 0.8);
+        }
+
+        .stat-box div {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-box strong {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #64B5F6, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* MVP Monster Card */
+        .mvp-monster {
+            background: rgba(30, 30, 45, 0.7);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            flex: 0 0 auto;
+            margin-top: auto;
+            width: 100%;
+            max-width: none;
+            position: relative;
+            padding: 1.5rem;
+            background: rgba(30, 30, 45, 0.7);
+        }
+
+        .mvp-monster-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            margin: 0 auto 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Navigation Grid */
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .nav-button {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.8), rgba(41, 128, 185, 0.8));
+            backdrop-filter: blur(5px);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-button:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.9), rgba(41, 128, 185, 0.9));
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Modern Responsive Design */
+        @media (max-width: 1024px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-sidebar {
+                position: relative;
+                top: 0;
+                max-width: 280px; /* Match desktop width */
+                margin: 0 auto;
+                height: auto;
+                padding: 1.5rem;
+            }
+            
+            .mvp-monster {
+                margin-top: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .navigation-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-sidebar {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -463,93 +756,86 @@
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
     <div class="profile-container">
-        <div class="profile-layout">
-            <!-- Logo -->
+        <!-- Profile Section -->
+        <aside class="profile-sidebar">
+            <div class="avatar-section">
+                <div class="avatar-container">
+                    <div class="avatar-placeholder" id="avatarPlaceholder">👤</div>
+                    <div class="account-badge" id="accountBadge">
+                        <span class="emoji"></span>
+                        <span class="type"></span>
+                    </div>
+                </div>
+                <h2 id="userName" style="text-align: center; margin-bottom: 1rem;">Loading...</h2>
+                <div class="profile-actions">
+                    <button class="rename-button" id="renamePlayerButton">Rename Player</button>
+                    <button class="upload-button" id="uploadImageButton">Change Profile Photo</button>
+                    <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
+                </div>
+            </div>
+            
+            <!-- MVP Monster Card -->
+            <div class="mvp-monster">
+                <h3>⭐ MVP Monster</h3>
+                <img id="mvpMonsterImage" class="mvp-monster-image" src="assets/images/placeholder-monster.png" alt="MVP Monster">
+                <p id="mvpMonsterName">Loading MVP...</p>
+                <p>Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
             <div class="logo-container">
                 <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
             </div>
 
-            <!-- Player Info -->
-            <div class="player-info">
-                <!-- Hidden file input for profile image -->
-                <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
-                
-                <div class="player-header">
-                    <div class="avatar-placeholder" id="avatarPlaceholder">
-                        👤
+            <!-- Stats Card -->
+            <div class="stats-card">
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div>Wins</div>
+                        <strong id="playerWins">0</strong>
                     </div>
-                    <div>
-                        <div class="account-badge" id="accountBadge">
-                            <span class="emoji"></span>
-                            <span class="type"></span>
-                        </div>
-                        <h2 id="userName">Loading...</h2>
+                    <div class="stat-box">
+                        <div>Losses</div>
+                        <strong id="playerLosses">0</strong>
                     </div>
-                </div>
-                
-                <!-- Move MVP Monster Section before player-details -->
-                <div class="mvp-monster">
-                    <h3>⭐ MVP Monster</h3>
-                    <img id="mvpMonsterImage" class="mvp-monster-image" src="assets/images/placeholder-monster.png" alt="MVP Monster">
-                    <p id="mvpMonsterName">Loading MVP...</p>
-                    <p>Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
-                </div>
-                
-                <div class="player-details">
-                    <div class="stats-container">
-                        <div class="stat-box">
-                            <div>Wins</div>
-                            <strong id="playerWins">0</strong>
-                        </div>
-                        <div class="stat-box">
-                            <div>Losses</div>
-                            <strong id="playerLosses">0</strong>
-                        </div>
-                        <div class="stat-box">
-                            <div>Total Monsters</div>
-                            <strong id="totalMonsters">0</strong>
-                        </div>
-                        <div class="stat-box">
-                            <div>Highest Level</div>
-                            <strong id="highestLevel">0</strong>
-                        </div>
-                        <div class="stat-box">
-                            <div>Unique Types</div>
-                            <strong id="uniqueTypes">0</strong>
-                        </div>
-                        <div class="stat-box">
-                            <div>Completion</div>
-                            <strong id="completionPercentage">0%</strong>
-                        </div>
+                    <div class="stat-box">
+                        <div>Total Monsters</div>
+                        <strong id="totalMonsters">0</strong>
                     </div>
-                </div>
-
-                <div class="button-container">
-                    <button class="rename-button" id="renamePlayerButton">Rename Player</button>
-                    <button class="upload-button" id="uploadImageButton">Change Profile Photo</button>
+                    <div class="stat-box">
+                        <div>Highest Level</div>
+                        <strong id="highestLevel">0</strong>
+                    </div>
+                    <div class="stat-box">
+                        <div>Unique Types</div>
+                        <strong id="uniqueTypes">0</strong>
+                    </div>
+                    <div class="stat-box">
+                        <div>Completion</div>
+                        <strong id="completionPercentage">0%</strong>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Game Tip Tooltips -->
-        <div class="tooltip-box" id="gameTip">
-            Loading tip...
-        </div>
+            <!-- Game Tip -->
+            <div class="tooltip-box" id="gameTip">
+                Loading tip...
+            </div>
 
-        <!-- Navigation Buttons -->
-        <div class="navigation-grid">
-            <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
-            <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
-            <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
-            <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
-            <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
-            <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
-            <button class="nav-button" onclick="location.href='help.html'">Help</button>
-            <button class="nav-button" id="logoutButton">Logout</button>
-        </div>
-
-        <!-- Error Message -->
-        <p id="errorMessage" style="color: red; display: none;"></p>
+            <!-- Navigation -->
+            <nav class="navigation-grid">
+                <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
+                <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
+                <button class="nav-button" onclick="location.href='train-monster.html'">Train Monster</button>
+                <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
+                <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
+                <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
+                <button class="nav-button" onclick="location.href='help.html'">Help</button>
+                <button class="nav-button" id="logoutButton">Logout</button>
+            </nav>
+        </main>
     </div>
 
     <!-- Version Number -->
