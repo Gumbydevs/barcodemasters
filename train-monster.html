@@ -789,6 +789,7 @@ function startTrainingProgress() {
 
 // Add new function to complete training
 async function completeTraining() {
+    await updateUserActivity();
     const state = getTrainingState();
     if (!state) return;
 
@@ -927,15 +928,20 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Event Listeners
-document.getElementById('monsterSelect').addEventListener('change', () => {
+document.getElementById('monsterSelect').addEventListener('change', async () => {
+    await updateUserActivity();
     filterAndSortMonsters();
     const selectedMonsterId = document.getElementById('monsterSelect').value;
     document.getElementById('trainingSection').style.display = selectedMonsterId ? 'block' : 'none';
 });
 
-document.getElementById('startTrainingButton').addEventListener('click', startTraining);
+document.getElementById('startTrainingButton').addEventListener('click', async () => {
+    await updateUserActivity();
+    startTraining();
+});
 
-document.getElementById('logoutButton').addEventListener('click', () => {
+document.getElementById('logoutButton').addEventListener('click', async () => {
+    await updateUserActivity();
     auth.signOut().then(() => {
         window.location.href = 'index.html';
     }).catch((error) => {
@@ -975,6 +981,49 @@ darkModeToggle.addEventListener("click", function() {
                 previewDiv.style.display = 'none';
             }
         });
+
+        // Add this new function after Firebase initialization
+        async function updateUserActivity() {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, {
+                    lastActive: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Error updating user activity:', error);
+            }
+        }
+
+        // Modify ensureUserFields to include lastActive
+        async function ensureUserFields(userId) {
+            try {
+                const userRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userRef);
+                
+                if (!userDoc.exists()) {
+                    throw new Error('User document not found');
+                }
+
+                const userData = userDoc.data();
+                const updates = {};
+                
+                if (!userData.lastActive) updates.lastActive = new Date().toISOString();
+                
+                // Only update if there are missing fields
+                if (Object.keys(updates).length > 0) {
+                    await updateDoc(userRef, updates);
+                    console.log('User fields initialized:', updates);
+                }
+
+                return { ...userData, ...updates };
+            } catch (error) {
+                console.error('Error initializing user fields:', error);
+                throw error;
+            }
+        }
         
     </script>
 </head>
