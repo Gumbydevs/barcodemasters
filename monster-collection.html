@@ -1445,8 +1445,14 @@
                 return;
             }
 
-            const newName = prompt("Enter new name for the monster:", currentName);
+            const newName = prompt("Enter new name for the monster (max 13 characters):", currentName);
             if (!newName || newName.trim() === "") return;
+
+            // Check name length
+            if (newName.length > 13) {
+                showToast("Monster names must be 13 characters or less.", false, true);
+                return;
+            }
 
             // Check for profanity
             if (containsProfanity(newName)) {
@@ -1787,19 +1793,23 @@
                 position: fixed;
                 bottom: 20px;
                 right: 20px;
-                background: ${isError ? 'rgba(231, 76, 60, 0.9)' : 'rgba(46, 204, 113, 0.9)'};
+                background: ${isError ? 'rgba(231, 76, 60, 0.95)' : 'rgba(46, 204, 113, 0.95)'};
                 color: white;
                 padding: 1rem 2rem;
                 border-radius: 8px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
                 transform: translateY(100px);
                 opacity: 0;
                 transition: all 0.3s ease;
                 z-index: 1000;
+                font-weight: 500;
+                text-align: center;
+                min-width: 200px;
+                backdrop-filter: blur(5px);
             `;
             document.body.appendChild(toast);
         } else {
-            toast.style.background = isError ? 'rgba(231, 76, 60, 0.9)' : 'rgba(46, 204, 113, 0.9)';
+            toast.style.background = isError ? 'rgba(231, 76, 60, 0.95)' : 'rgba(46, 204, 113, 0.95)';
         }
         
         toast.textContent = message;
