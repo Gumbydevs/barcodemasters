@@ -1121,7 +1121,7 @@
 <body>
     <div id="toastContainer" class="toast-container"></div>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-    <div class="version-number">v1.0.051</div>
+    <div class="version-number">v1.0.052</div>
 
     <div class="battle-container">
         <div class="logo-container">
@@ -1164,10 +1164,10 @@
                     <thead>
                         <tr>
                             <th>Action</th>
-                            <th>Battle Code</th>
                             <th>Creator</th>
                             <th>Monster</th>
                             <th>Level</th>
+                            <th>Battle Code</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1275,7 +1275,7 @@
         }
 
         // Add version constant at the top of your script
-        const APP_VERSION = '1.0.051'; // Update this when you make changes
+        const APP_VERSION = '1.0.052'; // Update this when you make changes
         
         // Add version to console on load
         console.log(`PvP Battle Version: ${APP_VERSION}`);
@@ -2198,10 +2198,10 @@
                                         Join Battle
                                     </button>
                                 </td>
-                                <td>${battle.battleCode}</td>
                                 <td>${creatorUsername}</td>
                                 <td>${battle.creator?.monsterData?.monsterName || 'Unknown'}</td>
                                 <td>${battle.creator?.monsterData?.level || '1'}</td>
+                                <td>${battle.battleCode}</td>
                             </tr>
                         `;
                     }));
