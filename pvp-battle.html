@@ -1510,48 +1510,40 @@
                         const battle = doc.data();
                         if (!battle) return;
 
-                        // Store battle data first
+                        // Always update battle state first
                         setBattleState(battle);
 
-                        // Only handle completion if the battle was actually in progress
-                        if (battle.status === 'completed' && !isCleaningUp) {
-                            // Verify the battle should actually be over
-                            const playerData = battle.creator.uid === user.uid ? battle.creator : battle.opponent;
-                            const opponentData = battle.creator.uid === user.uid ? battle.opponent : battle.creator;
-                            
-                            if (playerData?.currentHP <= 0 || opponentData?.currentHP <= 0) {
-                                const isVictory = battle.winner === user.uid;
-                                handleBattleEnd(isVictory);
-                            }
-                        } else if (battle.status === 'cancelled') {
-                            handleCleanup();
-                            return;
+                        // Update player and opponent data
+                        const isCreator = user.uid === battle.creator.uid;
+                        const playerData = isCreator ? battle.creator : battle.opponent;
+                        const opponentData = isCreator ? battle.opponent : battle.creator;
+
+                        // Ensure we have valid monster data before updating state
+                        if (playerData?.monsterData) {
+                            setPlayerMonster(playerData.monsterData);
+                            setPlayerHealth(playerData.currentHP);
                         }
 
-                        // Update game state for active battles
-                        if (['in_progress', 'joining'].includes(battle.status)) {
-                            setIsMyTurn(battle.currentTurn === user.uid);
+                        if (opponentData?.monsterData) {
+                            setOpponentMonster(opponentData.monsterData);
+                            setOpponentHealth(opponentData.currentHP);
+                        }
 
-                            if (battle.creator.uid === user.uid) {
-                                setPlayerMonster(battle.creator.monsterData);
-                                setPlayerHealth(battle.creator.currentHP);
-                                setOpponentMonster(battle.opponent?.monsterData);
-                                setOpponentHealth(battle.opponent?.currentHP);
-                            } else {
-                                setPlayerMonster(battle.opponent.monsterData);
-                                setPlayerHealth(battle.opponent.currentHP);
-                                setOpponentMonster(battle.creator.monsterData);
-                                setOpponentHealth(battle.creator.currentHP);
-                            }
+                        // Update turn state
+                        setIsMyTurn(battle.currentTurn === user.uid);
+
+                        // Handle battle completion
+                        if (battle.status === 'completed' && !isBattleOver) {
+                            const hasWon = battle.winner === user.uid;
+                            setIsBattleOver(true);
+                            handleBattleEnd(hasWon);
                         }
                     }, (error) => {
                         console.error('Battle snapshot error:', error);
                         handleCleanup();
                     });
 
-                return () => {
-                    unsubscribe();
-                };
+                return () => unsubscribe();
             }, [battleCode, creatorId, isCleaningUp]);
 
             React.useEffect(() => {

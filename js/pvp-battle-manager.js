@@ -175,7 +175,6 @@ class PvPBattleManager {
 
     async makeMove(move, data) {
         if (!this.battleRef) throw new Error('Battle reference not initialized');
-        
         const user = firebase.auth().currentUser;
         if (!user) throw new Error('User not authenticated');
 
@@ -187,10 +186,7 @@ class PvPBattleManager {
             if (battleData.status !== 'in_progress') throw new Error('Battle is not in progress');
             if (battleData.currentTurn !== user.uid) throw new Error('Not your turn');
 
-            // Calculate move outcome
             const updates = this.calculateMoveOutcome(move, data, battleData);
-
-            // Add move to history
             const moveHistory = battleData.moves || [];
             moveHistory.push({
                 userId: user.uid,
@@ -199,7 +195,6 @@ class PvPBattleManager {
                 timestamp: new Date()
             });
 
-            // Update battle state
             const fullUpdates = {
                 ...updates,
                 moves: moveHistory,
@@ -207,7 +202,22 @@ class PvPBattleManager {
                 currentTurn: this.getNextTurn(battleData)
             };
 
+            // First update the move
             await this.battleRef.update(fullUpdates);
+
+            // If battle is ending, wait for animation then complete
+            if (updates.pendingEnd) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await this.battleRef.update({
+                    status: 'completed',
+                    winner: user.uid,
+                    endTime: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Handle the battle end effects
+                await this.handleBattleEnd(battleData, user.uid);
+            }
+
             return fullUpdates;
         } catch (error) {
             console.error('Error making move:', error);
@@ -222,39 +232,47 @@ class PvPBattleManager {
         const defender = isCreator ? battleState.opponent : battleState.creator;
         const updates = {};
 
-        // Add debugging
-        console.log('Move calculation:', { move, data, isCreator, attacker, defender });
-
         switch (move) {
             case 'attack':
                 const newHealth = Math.max(0, defender.currentHP - data.damage);
-                updates[`${isCreator ? 'opponent' : 'creator'}.currentHP`] = newHealth;
-                // Reset defender's defending state
-                updates[`${isCreator ? 'opponent' : 'creator'}.isDefending`] = false;
+                // Keep ALL monster data when updating health
+                updates[isCreator ? 'opponent' : 'creator'] = defender;
+                updates[isCreator ? 'opponent' : 'creator'].currentHP = newHealth;
+                updates[isCreator ? 'opponent' : 'creator'].isDefending = false;
+
+                if (newHealth <= 0) {
+                    // Don't set status to completed yet, just mark it pending
+                    updates.pendingEnd = true;
+                }
                 break;
 
             case 'defend':
-                updates[`${isCreator ? 'creator' : 'opponent'}.isDefending`] = true;
+                updates[isCreator ? 'creator' : 'opponent'] = {
+                    ...attacker,
+                    isDefending: true
+                };
                 break;
 
             case 'heal':
                 const maxHealth = attacker.monsterData.HP;
                 const newHealedHealth = Math.min(maxHealth, attacker.currentHP + data.amount);
-                updates[`${isCreator ? 'creator' : 'opponent'}.currentHP`] = newHealedHealth;
+                updates[isCreator ? 'creator' : 'opponent'] = {
+                    ...attacker,
+                    currentHP: newHealedHealth
+                };
                 break;
 
             case 'special':
                 const newHealthAfterSpecial = Math.max(0, defender.currentHP - data.damage);
-                updates[`${isCreator ? 'opponent' : 'creator'}.currentHP`] = newHealthAfterSpecial;
-                updates[`${isCreator ? 'creator' : 'opponent'}.specialCooldown`] = 3;
+                updates[isCreator ? 'opponent' : 'creator'] = {
+                    ...defender,
+                    currentHP: newHealthAfterSpecial
+                };
+                updates[isCreator ? 'creator' : 'opponent'] = {
+                    ...attacker,
+                    specialCooldown: 3
+                };
                 break;
-        }
-
-        // Add battle status check
-        if (updates[`${isCreator ? 'opponent' : 'creator'}.currentHP`] === 0) {
-            updates.status = 'completed';
-            updates.winner = user.uid;
-            updates.endTime = firebase.firestore.FieldValue.serverTimestamp();
         }
 
         return updates;
