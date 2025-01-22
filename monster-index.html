@@ -542,7 +542,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.02</span></p>
+        <p>Version: <span id="versionNumber">1.0.04</span></p>
         <p>&copy; 2025 Barcode Masters | 
             <a href="changelog.html" class="support-link">
                 📝 Change Log
@@ -834,7 +834,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const usernameCache = new Map();
 
@@ -851,6 +851,31 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    // Add activity tracking function
+    async function updateUserActivity() {
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                lastActive: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error updating user activity:', error);
+        }
+    }
+
+    // Modify the auth state change handler
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            await updateUserActivity(); // Add this line
+            fetchMonsters();
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
 
     let currentMonsters = [];
 
@@ -1179,9 +1204,25 @@ async function updateCollectionStats(monsters) {
         localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
     });
 
-    // Check authentication state and initialize
-    onAuthStateChanged(auth, (user) => {
+    // Add activity tracking function
+    async function updateUserActivity() {
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                lastActive: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error updating user activity:', error);
+        }
+    }
+
+    // Modify the auth state change handler
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
+            await updateUserActivity(); // Add this line
             fetchMonsters();
         } else {
             window.location.href = 'index.html';

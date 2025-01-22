@@ -1006,7 +1006,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.07</span></p>
+        <p>Version: <span id="versionNumber">1.0.09</span></p>
         <p>&copy; 2025 Barcode Masters | 
             <a href="changelog.html" class="support-link">
                 📝 Change Log
@@ -1893,9 +1893,25 @@
         localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
     });
 
-    // Check authentication state and initialize
-    onAuthStateChanged(auth, (user) => {
+    // Add activity tracking function
+    async function updateUserActivity() {
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                lastActive: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error updating user activity:', error);
+        }
+    }
+
+    // Modify the auth state change handler
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
+            await updateUserActivity(); // Add this line
             setupEventListeners();
             fetchMonsters();
         } else {

@@ -840,7 +840,7 @@
 
     <!-- Version Number -->
     <footer>
-        <p>Version: <span id="versionNumber">1.0.051</span></p>
+        <p>Version: <span id="versionNumber">1.0.052</span></p>
         <p>&copy; 2025 Barcode Masters | 
             <a href="changelog.html" class="support-link">
                 📝 Change Log
@@ -876,6 +876,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const storage = getStorage(app);
+        const db = getFirestore(app); // Add this line
 
         // Remove the old gameTips array and updateGameTip function
         // Replace with new tooltip implementation
@@ -959,9 +960,25 @@
         // Handle logout button click
         document.getElementById('logoutButton').addEventListener('click', handleLogout);
 
-        // Firebase Auth state check
+        // Add activity tracking function
+        async function updateUserActivity() {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, {
+                    lastActive: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Error updating user activity:', error);
+            }
+        }
+
+        // Modify the auth state change handler
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                await updateUserActivity(); // Add this line
                 const db = getFirestore(app);
                 const userRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(userRef);
