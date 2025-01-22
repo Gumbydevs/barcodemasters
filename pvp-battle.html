@@ -1116,6 +1116,51 @@
                 padding: 6px 2px;
             }
         }
+
+        /* Update battle log styles */
+        .battle-log {
+            position: relative;
+            height: 150px; /* Fixed height */
+            max-height: 150px;
+            overflow-y: auto;
+            margin: 10px 0 20px; /* Reduced bottom margin */
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        /* Update controls positioning - remove fixed positioning */
+        .controls-grid {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            z-index: 100;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            max-width: 800px;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+        }
+
+        /* Add responsive adjustments */
+        @media (max-width: 768px) {
+            .battle-log {
+                height: 120px; /* Smaller height on mobile */
+                max-height: 120px;
+                margin-bottom: 15px; /* Smaller margin on mobile */
+            }
+
+            .controls-grid {
+                padding: 8px;
+                gap: 8px;
+            }
+        }
+
+        /* Add styles to prevent content from being hidden behind fixed controls */
+        .battle-container {
+            padding-bottom: 80px; /* Ensure content isn't hidden behind controls */
+        }
     </style>
 </head>
 <body>
@@ -1726,7 +1771,7 @@
                     const healAmount = Math.floor(playerMonster.HP * 0.3);
                     await battleManager.makeMove('heal', { amount: healAmount });
                     
-                    addToLog(`You healed for ${healAmount} HP!`, battleLog, setBattleLog);
+                    // addToLog(`You healed for ${healAmount} HP!`, battleLog, setBattleLog);
                     
                     // Apply visual effect
                     const playerElement = document.querySelector('.battle-container .monster:first-child');
