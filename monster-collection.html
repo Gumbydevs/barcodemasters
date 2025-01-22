@@ -1474,10 +1474,29 @@
                 monsterName: newName.trim()
             });
             
-            showToast('Monster renamed successfully!'); // Removed refresh parameter
+            // Update name in compact view
+            const compactCard = document.querySelector(`.monster-card[data-id="${monsterId}"]`);
+            if (compactCard) {
+                compactCard.querySelector('.monster-name').textContent = newName.trim();
+            }
+
+            // Update name in expanded view if it exists
+            const expandedCard = document.querySelector('.monster-card.expanded');
+            if (expandedCard && expandedCard.getAttribute('data-id') === monsterId) {
+                const expandedNames = expandedCard.querySelectorAll('.monster-name');
+                expandedNames.forEach(nameElement => {
+                    nameElement.textContent = newName.trim();
+                });
+            }
+
+            // Update in currentMonsters array
+            const monsterIndex = currentMonsters.findIndex(m => m.id === monsterId);
+            if (monsterIndex !== -1) {
+                currentMonsters[monsterIndex].monsterName = newName.trim();
+            }
+
+            showToast('Monster renamed successfully!');
             
-            // Refresh the display
-            await fetchMonsters();
         } catch (error) {
             console.error("Error renaming monster:", error);
             showError("Failed to rename monster: " + error.message);
@@ -1817,15 +1836,26 @@
         });
 
         // Add click handler for monster cards
-        document.getElementById('monstersGrid').addEventListener('click', (e) => {
+        document.getElementById('monstersGrid').addEventListener('click', async (e) => {
             const card = e.target.closest('.monster-card');
             if (!card) return;
 
-            // Create a clone of the card for the expanded view
+            const monsterId = card.getAttribute('data-id');
+            // Find the fresh monster data from currentMonsters
+            const monsterData = currentMonsters.find(m => m.id === monsterId);
+            if (!monsterData) return;
+
+            // Create the expanded card using current data
             const expandedCard = card.cloneNode(true);
             expandedCard.classList.remove('compact');
             expandedCard.classList.add('expanded');
             
+            // Update just the monster names in the expanded view
+            const expandedNames = expandedCard.querySelectorAll('.monster-name');
+            expandedNames.forEach(nameElement => {
+                nameElement.textContent = monsterData.monsterName;
+            });
+
             const overlay = document.createElement('div');
             overlay.className = 'overlay';
             document.body.appendChild(overlay);
