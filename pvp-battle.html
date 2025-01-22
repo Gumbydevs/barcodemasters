@@ -1062,12 +1062,66 @@
             position: relative;
             z-index: 1;
         }
+
+        /* Update battle list table responsive styles */
+        @media screen and (max-width: 768px) {
+            .battle-table {
+                min-width: auto; /* Remove minimum width constraint */
+                font-size: 0.8rem; /* Smaller font size on mobile */
+            }
+
+            .battle-table th,
+            .battle-table td {
+                padding: 8px 4px; /* Reduce padding */
+                font-size: 0.8rem; /* Ensure consistent small font */
+                white-space: normal; /* Allow text wrapping */
+            }
+
+            .battle-table button {
+                padding: 4px 8px; /* Smaller button padding */
+                font-size: 0.8rem;
+                min-width: 60px; /* Smaller minimum width */
+            }
+
+            /* Make creator name and monster name wrap if too long */
+            .battle-table td:nth-child(3), /* Creator column */
+            .battle-table td:nth-child(4) { /* Monster column */
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            /* Battle code can be slightly smaller */
+            .battle-table td:nth-child(2) {
+                font-size: 0.75rem;
+                letter-spacing: -0.5px;
+            }
+
+            /* Level column can be very compact */
+            .battle-table td:nth-child(5) {
+                padding: 8px 2px;
+                text-align: center;
+            }
+        }
+
+        /* Even smaller screens */
+        @media screen and (max-width: 360px) {
+            .battle-table {
+                font-size: 0.7rem;
+            }
+
+            .battle-table th,
+            .battle-table td {
+                padding: 6px 2px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="toastContainer" class="toast-container"></div>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-    <div class="version-number">v1.0.049</div>
+    <div class="version-number">v1.0.051</div>
 
     <div class="battle-container">
         <div class="logo-container">
@@ -1221,7 +1275,7 @@
         }
 
         // Add version constant at the top of your script
-        const APP_VERSION = '1.0.049'; // Update this when you make changes
+        const APP_VERSION = '1.0.051'; // Update this when you make changes
         
         // Add version to console on load
         console.log(`PvP Battle Version: ${APP_VERSION}`);
