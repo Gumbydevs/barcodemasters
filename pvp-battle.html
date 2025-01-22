@@ -1109,11 +1109,11 @@
                 <table class="battle-table">
                     <thead>
                         <tr>
+                            <th>Action</th>
                             <th>Battle Code</th>
                             <th>Creator</th>
                             <th>Monster</th>
                             <th>Level</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2139,15 +2139,15 @@
                         
                         return `
                             <tr>
-                                <td>${battle.battleCode}</td>
-                                <td>${creatorUsername}</td>
-                                <td>${battle.creator?.monsterData?.monsterName || 'Unknown'}</td>
-                                <td>${battle.creator?.monsterData?.level || '1'}</td>
                                 <td>
                                     <button onclick="joinBattle('${battle.battleCode}', '${creatorId}')">
                                         Join Battle
                                     </button>
                                 </td>
+                                <td>${battle.battleCode}</td>
+                                <td>${creatorUsername}</td>
+                                <td>${battle.creator?.monsterData?.monsterName || 'Unknown'}</td>
+                                <td>${battle.creator?.monsterData?.level || '1'}</td>
                             </tr>
                         `;
                     }));
