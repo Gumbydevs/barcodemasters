@@ -1599,7 +1599,7 @@
                                 }
 
                                 if (moveMessage) {
-                                    const emoji = isPlayerMove ? '👊 ' : '🤖 ';
+                                    const emoji = isPlayerMove ? '👊 ' : '👹 ';
                                     addToLog(`${emoji}${moveMessage}`, battleLog, setBattleLog);
                                 }
                             }
@@ -1705,7 +1705,7 @@
                 try {
                     await battleManager.makeMove('defend', {});
                     setIsDefending(true);
-                    addToLog("You're defending against the next attack!", battleLog, setBattleLog);
+                    // addToLog("You're defending against the next attack!", battleLog, setBattleLog);
                     
                     // Apply visual effect
                     const playerElement = document.querySelector('.battle-container .monster:first-child');
