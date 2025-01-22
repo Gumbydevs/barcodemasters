@@ -1067,7 +1067,7 @@
 <body>
     <div id="toastContainer" class="toast-container"></div>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
-    <div class="version-number">v1.0.048</div>
+    <div class="version-number">v1.0.049</div>
 
     <div class="battle-container">
         <div class="logo-container">
@@ -1221,7 +1221,7 @@
         }
 
         // Add version constant at the top of your script
-        const APP_VERSION = '1.0.048'; // Update this when you make changes
+        const APP_VERSION = '1.0.049'; // Update this when you make changes
         
         // Add version to console on load
         console.log(`PvP Battle Version: ${APP_VERSION}`);
@@ -1488,6 +1488,9 @@
                 };
             }, [handleCleanup]);
 
+            // Add this at the top of the PvPBattle component:
+            const processedMoves = React.useRef(new Set());
+
             // Monitor battle state
             React.useEffect(() => {
                 if (!battleCode || !creatorId || isCleaningUp) return;
@@ -1510,10 +1513,45 @@
                         const battle = doc.data();
                         if (!battle) return;
 
-                        // Always update battle state first
                         setBattleState(battle);
 
-                        // Update player and opponent data
+                        // Only process the latest move if it exists and hasn't been processed
+                        const lastMove = battle.moves?.[battle.moves.length - 1];
+                        if (lastMove && lastMove.timestamp) {
+                            // Add a move ID to prevent duplicate processing
+                            const moveId = `${lastMove.userId}-${lastMove.timestamp.seconds}-${lastMove.move}`;
+                            
+                            // Check if this move has already been processed
+                            if (!processedMoves.current.has(moveId)) {
+                                processedMoves.current.add(moveId);
+                                
+                                const isPlayerMove = lastMove.userId === user.uid;
+                                const moveActor = isPlayerMove ? 'You' : opponentName;
+                                let moveMessage = '';
+
+                                switch(lastMove.move) {
+                                    case 'attack':
+                                        moveMessage = `${moveActor} dealt ${lastMove.data.damage} damage!${lastMove.data.isCritical ? ' (Critical Hit!)' : ''}`;
+                                        break;
+                                    case 'defend':
+                                        moveMessage = `${moveActor} ${isPlayerMove ? 'are' : 'is'} defending against the next attack!`;
+                                        break;
+                                    case 'heal':
+                                        moveMessage = `${moveActor} healed for ${lastMove.data.amount} HP!`;
+                                        break;
+                                    case 'special':
+                                        moveMessage = `${moveActor} used Special Attack for ${lastMove.data.damage} damage!`;
+                                        break;
+                                }
+
+                                if (moveMessage) {
+                                    const emoji = isPlayerMove ? '👊 ' : '🤖 ';
+                                    addToLog(`${emoji}${moveMessage}`, battleLog, setBattleLog);
+                                }
+                            }
+                        }
+
+                        // Rest of existing battle state updates...
                         const isCreator = user.uid === battle.creator.uid;
                         const playerData = isCreator ? battle.creator : battle.opponent;
                         const opponentData = isCreator ? battle.opponent : battle.creator;
@@ -1544,7 +1582,7 @@
                     });
 
                 return () => unsubscribe();
-            }, [battleCode, creatorId, isCleaningUp]);
+            }, [battleCode, creatorId, isCleaningUp, opponentName]);
 
             React.useEffect(() => {
                 if (!battleState) return;
