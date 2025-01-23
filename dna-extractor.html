@@ -705,65 +705,70 @@
         }
 
         function generateMonsterPrompt(monster, typeInfo) {
-            try {
-                const promptParts = [];
-                const characteristics = [];
-                
-                // Enhanced positive prompt structure with stronger framing rules
-                promptParts.push(
-                    "character illustration",    
-                    "award winning digital art",
-                    "masterpiece",
-                    "clean image",
-                    "best quality",
-                    "highly detailed",
-                    `${monster.type.toLowerCase()} type creature`,
-                    "complete full body shot",
-                    "entire creature visible",
-                    "fits completely in frame",
-                    "subject fully centered",
-                    "symmetrical front view",
-                    "clear empty space around subject",
-                    "proper composition"
-                );
-                
-                // Add type description
-                if (typeInfo[0] && typeInfo[0].description) {
-                    promptParts.push(typeInfo[0].description);
-                }
-                
-                // Add stat-based characteristics
-                if (monster.HP > 15) characteristics.push('massive, sturdy build');
-                if (monster.AP > 8) characteristics.push('visible powerful features');
-                if (monster.Speed > 5) characteristics.push('sleek, nimble, agile form');
-                if (monster.HP < 5) characteristics.push('frail, weak build');
-                if (monster.AP < 5) characteristics.push('scrawny, weak features');
-                if (monster.Speed < 5) characteristics.push('heavy, slow form');
+    const defaultPromptParts = [
+        "character illustration",
+        "fantasy creature design", 
+        "monster concept art",
+        "best quality"
+    ];
 
-                if (characteristics.length > 0) {
-                    promptParts.push(characteristics.join(', '));
-                }
+    const negativePrompt = "text, watermark, signature, cropped, bad anatomy, bad proportions, extra limbs, duplicate, deformed, mutation, out of frame, blurry";
 
-                promptParts.push(
-                    `themed after ${monster.monsterName.toLowerCase()}`,
-                    "dramatic lighting",
-                    "vibrant colors",
-                    "4k resolution"
-                );
-
-                return {
-                    positivePrompt: promptParts.filter(Boolean).join(', '),
-                    negativePrompt: "text, watermark, signature, cropped, bad anatomy, bad proportions, extra limbs, duplicate, deformed, mutation, blurry"
-                };
-
-            } catch (error) {
-                console.error('Error in generateMonsterPrompt:', error);
-                return {
-                    positivePrompt: 'high quality digital art of a fantasy creature character, full body, centered',
-                    negativePrompt: 'text, watermark, signature, cropped, bad anatomy, extra limbs'
-                };
-            }
+    try {
+        const promptParts = [
+            ...defaultPromptParts,
+            "award winning digital art",
+            "masterpiece",
+            "clean image",
+            "highly detailed",
+            `${monster.type.toLowerCase()} type creature`,
+            "complete full body shot",
+            "entire creature visible",
+            "fits completely in frame",
+            "subject fully centered",
+            "symmetrical front view",
+            "clear empty space around subject",
+            "proper composition"
+        ];
+        
+        // Add type description
+        if (typeInfo[0]?.description) {
+            promptParts.push(typeInfo[0].description);
         }
+        
+        // Add stat-based characteristics
+        const characteristics = [];
+        if (monster.HP > 15) characteristics.push('massive, sturdy build');
+        if (monster.AP > 8) characteristics.push('visible powerful features');
+        if (monster.Speed > 5) characteristics.push('sleek, nimble, agile form');
+        if (monster.HP < 5) characteristics.push('frail, weak build');
+        if (monster.AP < 5) characteristics.push('scrawny, weak features');
+        if (monster.Speed < 5) characteristics.push('heavy, slow form');
+
+        if (characteristics.length > 0) {
+            promptParts.push(characteristics.join(', '));
+        }
+
+        promptParts.push(
+            `themed after ${monster.monsterName.toLowerCase()}`,
+            "dramatic lighting",
+            "vibrant colors",
+            "4k resolution"
+        );
+
+        return {
+            positivePrompt: promptParts.filter(Boolean).join(', '),
+            negativePrompt
+        };
+
+    } catch (error) {
+        console.error('Error in generateMonsterPrompt:', error);
+        return {
+            positivePrompt: defaultPromptParts.join(', '),
+            negativePrompt
+        };
+    }
+}
 
         function calculateStat(statType, seed, statModifiers) {
             try {
