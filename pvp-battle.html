@@ -1127,6 +1127,20 @@
             background: rgba(0, 0, 0, 0.2);
             border-radius: 8px;
             padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-entries {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 100%;
+        }
+
+        .log-entry {
+            padding: 4px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* Update controls positioning - remove fixed positioning */
@@ -1535,6 +1549,9 @@
             const [isDefending, setIsDefending] = React.useState(false);
             const [specialCooldown, setSpecialCooldown] = React.useState(3);
 
+            // Add the ref at component level
+            const battleLogRef = React.useRef(null);
+
             // Add new state for player names and roles
             const [playerRole, setPlayerRole] = React.useState(null);
             const [playerName, setPlayerName] = React.useState('');
@@ -1713,7 +1730,22 @@
 
             // Add this helper function at the top
             const addToLog = (message, battleLog, setBattleLog) => {
-                setBattleLog(prevLog => [message, ...prevLog].slice(0, 8));
+                setBattleLog(prevLog => {
+                    const newLog = [...prevLog, message];
+                    // Keep last 50 messages
+                    if (newLog.length > 50) {
+                        return newLog.slice(-50);
+                    }
+                    return newLog;
+                });
+                
+                // Auto-scroll after state update
+                setTimeout(() => {
+                    const logElement = document.querySelector('.battle-log');
+                    if (logElement) {
+                        logElement.scrollTop = logElement.scrollHeight;
+                    }
+                }, 0);
             };
 
             // Add missing battle manager reference
@@ -2029,7 +2061,7 @@
                         </div>
                     </div>
 
-                    <div className="battle-log">
+                    <div className="battle-log" ref={battleLogRef}>
                         <div className="log-header">Battle Log</div>
                         <div className="log-entries">
                             {battleLog.map((entry, index) => (
