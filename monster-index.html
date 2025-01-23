@@ -852,7 +852,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Add activity tracking function
+    // Activity tracking function
     async function updateUserActivity() {
         try {
             const user = auth.currentUser;
@@ -867,10 +867,10 @@
         }
     }
 
-    // Modify the auth state change handler
+    // Auth state change handler
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            await updateUserActivity(); // Add this line
+            await updateUserActivity();
             fetchMonsters();
         } else {
             window.location.href = 'index.html';
@@ -1202,31 +1202,6 @@ async function updateCollectionStats(monsters) {
     darkModeToggle.addEventListener("click", function() {
         document.body.classList.toggle("dark-mode");
         localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-    });
-
-    // Add activity tracking function
-    async function updateUserActivity() {
-        try {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
-                lastActive: new Date().toISOString()
-            });
-        } catch (error) {
-            console.error('Error updating user activity:', error);
-        }
-    }
-
-    // Modify the auth state change handler
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            await updateUserActivity(); // Add this line
-            fetchMonsters();
-        } else {
-            window.location.href = 'index.html';
-        }
     });
 </script>
 </body>
