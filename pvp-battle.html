@@ -1175,6 +1175,265 @@
         .battle-container {
             padding-bottom: 80px; /* Ensure content isn't hidden behind controls */
         }
+
+        @media (max-width: 768px) {
+            .monster-section {
+                /* Update mobile monster section layout */
+                min-height: 80px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 0.5rem;
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+                width: 100%;
+            }
+
+            .monster-header {
+                /* Adjust header for horizontal layout */
+                margin: 0;
+                flex: 0 0 auto;
+                min-width: 80px;
+                text-align: left;
+            }
+
+            .monster-display {
+                /* Make display horizontal */
+                flex: 1;
+                flex-direction: row;
+                gap: 0.5rem;
+                justify-content: flex-start;
+                align-items: center;
+                min-width: 0;
+            }
+
+            .monster-info {
+                /* Adjust info container */
+                flex: 1;
+                min-width: 0;
+                margin-left: 0.5rem;
+            }
+
+            .stats-box {
+                /* Keep stats readable */
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.25rem;
+                margin: 0;
+                padding: 0.25rem;
+            }
+
+            .health-bar-container {
+                /* Move health bar below */
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+
+            .monster-display img {
+                /* Keep image size consistent */
+                width: 60px;
+                height: 60px;
+                flex-shrink: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .monster-section {
+                display: flex;
+                flex-direction: column;
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+            }
+
+            .monster-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5rem;
+                width: 100%;
+            }
+
+            .monster-header h3 {
+                margin: 0;
+                font-size: 1rem;
+            }
+
+            .monster-display {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 0.75rem;
+                align-items: center;
+                width: 100%;
+            }
+
+            .monster-display img {
+                width: 80px;
+                height: 80px;
+                object-fit: contain;
+                border-radius: 8px;
+                background: rgba(0, 0, 0, 0.2);
+            }
+
+            .monster-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .monster-name, .monster-level {
+                margin: 0;
+                line-height: 1.2;
+            }
+
+            .stats-box {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.25rem;
+                font-size: 0.85rem;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 0.5rem;
+                border-radius: 6px;
+            }
+
+            .health-bar-container {
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+
+            .health-bar {
+                height: 20px; /* Restored to original size */
+                border-radius: 10px;
+                overflow: hidden;
+                background: rgba(0, 0, 0, 0.3);
+            }
+
+            .health-text {
+                font-size: 0.9rem;
+                text-align: right;
+                margin-top: 0.25rem;
+            }
+
+            /* Keep the opponent section clearly separated */
+            .opponent-section {
+                margin-top: 0.75rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 0.75rem;
+            }
+        }
+
+        /* Update mobile monster section styles */
+        @media (max-width: 768px) {
+            .monster-section {
+                display: flex;
+                flex-direction: column;
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                text-align: left;
+            }
+
+            .monster-header {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 0.5rem;
+                width: 100%;
+            }
+
+            .monster-header h3 {
+                margin: 0 0 0.25rem 0;
+                font-size: 1rem;
+                color: #3498db;
+            }
+
+            .monster-display {
+                display: grid;
+                grid-template-columns: 80px 1fr;
+                gap: 0.75rem;
+                align-items: start;
+                width: 100%;
+            }
+
+            .monster-display img {
+                width: 80px;
+                height: 80px;
+                object-fit: contain;
+                border-radius: 8px;
+                background: rgba(0, 0, 0, 0.2);
+            }
+
+            .monster-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .monster-name {
+                font-weight: bold;
+                margin: 0;
+                font-size: 0.95rem;
+                line-height: 1.2;
+                color: #fff;
+            }
+
+            .monster-level {
+                font-size: 0.85rem;
+                color: #3498db;
+                margin: 0;
+            }
+
+            .monster-type {
+                font-size: 0.85rem;
+                color: #2ecc71;
+                margin: 0;
+            }
+
+            .stats-box {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+                font-size: 0.85rem;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 0.5rem;
+                border-radius: 6px;
+                margin-top: 0.25rem;
+            }
+
+            .stats-box div {
+                color: #e0e0e0;
+            }
+
+            .health-bar-container {
+                width: 100%;
+                margin: 0.5rem 0 0 0;
+            }
+
+            .health-bar {
+                height: 12px;
+                border-radius: 6px;
+            }
+
+            .health-text {
+                font-size: 0.8rem;
+                text-align: right;
+                margin-top: 0.25rem;
+                color: #e0e0e0;
+            }
+
+            /* Keep the opponent section clearly separated */
+            .opponent-section {
+                margin-top: 0.75rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 0.75rem;
+            }
+        }
+
     </style>
 </head>
 <body>
