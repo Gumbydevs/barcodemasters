@@ -483,7 +483,893 @@
             background: rgba(255, 255, 255, 0.1);
             transform: translateY(-1px);
         }
+
+        /* Update monsters grid for smaller cards */
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+            padding: 0.75rem;
+            width: 100%;
+        }
+
+        .monster-card {
+            width: 100%;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 0;
+        }
+
+        .monster-name {
+            font-size: 0.85rem;
+            text-align: left;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            color: #3498db;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .monster-image-container {
+            width: 100%;
+            height: 140px;
+            margin: 0.5rem 0;
+        }
+
+        .monster-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .monster-image-placeholder {
+            width: 100%;
+            height: 140px;
+            margin: 0.5rem 0;
+        }
+
+        .monster-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.3rem;
+            width: 100%;
+            font-size: 0.75rem;
+            margin: 0.5rem 0;
+        }
+
+        .stat-item {
+            padding: 0.3rem;
+            font-size: 0.75rem;
+        }
+
+        .type-description {
+            font-size: 0.8rem;
+            padding: 0.4rem;
+            margin-top: 0.4rem;
+        }
+
+        @media (max-width: 480px) {
+            .monsters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .monster-card {
+                padding: 0.5rem;
+            }
+
+            .monster-image-container,
+            .monster-image-placeholder {
+                height: 120px;
+            }
+
+            .monster-name {
+                font-size: 0.8rem;
+            }
+
+            .monster-stats {
+                font-size: 0.7rem;
+            }
+        }
     </style>
+    <style>
+    /* Override and reset monster grid and card styles */
+    .monsters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.5rem;
+        padding: 0.5rem;
+        width: 100%;
+    }
+
+    .monster-card {
+        width: 100%;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin: 0;
+        height: auto;
+    }
+
+    .monster-name {
+        font-size: 0.85rem;
+        text-align: left;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+
+    .monster-image-container,
+    .monster-image-placeholder {
+        width: 100%;
+        height: 100px;
+        margin: 0.25rem 0;
+    }
+
+    .monster-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .monster-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.25rem;
+        width: 100%;
+        font-size: 0.7rem;
+        margin: 0.25rem 0;
+    }
+
+    .stat-item {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.25rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .monster-type-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .type-description {
+        font-size: 0.7rem;
+        padding: 0.25rem;
+        margin-top: 0.25rem;
+    }
+
+    @media (max-width: 480px) {
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.4rem;
+        }
+
+        .monster-image-container,
+        .monster-image-placeholder {
+            height: 80px;
+        }
+
+        .monster-name {
+            font-size: 0.8rem;
+        }
+
+        .monster-stats {
+            font-size: 0.65rem;
+        }
+    }
+</style>
+<style>
+    /* Ultra compact monster grid and card styles */
+    .monsters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.4rem;
+        padding: 0.4rem;
+        width: 100%;
+    }
+
+    .monster-card {
+        width: 100%;
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        margin: 0;
+        height: auto;
+        min-width: 0;
+    }
+
+    .monster-name {
+        font-size: 0.75rem;
+        text-align: left;
+        margin-bottom: 0.2rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        line-height: 1.2;
+    }
+
+    .monster-image-container,
+    .monster-image-placeholder {
+        width: 100%;
+        height: 80px;
+        margin: 0.2rem 0;
+        min-width: 0;
+    }
+
+    .monster-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.2rem;
+        width: 100%;
+        font-size: 0.65rem;
+        margin: 0.2rem 0;
+    }
+
+    .stat-item {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.2rem;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .stat-item span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .monster-type-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.3rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .type-description {
+        font-size: 0.65rem;
+        padding: 0.2rem;
+        margin-top: 0.2rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    @media (max-width: 768px) {
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.3rem;
+        }
+
+        .monster-image-container,
+        .monster-image-placeholder {
+            height: 70px;
+        }
+
+        .monster-name {
+            font-size: 0.7rem;
+        }
+
+        .monster-stats {
+            font-size: 0.6rem;
+        }
+
+        .stat-item {
+            padding: 0.15rem;
+        }
+    }
+</style>
+<style>
+    /* Add expandable card styles */
+    .monster-card.expanded {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        z-index: 1000;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .overlay.active {
+        display: block;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    /* Update compact card styles */
+    .monster-card {
+        width: 100%;
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        margin: 0;
+        height: auto;
+        min-width: 0;
+        cursor: pointer;
+    }
+
+    .monster-type-container {
+        display: none; /* Hide in compact view */
+    }
+
+    .monster-card.expanded .monster-type-container {
+        display: block; /* Show in expanded view */
+    }
+
+    body.dark-mode .monster-card.expanded {
+        background: rgba(18, 18, 18, 0.95);
+    }
+</style>
+<style>
+    /* Base grid styles */
+    .monsters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
+        padding: 0.5rem;
+        width: 100%;
+    }
+
+    /* Compact card styles */
+    .monster-card.compact {
+        width: 100%;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .monster-card.compact .monster-image-container {
+        width: 100%;
+        height: 80px;
+        margin: 0.25rem 0;
+    }
+
+    .monster-card.compact .monster-quick-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.25rem;
+        width: 100%;
+        font-size: 0.7rem;
+    }
+
+    .monster-card.compact .stat-badge {
+        padding: 0.2rem;
+        display: flex;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
+    }
+
+    /* Expanded card styles */
+    .monster-card.expanded {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        z-index: 1000;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    body.dark-mode .monster-card.expanded {
+        background: rgba(18, 18, 18, 0.95);
+    }
+
+    .monster-type-container {
+        display: none;
+    }
+
+    .monster-card.expanded .monster-type-container {
+        display: block;
+    }
+</style>
+<style>
+    /* Reset monster grid and card styles to match collection exactly */
+    .monsters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.5rem;
+        padding: 0.5rem;
+        width: 100%;
+    }
+
+    .monster-card {
+        width: 100%;
+        max-width: 120px;
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .monster-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .monster-name {
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+
+    .monster-image-container,
+    .monster-image-placeholder {
+        width: 100%;
+        aspect-ratio: 1;
+        height: 90px;
+        margin: 0.25rem 0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .monster-quick-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        font-size: 0.65rem;
+        margin-top: 0.25rem;
+    }
+
+    .stat-badge {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
+    }
+
+    /* Expanded card styles */
+    .monster-card.expanded {
+        max-width: none;
+        width: 90%;
+        max-height: 90vh;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    body.dark-mode .monster-card.expanded {
+        background: rgba(18, 18, 18, 0.95);
+    }
+
+    @media (max-width: 480px) {
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        }
+
+        .monster-card {
+            max-width: 100px;
+        }
+
+        .monster-image-container,
+        .monster-image-placeholder {
+            height: 80px;
+        }
+    }
+</style>
+<style>
+    /* Core monster grid and card styles */
+    .monsters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.4rem;
+        width: 100%;
+    }
+
+    .monster-card {
+        width: 100%;
+        max-width: 90px;
+        padding: 0.4rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .monster-name {
+        font-size: 0.7rem;
+        margin-bottom: 0.2rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+    }
+
+    .monster-image-container,
+    .monster-image-placeholder {
+        width: 100%;
+        height: 70px;
+        margin: 0.2rem 0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .monster-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .monster-quick-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        font-size: 0.65rem;
+    }
+
+    .stat-badge {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    /* Expanded card style */
+    .monster-card.expanded {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 400px;
+        max-height: 90vh;
+        z-index: 1000;
+        padding: 1rem;
+        background: rgba(18, 18, 18, 0.95);
+        overflow-y: auto;
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Final grid layout override - must be last */
+    .monsters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+        gap: 2px;
+        padding: 2px;
+        width: 100%;
+    }
+
+    .monster-card {
+        width: 100%;
+        max-width: none;
+        padding: 4px;
+        margin: 0;
+    }
+
+    .monster-image-container,
+    .monster-image-placeholder {
+        height: 70px;
+        margin: 2px 0;
+    }
+
+    /* Ensure text stays compact */
+    .monster-name {
+        font-size: 0.7rem;
+        margin-bottom: 2px;
+    }
+
+    .monster-quick-stats {
+        gap: 2px;
+    }
+
+    .stat-badge {
+        padding: 2px 4px;
+    }
+
+    @media (max-width: 480px) {
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+            gap: 2px;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Ultimate override - fixes spacing issues */
+    .monsters-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(85px, 85px)) !important;
+        gap: 2px !important;
+        padding: 2px !important;
+        width: 100% !important;
+        justify-content: start !important;
+    }
+
+    .monster-card {
+        width: 85px !important;
+        min-width: 85px !important;
+        max-width: 85px !important;
+        padding: 4px !important;
+        margin: 0 !important;
+    }
+
+    .monster-image-container,
+    .monster-image-placeholder {
+        height: 65px !important;
+        margin: 2px 0 !important;
+    }
+
+    @media (max-width: 480px) {
+        .monsters-grid {
+            grid-template-columns: repeat(auto-fill, minmax(75px, 75px)) !important;
+        }
+        
+        .monster-card {
+            width: 75px !important;
+            min-width: 75px !important;
+            max-width: 75px !important;
+        }
+    }
+</style>
+<style>
+    /* Navigation Grid Override - Matches monster-collection */
+    .navigation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    .nav-button {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: inherit;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(5px);
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    @media (max-width: 480px) {
+        .navigation-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+<style>
+    /* Navigation button styles override - matches monster-collection exactly */
+    .nav-button {
+        background: linear-gradient(135deg, #1a2236, #2a3854) !important;
+        color: #fff !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        text-transform: none !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        backdrop-filter: blur(5px) !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px) !important;
+        background: linear-gradient(135deg, #2a3854, #3a4874) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .nav-button:active {
+        transform: translateY(0) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Keep logout button special styling */
+    #logoutButton {
+        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+    }
+
+    #logoutButton:hover {
+        background: linear-gradient(135deg, #d35400, #e67e22) !important;
+    }
+
+    /* Navigation grid layout */
+    .navigation-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+        gap: 0.75rem !important;
+        margin-bottom: 2rem !important;
+        width: 100% !important;
+    }
+
+    @media (max-width: 480px) {
+        .navigation-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.5rem !important;
+        }
+
+        .nav-button {
+            padding: 0.65rem 1rem !important;
+            font-size: 0.85rem !important;
+        }
+    }
+</style>
+<style>
+    /* Navigation buttons - exact copy from monster-collection */
+    .nav-button {
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #2c3e50, #3498db);
+        color: white;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #34495e, #2980b9);
+    }
+
+    .nav-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #logoutButton {
+        background: linear-gradient(135deg, #c0392b, #e74c3c);
+    }
+
+    #logoutButton:hover {
+        background: linear-gradient(135deg, #d35400, #e67e22);
+    }
+
+    .navigation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    @media (max-width: 480px) {
+        .navigation-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .nav-button {
+            padding: 0.65rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+<style>
+    /* Exact button styles from monster-collection */
+    .nav-button {
+        padding: 0.35rem !important;
+        border: none !important;
+        border-radius: 8px !important;
+        background: linear-gradient(135deg, #2c3e50, #3498db) !important;
+        color: white !important;
+        font-size: 0.95rem !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        text-align: center !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .nav-button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+        background: linear-gradient(135deg, #34495e, #2980b9) !important;
+    }
+
+    .nav-button:active {
+        transform: translateY(0) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #logoutButton {
+        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+    }
+
+    #logoutButton:hover {
+        background: linear-gradient(135deg, #d35400, #e67e22) !important;
+    }
+</style>
 </head>
 <body>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
@@ -542,7 +1428,7 @@
     </div>
 
     <footer>
-        <p>Version: <span id="versionNumber">1.0.04</span></p>
+        <p>Version: <span id="versionNumber">1.0.05</span></p>
         <p>&copy; 2025 Barcode Masters | 
             <a href="changelog.html" class="support-link">
                 📝 Change Log
@@ -657,80 +1543,27 @@
         .stat-box:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
+        }  /* Add this missing closing brace */
 
-        .stat-box h3 {
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-            margin: 0 0 0.5rem 0;
-            color: #a8b3cf;
-        }
-
-        .stat-box p {
-            font-size: clamp(1.5rem, 4vw, 2rem);
+        /* Update the monsters-grid to maintain compact layout */
+        .monsters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.4rem;
+            width: 100%;
             margin: 0;
-            font-weight: bold;
-            color: #2c3e50; /* Dark color for day mode */
+            padding: 0;
         }
 
-        /* Dark mode specific styles */
-        body.dark-mode .stat-box p {
-            color: #ffffff; /* White color for dark mode */
-        }
-
-        /* Filters */
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);  /* Change to 2 columns */
-            gap: 1rem;
-            margin-bottom: 2rem;
+        .monster-card {
             width: 100%;
+            max-width: 90px;
+            margin: 0;
+            padding: 0.4rem;
         }
 
-        .filter-select, .sort-select {
-            padding: 0.75rem 1.25rem;
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.2);
-            color: #ffffff;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            min-width: 0;
-            backdrop-filter: blur(5px);
-        }
-
-        .filter-select:hover, .sort-select:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        /* Navigation Buttons */
-        .navigation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .nav-button {
-            padding: 0.55rem;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-            background: linear-gradient(135deg, #34495e, #2980b9);
-        }
+        /* Remove any competing grid definitions later in the CSS */
+        /* You may need to remove or comment out other .monsters-grid definitions */
 
         .nav-button:active {
             transform: translateY(0);
@@ -921,46 +1754,35 @@ async function createMonsterCard(monster) {
     const ownerUsername = monster.ownerId ? 
         await getUsernameById(monster.ownerId) : 
         'Unknown User';
-    const typeDescription = await getMonsterTypeDescription(monster.type);
-
-    // Create image HTML based on whether the monster has an imageUrl
-    const imageHTML = monster.imageUrl ? 
-        `<div class="monster-image-container">
-            <img src="${monster.imageUrl}" alt="${monster.monsterName}" 
-                onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'monster-image-placeholder\'></div>';">
-        </div>` : 
-        `<div class="monster-image-placeholder"></div>`;
-
+    
     return `
         <div class="monster-card" data-id="${monster.id}">
-            <div class="monster-info">
-                <div class="monster-name">${monster.monsterName}</div>
-                ${imageHTML}
-                <div class="monster-type-container">
-                    <span class="monster-type-badge" data-type="${monster.type}">${monster.type}</span>
-                    <div class="type-description">${typeDescription}</div>
+            <div class="monster-name">${monster.monsterName}</div>
+            <div class="monster-image-container">
+                ${monster.imageUrl ? 
+                    `<img src="${monster.imageUrl}" alt="${monster.monsterName}">` : 
+                    '<div class="monster-image-placeholder"></div>'
+                }
+            </div>
+            <div class="monster-quick-stats">
+                <div class="stat-badge">
+                    <span>Type</span>
+                    <span>${monster.type}</span>
                 </div>
-                <div class="monster-stats">
-                    <div class="stat-item">
-                        <span>Level</span>
-                        <span>${monster.level}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>HP</span>
-                        <span>${monster.HP}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>AP</span>
-                        <span>${monster.AP}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Speed</span>
-                        <span>${monster.Speed}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span>Owner</span>
-                        <span>${ownerUsername}</span>
-                    </div>
+                <div class="stat-badge">
+                    <span>Level</span>
+                    <span>${monster.level}</span>
+                </div>
+                <div class="stat-badge">
+                    <span>Owner</span>
+                    <span>${ownerUsername}</span>
+                </div>
+            </div>
+            <div class="expanded-content" style="display: none;">
+                <div class="monster-full-stats">
+                    <div class="stat-badge"><span>HP</span><span>${monster.HP}</span></div>
+                    <div class="stat-badge"><span>AP</span><span>${monster.AP}</span></div>
+                    <div class="stat-badge"><span>Speed</span><span>${monster.Speed}</span></div>
                 </div>
             </div>
         </div>
@@ -1202,6 +2024,43 @@ async function updateCollectionStats(monsters) {
     darkModeToggle.addEventListener("click", function() {
         document.body.classList.toggle("dark-mode");
         localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+    });
+
+    // Add click handler for monster cards
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('monstersGrid').addEventListener('click', async (e) => {
+            const card = e.target.closest('.monster-card');
+            if (!card) return;
+
+            const expandedCard = card.cloneNode(true);
+            expandedCard.classList.add('expanded');
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            
+            const closeButton = document.createElement('button');
+            closeButton.className = 'close-button';
+            closeButton.innerHTML = '×';
+            expandedCard.appendChild(closeButton);
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(expandedCard);
+
+            expandedCard.querySelector('.expanded-content').style.display = 'block';
+            
+            requestAnimationFrame(() => {
+                overlay.classList.add('active');
+            });
+
+            const closeCard = () => {
+                overlay.classList.remove('active');
+                expandedCard.remove();
+                overlay.remove();
+            };
+
+            closeButton.addEventListener('click', closeCard);
+            overlay.addEventListener('click', closeCard);
+        });
     });
 </script>
 </body>
