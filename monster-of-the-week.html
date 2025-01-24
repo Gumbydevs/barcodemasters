@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/barcodemasters/favicon.ico" type="image/x-icon">
+    <title>Monster of the Week - Barcode Masters</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        .contest-container {
+            padding-top: 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        /* Update contest header styles to match monster-index showcase */
+        .contest-header {
+            background: linear-gradient(135deg, 
+                rgba(52, 152, 219, 0.1), 
+                rgba(46, 204, 113, 0.15)
+            );
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.1);
+            text-align: center;
+        }
+
+        .contest-header h1 {
+            color: #2ecc71;
+            text-shadow: 0 2px 4px rgba(46, 204, 113, 0.2);
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .countdown {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            color: #2ecc71;
+        }
+
+        .vote-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(46, 204, 113, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .membership-status {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            margin: 0.5rem;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        /* Adjust container top padding */
+        .container {
+            padding-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .contest-header {
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+
+            .contest-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .countdown {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        .nominees-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nominee-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 280px;
+            font-size: 0.85rem;
+        }
+
+        .nominee-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nominee-image {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: var(--image-bg);
+            margin-bottom: 0.5rem;
+        }
+
+        .vote-controls {
+            margin-top: auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .vote-amount {
+            width: 50px;
+            padding: 0.25rem;
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .vote-button {
+            flex-grow: 1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .vote-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .vote-count {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .monster-name {
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .monster-info {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .nominees-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            .nominee-card {
+                height: 260px;
+                font-size: 0.8rem;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-color);
+        }
+
+        .monster-count {
+            background: var(--card-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            color: #ff4444;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 1600px) {
+            .container {
+                max-width: 1400px;
+            }
+        }
+
+        /* Navigation styles to match other pages */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-button {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 100px;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Dark mode toggle specific styles */
+        #themeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            min-width: unset !important;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        #themeToggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Adjust container padding to account for fixed navbar */
+        .container {
+            padding-top: 5rem;
+        }
+
+        /* Update vote controls styles */
+        .vote-controls {
+            margin-top: auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .vote-amount {
+            width: 50px;
+            padding: 0.25rem;
+            border-radius: 4px;
+            background: var(--input-bg, #ffffff);
+            color: var(--text-color, #000000);
+            border: 1px solid var(--border-color, #cccccc);
+        }
+
+        .vote-button {
+            flex-grow: 1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white !important;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .vote-button:hover {
+            background: linear-gradient(135deg, #34495e, #2980b9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .vote-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        body.dark-mode .vote-button:hover {
+            background: linear-gradient(135deg, #2980b9, #2c3e50);
+        }
+
+        .account-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .account-badge.free {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .account-badge.premium {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+        }
+
+        .account-badge.vip {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .account-badge .emoji {
+            margin-right: 6px;
+        }
+
+        .votes-remaining {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .toast {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(46, 204, 113, 0.95);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            transition: top 0.3s ease;
+            z-index: 2000;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toast.error {
+            background: rgba(231, 76, 60, 0.95);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .toast.show {
+            top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-group">
+            <button class="nav-button" onclick="location.href='monster-index.html'">
+                <i class="fas fa-dragon"></i> Monster Index
+            </button>
+        </div>
+        <div class="nav-group">
+            <button id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="contest-header">
+            <h1>🏆 Monster of the Week</h1>
+            <div id="countdown" class="countdown">Next winner in: --:--:--</div>
+            <div class="vote-info">
+                <div id="membershipStatus" class="account-badge">
+                    <span class="emoji"></span>
+                    <span class="type"></span>
+                </div>
+                <div class="votes-remaining">
+                    Votes remaining: <span id="votesRemaining">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="nomineesGrid" class="nominees-grid">
+            <!-- Nominees will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            where, 
+            getDocs, 
+            doc, 
+            getDoc, 
+            setDoc,
+            updateDoc, 
+            runTransaction, 
+            serverTimestamp,
+            orderBy,
+            limit,
+            startAfter
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
+            authDomain: "barcodemasters-b4b9b.firebaseapp.com",
+            projectId: "barcodemasters-b4b9b",
+            storageBucket: "barcodemasters-b4b9b.firebasestorage.app",
+            messagingSenderId: "827677074735",
+            appId: "1:827677074735:web:3bace3d02034348bc82dda",
+            measurementId: "G-14YTBBLTPZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const VOTES_PER_TIER = {
+            free: 1,
+            premium: 3,
+            vip: 5
+        };
+
+        let currentUser = null;
+        let currentContest = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                await initializeContest();
+                updateUI();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        async function initializeContest() {
+            const now = new Date();
+            const weekStart = getWeekStart(now);
+            const weekId = weekStart.toISOString().split('T')[0];
+
+            // Get or create current week's contest
+            const contestRef = doc(db, 'weeklyContests', weekId);
+            const contestDoc = await getDoc(contestRef);
+
+            if (!contestDoc.exists()) {
+                // Create new contest structure
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 7);
+                
+                await setDoc(contestRef, {
+                    startDate: weekStart.toISOString(),
+                    endDate: weekEnd.toISOString(),
+                    status: 'active',
+                    winner: null
+                });
+            }
+
+            currentContest = {
+                id: weekId,
+                ...(contestDoc.exists() ? contestDoc.data() : {})
+            };
+
+            startCountdown(currentContest.endDate);
+            await loadNominees(); // We'll keep the function name but it loads all monsters
+        }
+
+        // Remove getTopMonstersForNomination and createNewContest functions as they're no longer needed
+
+        window.submitVote = async function(monsterId, votes) {
+            if (!currentUser || !currentContest) return;
+            votes = parseInt(votes);
+            try {
+                let monsterName = '';
+                await runTransaction(db, async (transaction) => {
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    const monsterRef = doc(db, 'monsters', monsterId);
+
+                    const userDoc = await transaction.get(userRef);
+                    const monsterDoc = await transaction.get(monsterRef);
+
+                    if (!userDoc.exists() || !monsterDoc.exists()) {
+                        throw new Error("Required documents don't exist");
+                    }
+
+                    // Get monster name for the toast message
+                    monsterName = monsterDoc.data().monsterName;
+
+                    const userData = userDoc.data();
+                    const votingRights = userData.weeklyVotes?.[currentContest.id] || {
+                        votesRemaining: VOTES_PER_TIER[userData.accountType || 'free'],
+                        lastVoteTimestamp: null
+                    };
+
+                    if (votingRights.votesRemaining < votes) {
+                        throw new Error("Not enough votes remaining");
+                    }
+
+                    // Update user's remaining votes
+                    transaction.update(userRef, {
+                        [`weeklyVotes.${currentContest.id}`]: {
+                            votesRemaining: votingRights.votesRemaining - votes,
+                            lastVoteTimestamp: serverTimestamp()
+                        }
+                    });
+
+                    // Update monster votes
+                    const monsterData = monsterDoc.data();
+                    const currentVotes = monsterData.weeklyVotes?.[currentContest.id]?.votes || 0;
+                    const currentVoters = monsterData.weeklyVotes?.[currentContest.id]?.voters || {};
+
+                    transaction.update(monsterRef, {
+                        [`weeklyVotes.${currentContest.id}`]: {
+                            votes: currentVotes + votes,
+                            voters: {
+                                ...currentVoters,
+                                [currentUser.uid]: {
+                                    voteCount: (currentVoters[currentUser.uid]?.voteCount || 0) + votes,
+                                    timestamp: serverTimestamp()
+                                }
+                            }
+                        }
+                    });
+                });
+
+                await loadNominees(); // Refresh the display
+                showToast(`🎉 Successfully voted ${votes} time${votes > 1 ? 's' : ''} for ${monsterName}!`);
+            } catch (error) {
+                console.error('Error submitting vote:', error);
+                showToast('Failed to submit vote: ' + error.message, true);
+            }
+        };
+
+        async function updateUI() {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            const userData = userDoc.data();
+            
+            // Update membership badge
+            const badge = document.getElementById('membershipStatus');
+            const accountType = userData.accountType || 'free';
+            const badges = {
+                'free': { emoji: '🌱', label: 'Free Account' },
+                'premium': { emoji: '⭐', label: 'Premium' },
+                'vip': { emoji: '👑', label: 'VIP' }
+            };
+            
+            badge.className = `account-badge ${accountType}`;
+            badge.innerHTML = `
+                <span class="emoji">${badges[accountType].emoji}</span>
+                <span class="type">${badges[accountType].label}</span>
+            `;
+            
+            // Update votes remaining
+            const votesRemaining = document.getElementById('votesRemaining');
+            const weeklyVotes = userData.weeklyVotes?.[currentContest?.id];
+            const remainingVotes = weeklyVotes ? weeklyVotes.votesRemaining : VOTES_PER_TIER[accountType];
+            votesRemaining.textContent = remainingVotes;
+        }
+
+        function startCountdown(endDate) {
+            const countdownElement = document.getElementById('countdown');
+            
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const end = new Date(endDate).getTime();
+                const distance = end - now;
+
+                if (distance < 0) {
+                    countdownElement.innerHTML = "Voting ended";
+                    return;
+                }
+
+                // Ensure proper number calculations
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                if (isNaN(days) || isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                    countdownElement.innerHTML = "Calculating...";
+                    return;
+                }
+
+                countdownElement.innerHTML = `Next winner in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+
+        async function loadNominees() {
+            const nomineesGrid = document.getElementById('nomineesGrid');
+            nomineesGrid.innerHTML = '<div class="loading">Loading monsters...</div>';
+
+            try {
+                const monstersRef = collection(db, 'monsters');
+                const snapshot = await getDocs(monstersRef);
+                
+                const allMonsters = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        votes: data.weeklyVotes?.[currentContest.id]?.votes || 0,
+                        voters: data.weeklyVotes?.[currentContest.id]?.voters || {}
+                    };
+                });
+
+                // Sort monsters by votes (descending) first, then by level (descending)
+                allMonsters.sort((a, b) => {
+                    if (b.votes !== a.votes) {
+                        return b.votes - a.votes;
+                    }
+                    return b.level - a.level;
+                });
+
+                // Rest of the loading logic remains the same...
+                // Process monsters in chunks for display
+                const CHUNK_SIZE = 30;
+                let html = '';
+
+                // Rest of the display logic remains the same...
+                for (let i = 0; i < allMonsters.length; i += CHUNK_SIZE) {
+                    const chunk = allMonsters.slice(i, i + CHUNK_SIZE);
+                    const chunkHtml = await Promise.all(chunk.map(async monster => {
+                        const ownerName = await getUsernameById(monster.ownerId);
+                        return `
+                            <div class="nominee-card">
+                                <div class="vote-count">${monster.votes} votes</div>
+                                <!-- Rest of the card template remains the same -->
+                                <div class="monster-image-container">
+                                    ${monster.imageUrl ? 
+                                        `<img src="${monster.imageUrl}" alt="${monster.monsterName}" class="nominee-image">` :
+                                        '<div class="monster-image-placeholder"></div>'
+                                    }
+                                </div>
+                                <h3 class="monster-name">${monster.monsterName}</h3>
+                                <p class="monster-info">Level ${monster.level} | Owner: ${ownerName}</p>
+                                <div class="vote-controls">
+                                    <input type="number" min="1" max="5" value="1" class="vote-amount" id="votes-${monster.id}">
+                                    <button class="vote-button" onclick="submitVote('${monster.id}', document.getElementById('votes-${monster.id}').value)">
+                                        Vote
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }));
+                    html += chunkHtml.join('');
+                    nomineesGrid.innerHTML = html;
+                    
+                    // Allow UI to update between chunks
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            } catch (error) {
+                console.error('Error loading monsters:', error);
+                nomineesGrid.innerHTML = '<div class="error">Error loading monsters. Please try again.</div>';
+            }
+        }
+
+        function getWeekStart(date) {
+            const d = new Date(date);
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() - d.getDay());
+            return d;
+        }
+
+        async function getUsernameById(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                return userDoc.exists() ? userDoc.data().username : 'Unknown User';
+            } catch (error) {
+                console.error('Error fetching username:', error);
+                return 'Unknown User';
+            }
+        }
+
+        // Add this function to show toast messages
+        function showToast(message, isError = false) {
+            let toast = document.querySelector('.toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+
+            toast.textContent = message;
+            toast.className = `toast${isError ? ' error' : ''}`;
+            
+            // Trigger reflow to ensure animation works
+            void toast.offsetWidth;
+            
+            // Show toast
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Hide toast after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', initializeContest);
+    </script>
+    <script>
+        // Add dark mode toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        });
+
+        // Check for saved theme preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+</body>
+</html>

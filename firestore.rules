@@ -61,6 +61,19 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() &&
                             (resource.data.ownerId == request.auth.uid || isAdmin());
     }
+
+    // Add these new rules for weeklyContests
+    match /weeklyContests/{contestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAuthenticated() && 
+        // Only allow updates to nominees' votes and voters
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['nominees']) &&
+        request.resource.data.startDate == resource.data.startDate &&
+        request.resource.data.endDate == resource.data.endDate &&
+        request.resource.data.status == resource.data.status;
+    }
   }
 }
 
