@@ -1316,6 +1316,69 @@
             }
         }
     </style>
+    <style>
+    /* ...existing styles... */
+
+    /* Update profile container styles */
+    .profile-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        min-height: calc(100vh - 4rem);
+        transform-origin: center left; /* Change transform origin */
+    }
+
+    /* Update sidebar styles */
+    .profile-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 240px; /* Slightly wider */
+        height: 100vh;
+        background: rgba(20, 20, 35, 0.95);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        overflow-y: auto;
+        z-index: 100;
+        transform-origin: top left; /* Add transform origin */
+    }
+
+    /* Update main content styles */
+    .main-content {
+        margin-left: 240px; /* Match sidebar width */
+        width: calc(100% - 240px);
+        padding: 1rem;
+        transform-origin: top left; /* Add transform origin */
+    }
+
+    /* Update responsive styles */
+    @media (max-width: 768px) {
+        .profile-container {
+            transform-origin: top left;
+            width: 100%;
+            padding: 0;
+        }
+
+        .profile-sidebar {
+            transform: scale(0.9); /* Scale sidebar less */
+            width: 200px; /* Slightly narrower on mobile */
+        }
+
+        .main-content {
+            margin-left: 200px;
+            width: calc(100% - 200px);
+            transform: scale(0.75); /* Scale content more */
+            transform-origin: top left;
+        }
+    }
+</style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8114687054287419" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -1903,14 +1966,26 @@
     // Scaling function
     function updateScaleFactor() {
         const container = document.querySelector('.profile-container');
-        if (!container) return;
+        const sidebar = document.querySelector('.profile-sidebar');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (!container || !sidebar || !mainContent) return;
 
         const width = window.innerWidth;
         if (width < 1024) {
-            const scale = Math.max(0.5, width / 1024);
-            container.style.transform = `scale(${scale})`;
+            const sidebarScale = Math.min(1, Math.max(0.9, width / 1024));
+            const contentScale = Math.min(1, Math.max(0.75, width / 1024));
+            
+            sidebar.style.transform = `scale(${sidebarScale})`;
+            mainContent.style.transform = `scale(${contentScale})`;
+            
+            // Adjust main content width to prevent cutoff
+            const adjustedWidth = (1024 / width) * 100;
+            mainContent.style.width = `${adjustedWidth}%`;
         } else {
-            container.style.transform = 'none';
+            sidebar.style.transform = 'none';
+            mainContent.style.transform = 'none';
+            mainContent.style.width = 'calc(100% - 240px)';
         }
     }
 

@@ -58,8 +58,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
                     request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
-                            (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (
+        (resource.data.ownerId == request.auth.uid || isAdmin()) ||
+        // Add this new condition to allow voting
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['weeklyVotes'])
+      );
+      allow delete: if isAuthenticated() &&
+                    (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
     // Add these new rules for weeklyContests
