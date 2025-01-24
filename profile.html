@@ -1379,6 +1379,67 @@
         }
     }
 </style>
+    <style>
+    .profile-container {
+        max-width: 1400px;
+        min-width: 1024px; /* Add minimum width */
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        min-height: calc(100vh - 4rem);
+        position: relative;
+        transform-origin: top left;
+    }
+
+    .profile-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 240px;
+        height: 100vh;
+        background: rgba(20, 20, 35, 0.95);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        overflow-y: auto;
+        z-index: 100;
+        transform-origin: top left;
+    }
+
+    .main-content {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        min-width: 784px; /* 1024px - 240px */
+        padding: 1rem;
+        transform-origin: top left;
+    }
+
+    /* Update media queries for proper scaling */
+    @media (max-width: 1023px) {
+        body {
+            min-width: 1024px; /* Force minimum width */
+            overflow-x: auto; /* Allow horizontal scroll if needed */
+        }
+
+        .profile-container {
+            transform: scale(var(--scale-factor, 1));
+            transform-origin: top left;
+        }
+
+        .profile-sidebar {
+            transform: scale(var(--scale-factor, 1));
+        }
+
+        .main-content {
+            transform: scale(var(--scale-factor, 1));
+        }
+    }
+</style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8114687054287419" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -1993,6 +2054,33 @@
     window.addEventListener('resize', updateScaleFactor);
     window.addEventListener('load', updateScaleFactor);
     document.addEventListener('DOMContentLoaded', updateScaleFactor);
+</script>
+<script>
+    function updateScale() {
+        const viewportWidth = window.innerWidth;
+        if (viewportWidth < 1024) {
+            const scaleFactor = viewportWidth / 1024;
+            document.documentElement.style.setProperty('--scale-factor', scaleFactor);
+            
+            // Adjust body height to account for scaling
+            const originalHeight = document.querySelector('.profile-container').scrollHeight;
+            document.body.style.height = (originalHeight * scaleFactor) + 'px';
+        } else {
+            document.documentElement.style.setProperty('--scale-factor', '1');
+            document.body.style.height = 'auto';
+        }
+    }
+
+    // Update scale on load and resize
+    window.addEventListener('load', updateScale);
+    window.addEventListener('resize', updateScale);
+    
+    // Update scale when content changes
+    const observer = new MutationObserver(updateScale);
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true 
+    });
 </script>
 </body>          <!-- Make sure this aligns with an opening <body> tag -->
 </html>          <!-- Make sure this aligns with an opening <html> tag -->
