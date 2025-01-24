@@ -1370,6 +1370,519 @@
         background: linear-gradient(135deg, #d35400, #e67e22) !important;
     }
 </style>
+<!-- ...existing code... -->
+<style>
+    /* Expanded card styles to match monster-collection */
+    .monster-card.expanded {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 400px;
+        height: auto;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: rgba(18, 18, 18, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem;
+        border-radius: 12px;
+        z-index: 1001;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .monster-card.expanded .monster-name {
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        white-space: normal;
+        color: #3498db;
+    }
+
+    .monster-card.expanded .monster-image-container,
+    .monster-card.expanded .monster-image-placeholder {
+        height: 280px;
+        margin: 1rem 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+
+    .monster-card.expanded .monster-quick-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .monster-card.expanded .stat-badge {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .monster-card.expanded .expanded-content {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .close-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .close-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .overlay.active {
+        opacity: 1;
+    }
+
+    @media (max-width: 480px) {
+        .monster-card.expanded {
+            width: 95%;
+            padding: 1rem;
+        }
+
+        .monster-card.expanded .monster-name {
+            font-size: 1.2rem;
+        }
+
+        .monster-card.expanded .monster-image-container,
+        .monster-card.expanded .monster-image-placeholder {
+            height: 200px;
+        }
+
+        .monster-card.expanded .stat-badge {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Expanded card styles to exactly match monster-collection */
+    .monster-card.expanded {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 500px !important;
+        min-width: 280px !important;
+        height: auto !important;
+        max-height: 90vh !important;
+        padding: 2rem !important;
+        background: rgba(18, 18, 18, 0.95) !important;
+        border-radius: 12px !important;
+        z-index: 1001 !important;
+        overflow-y: auto !important;
+    }
+
+    .monster-card.expanded .monster-name {
+        font-size: 1.8rem !important;
+        text-align: center !important;
+        margin-bottom: 1.5rem !important;
+        color: #3498db !important;
+        white-space: normal !important;
+        width: 100% !important;
+    }
+
+    .monster-card.expanded .monster-image-container,
+    .monster-card.expanded .monster-image-placeholder {
+        width: 100% !important;
+        height: 300px !important;
+        margin: 1.5rem 0 !important;
+        border-radius: 8px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .monster-card.expanded .monster-quick-stats {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+        margin: 1.5rem 0 !important;
+        width: 100% !important;
+    }
+
+    .monster-card.expanded .stat-badge {
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 8px !important;
+    }
+
+    .monster-card.expanded .stat-badge span {
+        font-size: 1rem !important;
+    }
+
+    .monster-card.expanded .expanded-content {
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    @media (max-width: 480px) {
+        .monster-card.expanded {
+            width: 95% !important;
+            padding: 1.5rem !important;
+        }
+
+        .monster-card.expanded .monster-name {
+            font-size: 1.4rem !important;
+        }
+
+        .monster-card.expanded .monster-image-container,
+        .monster-card.expanded .monster-image-placeholder {
+            height: 250px !important;
+        }
+
+        .monster-card.expanded .stat-badge {
+            padding: 0.75rem !important;
+            font-size: 0.9rem !important;
+        }
+    }
+
+    .close-button {
+        position: absolute !important;
+        top: 1rem !important;
+        right: 1rem !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        font-size: 1.5rem !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        z-index: 1002 !important;
+    }
+
+    .overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+        backdrop-filter: blur(4px) !important;
+        z-index: 1000 !important;
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Update expanded card styles */
+    .monster-card.expanded .expanded-content {
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .monster-card.expanded .owner-info {
+        text-align: center !important;
+        margin-bottom: 1rem !important;
+        color: #a8b3cf !important;
+        font-size: 0.9rem !important;
+    }
+
+    .monster-card.expanded .action-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-top: 1.5rem !important;
+        padding-top: 1.5rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .monster-card.expanded .action-button {
+        padding: 0.5rem !important;
+        border: none !important;
+        border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.8rem !important;
+        cursor: not-allowed !important;
+        transition: all 0.2s ease !important;
+        text-align: center !important;
+        opacity: 0.5 !important;
+    }
+
+    .monster-card.expanded .action-button:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    @media (max-width: 480px) {
+        .monster-card.expanded .action-buttons {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+        }
+    }
+</style>
+<style>
+    /* Expanded card styles to match monster-collection exactly */
+    .monster-card.expanded {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        height: auto !important;
+        max-height: 90vh !important;
+        padding: 1.5rem !important;
+        background: rgba(18, 18, 18, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 12px !important;
+        z-index: 1001 !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+        overflow-y: auto !important;
+    }
+
+    .monster-card.expanded .monster-name {
+        font-size: 1.4rem !important;
+        text-align: center !important;
+        margin-bottom: 1rem !important;
+        color: #3498db !important;
+        width: 100% !important;
+    }
+
+    .monster-card.expanded .monster-type-container {
+        margin: 1rem 0 !important;
+        padding: 0.75rem !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 8px !important;
+        display: block !important;
+    }
+
+    .monster-card.expanded .type-description {
+        color: #a8b3cf !important;
+        font-size: 0.9rem !important;
+        line-height: 1.4 !important;
+    }
+
+    .monster-card.expanded .monster-quick-stats {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+        margin: 1rem 0 !important;
+    }
+
+    .monster-card.expanded .monster-image-container,
+    .monster-card.expanded .monster-image-placeholder {
+        height: 280px !important;
+        margin: 1rem 0 !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 8px !important;
+    }
+
+    .monster-card.expanded .action-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-top: 1rem !important;
+        padding-top: 1rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .monster-card.expanded .action-button {
+        padding: 0.5rem 0.75rem !important;
+        border: none !important;
+        border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.85rem !important;
+        cursor: not-allowed !important;
+        transition: all 0.2s ease !important;
+        opacity: 0.5 !important;
+    }
+
+    .monster-card.expanded .owner-info {
+        text-align: center !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.8rem !important;
+        margin-top: 1rem !important;
+        padding-top: 1rem !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+</style>
+
+<!-- Update the createMonsterCard function -->
+<script type="module">
+    async function createMonsterCard(monster) {
+        const ownerName = await getUsernameById(monster.ownerId);
+        const creatorName = await getUsernameById(monster.createdBy);
+        const typeDescription = await getMonsterTypeDescription(monster.type);
+        
+        return `
+            <div class="monster-card" data-id="${monster.id}">
+                <div class="compact-content">
+                    <div class="monster-name">${monster.monsterName}</div>
+                    <div class="monster-image-container">
+                        ${monster.imageUrl ? 
+                            `<img src="${monster.imageUrl}" alt="${monster.monsterName}">` : 
+                            '<div class="monster-image-placeholder"></div>'
+                        }
+                    </div>
+                    <div class="monster-quick-stats">
+                        <div class="stat-badge">
+                            <span>${monster.type}</span>
+                        </div>
+                        <div class="stat-badge">
+                            <span>Lvl ${monster.level}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="expanded-content">
+                    <div class="monster-name">${monster.monsterName}</div>
+                    <div class="monster-image-container">
+                        ${monster.imageUrl ? 
+                            `<img src="${monster.imageUrl}" alt="${monster.monsterName}">` : 
+                            '<div class="monster-image-placeholder"></div>'
+                        }
+                    </div>
+                    <div class="type-description-container">
+                        <p class="type-description">${typeDescription}</p>
+                    </div>
+                    <div class="monster-quick-stats">
+                        <div class="stat-badge"><span>Type</span><span>${monster.type}</span></div>
+                        <div class="stat-badge"><span>Level</span><span>${monster.level}</span></div>
+                        <div class="stat-badge"><span>HP</span><span>${monster.HP}</span></div>
+                        <div class="stat-badge"><span>AP</span><span>${monster.AP}</span></div>
+                        <div class="stat-badge"><span>Speed</span><span>${monster.Speed}</span></div>
+                    </div>
+                    <div class="ownership-info">
+                        <div>Owned by: ${ownerName}</div>
+                        <div>Created by: ${creatorName}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="action-button" disabled>Propose Trade</button>
+                        <button class="action-button" disabled>Challenge Monster</button>
+                        <button class="action-button" disabled>Challenge For Keeps</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function updateCollectionStats(monsters) {
+        const totalMonstersElement = document.getElementById('totalMonsters');
+        const highestLevelElement = document.getElementById('highestLevel');
+        const uniqueTypesElement = document.getElementById('uniqueTypes'); // Fixed typo here
+
+        if (!monsters || monsters.length === 0) {
+            totalMonstersElement.textContent = '0';
+            highestLevelElement.textContent = '0';
+            uniqueTypesElement.textContent = '0';
+            return;
+        }
+
+        // Count all valid monsters globally
+        const validMonsters = monsters.filter(monster => 
+            monster.ownerId && monster.monsterName && monster.type
+        );
+
+        // Set total global monster count
+        totalMonstersElement.textContent = validMonsters.length;
+
+        // Find owner with most monsters
+        const ownerCounts = {};
+        validMonsters.forEach(monster => {
+            ownerCounts[monster.ownerId] = (ownerCounts[monster.ownerId] || 0) + 1;
+        });
+
+        if (Object.keys(ownerCounts).length > 0) {
+            const topOwnerEntry = Object.entries(ownerCounts)
+                .reduce((a, b) => (b[1] > a[1] ? b : a));
+            const [topOwnerId, monsterCount] = topOwnerEntry;
+            const ownerName = await getUsernameById(topOwnerId);
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'monster-details';
+            detailsDiv.innerHTML = `
+                <span>Most owned by: ${ownerName}</span>
+                <span>Owns: ${monsterCount} monsters</span>
+            `;
+            totalMonstersElement.parentNode.appendChild(detailsDiv);
+        }
+
+        // Highest level monster
+        if (validMonsters.length > 0) {
+            const highestLevelMonster = validMonsters.reduce((prev, current) => 
+                (prev.level > current.level) ? prev : current
+            );
+            
+            highestLevelElement.textContent = highestLevelMonster.level;
+            const ownerName = await getUsernameById(highestLevelMonster.ownerId);
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'monster-details';
+            detailsDiv.innerHTML = `
+                <span>Monster: ${highestLevelMonster.monsterName}</span>
+                <span>Owned by: ${ownerName}</span>
+            `;
+            highestLevelElement.parentNode.appendChild(detailsDiv);
+        }
+
+        // Calculate unique types
+        const allUniqueTypes = new Set(validMonsters.map(monster => monster.type));
+        uniqueTypesElement.textContent = allUniqueTypes.size;
+
+        // Calculate per-owner type counts
+        const ownerTypeMap = {};
+        validMonsters.forEach(monster => {
+            if (!ownerTypeMap[monster.ownerId]) {
+                ownerTypeMap[monster.ownerId] = new Set();
+            }
+            ownerTypeMap[monster.ownerId].add(monster.type);
+        });
+
+        if (Object.keys(ownerTypeMap).length > 0) {
+            const topTypeOwnerEntry = Object.entries(ownerTypeMap)
+                .reduce((a, b) => (b[1].size > a[1].size ? b : a));
+            const [topOwnerId, typeSet] = topTypeOwnerEntry;
+            const ownerName = await getUsernameById(topOwnerId);
+            
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'monster-details';
+            detailsDiv.innerHTML = `
+                <span>Most types owned by: ${ownerName}</span>
+                <span>Types owned: ${typeSet.size}</span>
+            `;
+            uniqueTypesElement.parentNode.appendChild(detailsDiv);
+        }
+    }
+    // ...existing code...
+</script>
 </head>
 <body>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
@@ -1398,13 +1911,13 @@
         </div>
         <div class="filters">
             <select id="levelFilter" class="filter-select">
+                <option value="desc" selected>Level (High to Low)</option>
                 <option value="">All Levels</option>
                 <option value="asc">Level (Low to High)</option>
-                <option value="desc">Level (High to Low)</option>
             </select>
             <select id="sortBy" class="sort-select">
+                <option value="level" selected>Level</option>
                 <option value="dateCreated">Date Created</option>
-                <option value="level">Level</option>
                 <option value="HP">HP</option>
                 <option value="AP">AP</option>
                 <option value="Speed">Speed</option>
@@ -1751,6 +2264,10 @@
 }
 
 async function createMonsterCard(monster) {
+    const ownerName = await getUsernameById(monster.ownerId);
+    const creatorName = await getUsernameById(monster.ownerId);
+    const typeDescription = await getMonsterTypeDescription(monster.type);
+    
     return `
         <div class="monster-card" data-id="${monster.id}">
             <div class="monster-name">${monster.monsterName}</div>
@@ -1782,8 +2299,31 @@ async function createMonsterCard(monster) {
                 </div>
             </div>
             <div class="expanded-content" style="display: none;">
-                <div class="monster-full-stats">
-                    <div class="stat-badge"><span>Owner</span><span>${await getUsernameById(monster.ownerId)}</span></div>
+                <div class="monster-name">${monster.monsterName}</div>
+                <div class="monster-image-container">
+                    ${monster.imageUrl ? 
+                        `<img src="${monster.imageUrl}" alt="${monster.monsterName}">` : 
+                        '<div class="monster-image-placeholder"></div>'
+                    }
+                </div>
+                <div class="type-description-container">
+                    <p class="type-description">${typeDescription}</p>
+                </div>
+                <div class="monster-quick-stats">
+                    <div class="stat-badge"><span>Type</span><span>${monster.type}</span></div>
+                    <div class="stat-badge"><span>Level</span><span>${monster.level}</span></div>
+                    <div class="stat-badge"><span>HP</span><span>${monster.HP}</span></div>
+                    <div class="stat-badge"><span>AP</span><span>${monster.AP}</span></div>
+                    <div class="stat-badge"><span>Speed</span><span>${monster.Speed}</span></div>
+                </div>
+                <div class="ownership-info">
+                    <div>Owned by: ${ownerName}</div>
+                    <div>Created by: ${creatorName}</div>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-button" disabled>Propose Trade</button>
+                    <button class="action-button" disabled>Challenge Monster</button>
+                    <button class="action-button" disabled>Challenge For Keeps</button>
                 </div>
             </div>
         </div>
@@ -2027,14 +2567,17 @@ async function updateCollectionStats(monsters) {
         localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
     });
 
-    // Add click handler for monster cards
+    // Replace the click handler section
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('monstersGrid').addEventListener('click', async (e) => {
             const card = e.target.closest('.monster-card');
             if (!card) return;
 
-            const expandedCard = card.cloneNode(true);
-            expandedCard.classList.add('expanded');
+            // Create new expanded card instead of cloning
+            const expandedContent = card.querySelector('.expanded-content');
+            const expandedCard = document.createElement('div');
+            expandedCard.className = 'monster-card expanded';
+            expandedCard.innerHTML = expandedContent.innerHTML;
             
             const overlay = document.createElement('div');
             overlay.className = 'overlay';
@@ -2046,8 +2589,6 @@ async function updateCollectionStats(monsters) {
 
             document.body.appendChild(overlay);
             document.body.appendChild(expandedCard);
-
-            expandedCard.querySelector('.expanded-content').style.display = 'block';
             
             requestAnimationFrame(() => {
                 overlay.classList.add('active');
@@ -2089,6 +2630,161 @@ async function updateCollectionStats(monsters) {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+</style>
+<style>
+    /* Core compact card styles fixes */
+    .monster-card {
+        width: 85px !important;
+        min-width: 85px !important;
+        max-width: 85px !important;
+        padding: 4px !important;
+        margin: 0 !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        cursor: pointer !important;
+    }
+
+    .monster-name {
+        font-size: 0.7rem !important;
+        margin-bottom: 2px !important;
+        color: #3498db !important;
+        width: 100% !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        padding: 0 2px !important;
+    }
+
+    .monster-image-container {
+        width: 65px !important;
+        height: 65px !important;
+        margin: 2px auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 4px !important;
+        overflow: hidden !important;
+    }
+
+    .monster-image-container img {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    .monster-quick-stats {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+        width: 100% !important;
+        margin-top: 2px !important;
+    }
+
+    .stat-badge {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 2px 4px !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border-radius: 4px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .stat-badge span {
+        font-size: 0.7rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+</style>
+<style>
+    /* Expanded card styles only */
+    .monster-card.expanded .type-description-container {
+        background: rgba(255, 255, 255, 0.05) !important;
+        padding: 1rem !important;
+        margin: 1rem 0 !important;
+        border-radius: 8px !important;
+    }
+
+    .monster-card.expanded .type-description {
+        font-style: italic !important;
+        color: #a8b3cf !important;
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+        text-align: center !important;
+        margin: 0 !important;
+        word-wrap: break-word !important;
+    }
+
+    .monster-card.expanded .ownership-info {
+        text-align: center !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 0.85rem !important;
+        margin: 1rem 0 !important;
+        line-height: 1.5 !important;
+    }
+
+    .monster-card.expanded .action-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-top: 1rem !important;
+    }
+
+    .monster-card.expanded .action-button {
+        padding: 0.5rem !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: none !important;
+        border-radius: 6px !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 0.85rem !important;
+        cursor: not-allowed !important;
+        opacity: 0.5 !important;
+        transition: background 0.2s ease !important;
+    }
+
+    .monster-card.expanded {
+        overflow-x: hidden !important;
+    }
+</style>
+<style>
+    /* Expanded card styles to exactly match monster-collection */
+    .monster-card.expanded {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90% !important;
+        max-width: 400px !important;
+        height: auto !important;
+        padding: 1.5rem !important;
+        background: rgba(18, 18, 18, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 12px !important;
+        z-index: 1001 !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .monster-card.expanded .monster-name {
+        font-size: 1.4rem !important;
+        text-align: center !important;
+        margin-bottom: 1rem !important;
+        color: #3498db !important;
+        width: 100% !important;
+    }
+</style>
+<style>
+    /* Add this style to handle visibility of compact content */
+    .monster-card.expanded .compact-content {
+        display: none !important;
+    }
+    
+    .monster-card:not(.expanded) .compact-content {
+        display: block !important;
     }
 </style>
 </body>
