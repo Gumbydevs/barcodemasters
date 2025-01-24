@@ -1751,10 +1751,6 @@
 }
 
 async function createMonsterCard(monster) {
-    const ownerUsername = monster.ownerId ? 
-        await getUsernameById(monster.ownerId) : 
-        'Unknown User';
-    
     return `
         <div class="monster-card" data-id="${monster.id}">
             <div class="monster-name">${monster.monsterName}</div>
@@ -1766,23 +1762,28 @@ async function createMonsterCard(monster) {
             </div>
             <div class="monster-quick-stats">
                 <div class="stat-badge">
-                    <span>Type</span>
                     <span>${monster.type}</span>
                 </div>
                 <div class="stat-badge">
-                    <span>Level</span>
+                    <span>Lvl</span>
                     <span>${monster.level}</span>
                 </div>
                 <div class="stat-badge">
-                    <span>Owner</span>
-                    <span>${ownerUsername}</span>
+                    <span>HP</span>
+                    <span>${monster.HP}</span>
+                </div>
+                <div class="stat-badge">
+                    <span>AP</span>
+                    <span>${monster.AP}</span>
+                </div>
+                <div class="stat-badge">
+                    <span>SPD</span>
+                    <span>${monster.Speed}</span>
                 </div>
             </div>
             <div class="expanded-content" style="display: none;">
                 <div class="monster-full-stats">
-                    <div class="stat-badge"><span>HP</span><span>${monster.HP}</span></div>
-                    <div class="stat-badge"><span>AP</span><span>${monster.AP}</span></div>
-                    <div class="stat-badge"><span>Speed</span><span>${monster.Speed}</span></div>
+                    <div class="stat-badge"><span>Owner</span><span>${await getUsernameById(monster.ownerId)}</span></div>
                 </div>
             </div>
         </div>
@@ -2063,5 +2064,32 @@ async function updateCollectionStats(monsters) {
         });
     });
 </script>
+<style>
+    /* Update these styles to make stat badges fill width */
+    .monster-quick-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        width: 100%;
+    }
+
+    .stat-badge {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.3rem 0.4rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .stat-badge span {
+        font-size: 0.7rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 </body>
 </html>
