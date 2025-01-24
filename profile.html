@@ -22,25 +22,32 @@
 
         footer {
             width: 100%;
-            padding: 1rem;
+            padding: 0.25rem; /* Reduced from 1rem */
             background: inherit;
             backdrop-filter: blur(10px);
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
-            position: static;
+            position: relative; /* Change from static to relative */
             bottom: 0;
             box-sizing: border-box;
-            
+            line-height: 1.2; /* Added to reduce line height */
+            z-index: 98; /* Add this line */
+        }
+
+        footer p {
+            margin: 0.1rem 0; /* Added to reduce space between paragraphs */
         }
 
         .profile-container {
-            max-width: 1400px;
-            min-height: calc(100vh - 4rem);
-            margin: 2rem auto;
-            padding: 0 2rem;
             display: grid;
-            grid-template-columns: 280px 1fr; /* Reduced from 300px */
-            gap: 2rem;
+            grid-template-columns: 280px 1fr;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            z-index: 101;
+            padding-bottom: 60px; /* Add space for footer */
         }
 
         .profile-layout {
@@ -132,20 +139,20 @@
 
         .navigation-grid {
             display: grid;
-            gap: 1rem;
-            width: 90%;
-            max-width: 1000px;
+            grid-template-columns: repeat(3, 1fr); /* Changed to 3 columns */
+            gap: 0.8rem; /* Slightly reduced gap */
+            width: 80%; /* Reduced overall width */
+            max-width: 800px;
             padding: 1rem;
             margin: 0 auto;
-            grid-template-columns: repeat(4, 1fr);
         }
 
         .nav-button {
-            padding: 0.55rem;
+            padding: 0.4rem 0.8rem; /* Reduced padding */
             border-radius: 8px;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.8), rgba(41, 128, 185, 0.8));
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem; /* Smaller font size */
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
@@ -454,11 +461,12 @@
         /* Main Layout */
         .profile-container {
             max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            display: grid;
-            grid-template-columns: 350px 1fr;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: flex;
+            flex-direction: row;
             gap: 2rem;
+            min-height: calc(100vh - 4rem);
         }
 
         /* Profile Section */
@@ -492,6 +500,9 @@
             display: flex;
             flex-direction: column;
             gap: 2rem;
+            margin-left: 200px;
+            width: calc(100% - 200px);
+            padding: 1rem;
         }
 
         /* Stats Card */
@@ -619,7 +630,6 @@
             display: flex;
             flex-direction: column;
             gap: 2rem;
-            min-height: calc(100vh - 4rem);
         }
 
         /* Stats Grid */
@@ -793,14 +803,6 @@
             <div class="stats-card">
                 <div class="stats-container">
                     <div class="stat-box">
-                        <div>Wins</div>
-                        <strong id="playerWins">0</strong>
-                    </div>
-                    <div class="stat-box">
-                        <div>Losses</div>
-                        <strong id="playerLosses">0</strong>
-                    </div>
-                    <div class="stat-box">
                         <div>Total Monsters</div>
                         <strong id="totalMonsters">0</strong>
                     </div>
@@ -832,8 +834,6 @@
                 <button class="nav-button" onclick="location.href='select-monster.html'">Battle Monsters</button>
                 <button class="nav-button" onclick="location.href='monster-index.html'">Monster Index</button>
                 <button class="nav-button" onclick="location.href='leaderboard.html'">Leaderboard</button>
-                <button class="nav-button" onclick="location.href='help.html'">Help</button>
-                <button class="nav-button" id="logoutButton">Logout</button>
             </nav>
         </main>
     </div>
