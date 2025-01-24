@@ -66,7 +66,7 @@
         .logo-container {
             width: 100%;
             max-width: 180px;
-            margin: 0 auto 2rem;
+            margin: 0 auto 0.5rem; /* Reduced from 1rem */
         }
 
         .logo-container img {
@@ -127,8 +127,8 @@
         }
 
         .tooltip-box {
-            margin: 1rem auto;
-            padding: 1rem;
+            margin: 0.25rem auto; /* Reduced from 0.5rem */
+            padding: 0.5rem; /* Reduced from 0.75rem */
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             text-align: center;
@@ -499,7 +499,7 @@
         .main-content {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 0.25rem; /* Reduced from 0.75rem */
             margin-left: 200px;
             width: calc(100% - 200px);
             padding: 1rem;
@@ -509,14 +509,16 @@
         .stats-card {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 20px;
-            padding: 2rem;
+            padding: 0.5rem; /* Reduced from 1rem */
             border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.5rem; /* Reduced from 1rem */
         }
 
         .stats-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.5rem;
+            gap: 0.5rem; /* Reduced from 1rem */
+            padding: 0.25rem; /* Reduced from 0.5rem */
         }
 
         .stat-box {
@@ -529,8 +531,13 @@
         /* Navigation Grid */
         .navigation-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 0.5rem;
+            width: 90%;
+            max-width: 800px;
+            padding: 0.5rem;
+            margin: 0.25rem auto;
         }
 
         /* MVP Monster Card */
@@ -546,12 +553,28 @@
         /* Responsive Design */
         @media (max-width: 1024px) {
             .profile-container {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+                padding: 1rem;
             }
-            
-            .profile-section {
+
+            .profile-sidebar {
+                flex: 0 0 auto;
+                width: 100%;
+                max-width: none;
                 position: relative;
                 top: 0;
+            }
+
+            .main-content {
+                max-width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .navigation-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
@@ -569,39 +592,55 @@
             }
         }
 
+        @media (max-width: 480px) {
+            .profile-container {
+                padding: 0.5rem;
+                margin: 1rem auto;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            
+            .navigation-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
         /* Modern Layout */
         .profile-container {
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 280px 1fr; /* Reduced from 300px */
+            display: flex;
+            flex-direction: row;
             gap: 2rem;
+            min-height: calc(100vh - 4rem);
         }
 
         /* Sleek Sidebar */
         .profile-sidebar {
-            background: rgba(20, 20, 35, 0.7);
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 200px; /* Reduced from 280px */
+            height: 100vh;
+            background: rgba(20, 20, 35, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 1.5rem; /* Reduced padding */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: sticky;
-            top: 2rem;
-            height: calc(100vh - 4rem);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem; /* Reduced padding */
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center children */
-            width: 100%;
-            box-sizing: border-box;
+            gap: 0.25rem; /* Reduced from 0.5rem to 0.25rem */
+            overflow-y: auto;
+            z-index: 100; /* Add this line */
         }
 
         .avatar-container {
             position: relative;
             width: 120px; /* Slightly smaller */
             height: 120px;
-            margin: 0 auto 1.5rem;
+            margin: 0 auto 0.25rem; /* Reduced from 0.5rem to 0.25rem */
         }
 
         .avatar-placeholder {
@@ -627,6 +666,8 @@
 
         /* Main Content Area */
         .main-content {
+            flex: 1;
+            max-width: calc(100% - 320px);
             display: flex;
             flex-direction: column;
             gap: 2rem;
@@ -695,9 +736,9 @@
         /* Navigation Grid */
         .navigation-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 1rem;
-            margin-top: 1rem;
+            width: 100%;
         }
 
         .nav-button {
@@ -721,20 +762,28 @@
         /* Modern Responsive Design */
         @media (max-width: 1024px) {
             .profile-container {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+                padding: 1rem;
             }
             
             .profile-sidebar {
+                flex: 0 0 auto;
+                width: 100%;
+                max-width: none;
                 position: relative;
                 top: 0;
-                max-width: 280px; /* Match desktop width */
-                margin: 0 auto;
-                height: auto;
-                padding: 1.5rem;
             }
             
-            .mvp-monster {
-                margin-top: 2rem;
+            .main-content {
+                max-width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .navigation-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
@@ -759,6 +808,513 @@
                 max-width: 280px;
             }
         }
+
+        /* Fixed Sidebar - Updated Size */
+        .profile-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 200px; /* Reduced from 280px */
+            height: 100vh;
+            background: rgba(20, 20, 35, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem; /* Reduced padding */
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem; /* Reduced from 0.5rem to 0.25rem */
+            overflow-y: hidden;
+        }
+
+        /* Adjust main content margin */
+        .main-content {
+            margin-left: 200px; /* Match sidebar width */
+        }  /* Add this missing closing brace */
+        
+        .avatar-container {
+            width: 80px; /* Smaller avatar */
+            height: 80px;
+            margin: 0 auto 0.25rem;
+        }
+
+        /* Compact Sidebar Sections */
+        .sidebar-section {
+            padding: 0.5rem; /* Reduced from 0.75rem */
+            margin-bottom: 0.15rem; /* Reduced from 0.25rem to 0.15rem */
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Compact Text */
+        .profile-sidebar h2 {
+            font-size: 1rem;
+            margin: 0.25rem 0; /* Reduced from 0.5rem to 0.25rem */
+        }
+
+        .profile-sidebar h3 {
+            font-size: 0.9rem;
+            margin: 0.25rem 0; /* Reduced from 0.5rem to 0.25rem */
+        }
+
+        /* Compact Buttons */
+        .profile-actions button {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .profile-sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                max-height: none;
+                padding: 1rem;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+            }
+        }
+
+        /* Add/Update these styles */
+        .name-container {
+            text-align: center;
+            margin-bottom: 0.25rem; /* Reduced from 1rem to 0.25rem */
+        }
+
+        .account-type-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.5rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .account-type-container.free {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .account-type-container.premium {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+        }
+
+        .account-type-container.vip {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .account-type-container .emoji {
+            margin-right: 4px;
+        }
+        /* ...existing code... */
+        
+        /* Stats Card - Updated Layout */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        /* Responsive adjustments for stats grid */
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, auto);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, auto);
+            }
+        }
+
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem; /* Reduced from 1rem to 0.25rem */
+        }
+
+        .sidebar-button {
+            width: 90%;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+        }
+
+        .sidebar-button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #34495e, #2980b9);
+        }
+
+        .sidebar-button.logout {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+        }
+
+        .sidebar-button.logout:hover {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+        }
+
+        /* Add these new notification styles */
+        .notification-item {
+            padding: 6px; /* Reduced from 8px */
+            margin: 4px 0; /* Reduced from 8px 0 */
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notification-item.unread {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: rgba(52, 152, 219, 0.3);
+        }
+
+        .notification-item.read {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .notification-item:hover {
+            transform: translateX(2px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #notificationsList {
+            max-height: 225px; /* Changed from 150px to 225px (1.5x) */
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        #notificationsList::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #notificationsList::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        /* Updated Sidebar Name Styling */
+        .name-container {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+        }
+
+        .name-container h2 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #64B5F6, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0.5rem 0;
+        }
+
+        /* Updated Account Badge Styling */
+        .account-type-container {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 0.5rem auto;
+            text-align: center;
+        }
+
+        .account-type-container.free {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .account-type-container.premium {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+        }
+
+        .account-type-container.vip {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        /* Updated Notifications Styling */
+        .notifications-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            max-height: 225px; /* Changed from 150px to 225px (1.5x) */
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-item.unread {
+            background: rgba(52, 152, 219, 0.2);
+            border-left: 3px solid #3498db;
+        }
+
+        .notification-item.read {
+            opacity: 0.7;
+        }
+
+        /* Updated Sidebar Buttons */
+        .sidebar-button {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.8), rgba(41, 128, 185, 0.8));
+            color: white;
+        }
+
+        .sidebar-button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.9), rgba(41, 128, 185, 0.9));
+        }
+
+        .sidebar-button.logout {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        /* Dark Mode Toggle Fix */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Dark mode specific styles */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        body:not(.dark-mode) {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .avatar-container {
+            position: relative;
+            width: 80px; /* Reduced from 120px */
+            height: 80px; /* Reduced from 120px */
+            margin: 0 auto 0.15rem; /* Reduced from 0.25rem */
+        }
+
+        .name-container {
+            text-align: center;
+            margin-bottom: 0.5rem; /* Reduced from 1rem */
+            padding: 0.25rem; /* Reduced from 0.5rem */
+        }
+
+        .name-container h2 {
+            font-size: 1.2rem; /* Reduced from 1.5rem */
+            margin: 0.25rem 0; /* Reduced from 0.5rem */
+        }
+
+        .account-type-container {
+            padding: 0.25rem 0.75rem; /* Reduced padding */
+            font-size: 0.8rem; /* Reduced from 0.9rem */
+            margin: 0.25rem auto; /* Reduced from 0.5rem */
+        }
+
+        /* Compact Sidebar Sections */
+        .sidebar-section {
+            padding: 0.35rem; /* Reduced from 0.5rem */
+            margin-bottom: 0.1rem; /* Reduced from 0.15rem */
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Compact Buttons */
+        .profile-actions {
+            gap: 0.25rem; /* Reduced from 0.5rem */
+            margin-top: 0.15rem; /* Reduced from 0.25rem */
+        }
+
+        .sidebar-button {
+            padding: 0.35rem; /* Reduced from 0.5rem */
+            margin: 0.1rem 0; /* Reduced from 0.25rem */
+            font-size: 0.8rem; /* Slightly reduced */
+        }
+
+        .notifications-container {
+            max-height: 225px; /* Changed from 150px to 225px (1.5x) */
+            padding: 0.35rem; /* Reduced padding */
+        }
+
+        #notificationsList {
+            max-height: 225px; /* Changed from 150px to 225px (1.5x) */
+        }
+
+        /* MVP Monster section adjustments */
+        .mvp-monster-image {
+            width: 48px; /* Reduced from 64px */
+            height: 48px; /* Reduced from 64px */
+            margin: 0 auto 0.5rem; /* Reduced margin */
+        }
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 0.5rem;
+            width: 90%;
+            max-width: 800px;
+            padding: 0.5rem;
+            margin: 0.25rem auto;
+        }
+
+        .nav-button {
+            width: 100%;
+            height: 100%;
+            padding: 0.75rem;
+        }
+
+        /* Remove any special positioning for last button */
+        .nav-button:last-child {
+            grid-column: auto;
+            grid-row: auto;
+        }
+
+        @media screen and (min-width: 1024px) {
+            .navigation-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+            }
+
+            .nav-button {
+                min-width: 0;
+            }
+        }
+        /* ...existing code... */
+    
+        .mvp-monster-image {
+            width: 64px;     /* Increased from 48px */
+            height: 64px;    /* Increased from 48px */
+            border-radius: 8px;
+            margin: 0.5rem auto;
+            display: block;
+            object-fit: cover;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .mvp-monster h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .mvp-monster-name {
+            font-size: 0.8rem;
+            margin: 0.2rem 0;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .mvp-monster-details {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0.1rem 0;
+        }
+
+        .mvp-monster-stats {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0.2rem 0;
+        }
+
+        .ad-container {
+            width: 100%;
+            max-width: 728px; /* Standard leaderboard ad size */
+            height: 90px;     /* Standard leaderboard ad size */
+            margin: 0 auto 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .ad-container {
+                height: 50px;     /* Mobile banner height */
+                margin: 0.5rem auto;
+            }
+        }
+
+        /* Remove all @media queries for mobile layouts and replace with this */
+        @media (max-width: 768px) {
+            .profile-container {
+                transform-origin: top left;
+                width: 1024px; /* Fixed width */
+            }
+
+            /* Keep sidebar fixed */
+            .profile-sidebar {
+                position: fixed;
+                width: 200px;
+            }
+
+            /* Maintain main content margin */
+            .main-content {
+                margin-left: 200px;
+                width: calc(100% - 200px);
+                min-width: 824px;
+            }
+
+            /* Maintain grid layouts */
+            .navigation-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(2, 1fr);
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -766,37 +1322,71 @@
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
 
     <div class="profile-container">
-        <!-- Profile Section -->
+        <!-- Fixed Sidebar -->
         <aside class="profile-sidebar">
-            <div class="avatar-section">
+            <!-- Profile Picture -->
+            <div class="sidebar-section">
                 <div class="avatar-container">
                     <div class="avatar-placeholder" id="avatarPlaceholder">👤</div>
-                    <div class="account-badge" id="accountBadge">
+                </div>
+                <div class="name-container">
+                    <h2 id="userName">Loading...</h2>
+                    <div class="account-type-container" id="accountBadge">
                         <span class="emoji"></span>
                         <span class="type"></span>
                     </div>
                 </div>
-                <h2 id="userName" style="text-align: center; margin-bottom: 1rem;">Loading...</h2>
-                <div class="profile-actions">
-                    <button class="rename-button" id="renamePlayerButton">Rename Player</button>
-                    <button class="upload-button" id="uploadImageButton">Change Profile Photo</button>
-                    <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
+            </div>
+
+            <!-- Notifications -->
+            <div class="sidebar-section">
+                <h3 style="display: flex; align-items: center; gap: 4px;">
+                    📬 Notifications
+                    <div style="display: inline-flex; align-items: center;">
+                        <span id="unreadIndicator" style="color: #f1c40f; display: none;">❗</span>
+                        <span id="unreadCount" style="color: #f1c40f; margin-left: 4px;"></span>
+                    </div>
+                </h3>
+                <div class="notifications-container">
+                    <div id="notificationsList">
+                        <!-- Notifications will be dynamically inserted here -->
+                    </div>
                 </div>
             </div>
-            
-            <!-- MVP Monster Card -->
-            <div class="mvp-monster">
+
+            <!-- MVP Monster -->
+            <div class="sidebar-section">
                 <h3>⭐ MVP Monster</h3>
                 <img id="mvpMonsterImage" class="mvp-monster-image" src="assets/images/placeholder-monster.png" alt="MVP Monster">
-                <p id="mvpMonsterName">Loading MVP...</p>
-                <p>Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
+                <p class="mvp-monster-name" id="mvpMonsterName">Loading MVP...</p>
+                <p class="mvp-monster-details">Type: <span id="mvpMonsterType">-</span> | Level: <span id="mvpMonsterLevel">0</span></p>
+                <p class="mvp-monster-stats">Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="sidebar-section profile-actions">
+                <button class="sidebar-button" id="renamePlayerButton">Rename Player</button>
+                <button class="sidebar-button" id="uploadImageButton">Change Photo</button>
+                <button class="sidebar-button" onclick="location.href='help.html'">Help</button>
+                <button class="sidebar-button logout" id="logoutButton">Logout</button>
+                <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <main class="main-content">
+            <div class="ad-container">
+                <!-- Ad code will go here -->
+                <div style="color: rgba(255,255,255,0.5);">Advertisement</div>
+            </div>
+            
             <div class="logo-container">
                 <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
+            </div>
+
+            <!-- Game Tip - Moved here -->
+            <div class="tooltip-box" id="gameTip">
+                Loading tip...
             </div>
 
             <!-- Stats Card -->
@@ -818,12 +1408,15 @@
                         <div>Completion</div>
                         <strong id="completionPercentage">0%</strong>
                     </div>
+                    <div class="stat-box">
+                        <div>Wins</div>
+                        <strong id="playerWins">0</strong>
+                    </div>
+                    <div class="stat-box">
+                        <div>Losses</div>
+                        <strong id="playerLosses">0</strong>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Game Tip -->
-            <div class="tooltip-box" id="gameTip">
-                Loading tip...
             </div>
 
             <!-- Navigation -->
@@ -840,7 +1433,7 @@
 
     <!-- Version Number -->
     <footer>
-        <p>Version: <span id="versionNumber">1.0.052</span></p>
+        <p>Version: <span id="versionNumber">1.0.053</span></p>
         <p>&copy; 2025 Barcode Masters | 
             <a href="changelog.html" class="support-link">
                 📝 Change Log
@@ -915,18 +1508,20 @@
 
         // Function to update MVP monster display
         function updateMVPMonster(monster) {
-            console.log("Updating MVP monster display with:", monster); // Debug log
-            if (monster && monster.monsterName) {  // Changed from name to monsterName
-                document.getElementById('mvpMonsterName').textContent = monster.monsterName;  // Changed from name to monsterName
-                document.getElementById('mvpMonsterWins').textContent = monster.wins || 0;
-                document.getElementById('mvpMonsterXP').textContent = monster.experience || 0;
-                // Add this line to update the monster image
+            if (monster && monster.monsterName) {
                 document.getElementById('mvpMonsterImage').src = monster.imageUrl || 'assets/images/placeholder-monster.png';
+                document.getElementById('mvpMonsterName').textContent = monster.monsterName;
+                document.getElementById('mvpMonsterType').textContent = monster.type || '-';
+                document.getElementById('mvpMonsterLevel').textContent = monster.level || '0';
+                document.getElementById('mvpMonsterWins').textContent = monster.wins || '0';
+                document.getElementById('mvpMonsterXP').textContent = monster.experience || '0';
             } else {
-                document.getElementById('mvpMonsterName').textContent = "No monsters yet";
-                document.getElementById('mvpMonsterWins').textContent = "0";
-                document.getElementById('mvpMonsterXP').textContent = "0";
                 document.getElementById('mvpMonsterImage').src = 'assets/images/placeholder-monster.png';
+                document.getElementById('mvpMonsterName').textContent = "No monsters yet";
+                document.getElementById('mvpMonsterType').textContent = '-';
+                document.getElementById('mvpMonsterLevel').textContent = '0';
+                document.getElementById('mvpMonsterWins').textContent = '0';
+                document.getElementById('mvpMonsterXP').textContent = '0';
             }
         }
 
@@ -1008,10 +1603,11 @@
                     
                     badge.querySelector('.emoji').textContent = badges[accountType].emoji;
                     badge.querySelector('.type').textContent = badges[accountType].label;
-                    badge.className = `account-badge ${accountType}`;
+                    badge.className = `account-type-container ${accountType}`; // Changed from account-badge to account-type-container
                 } else {
                     console.log("No such document!");
                 }
+                renderNotifications(); // Add this line to render notifications
             } else {
                 window.location.href = 'index.html';
             }
@@ -1179,6 +1775,148 @@
                 });
             }
         });
-    </script>
-</body>
-</html>
+
+        // Sample notifications data
+        let notifications = JSON.parse(localStorage.getItem('notifications')) || [
+            {
+                id: 1,
+                message: "🏆 Don't forget to vote for Monster of the Week in the Monster Index!",
+                timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+                read: false
+            },
+            {
+                id: 2,
+                message: "💫 Coming soon: Monster Trading & PvP Battles!",
+                timestamp: new Date(Date.now() - 5000 * 60 * 60).toISOString(), // 1 hour ago
+                read: false
+            },
+            {
+                id: 3,
+                message: "🎮 Game Milestone: 100 monsters discovered by players!",
+                timestamp: new Date(Date.now() - 10000 * 60 * 120).toISOString(), // 2 hours ago
+                read: false
+            }
+        ];
+
+        // Function to save notifications to localStorage
+        function saveNotifications() {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+        }
+
+        // Function to format timestamp
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMinutes = Math.floor((now - date) / (1000 * 60));
+            
+            if (diffMinutes < 60) {
+                return `${diffMinutes}m ago`;
+            } else if (diffMinutes < 1440) {
+                return `${Math.floor(diffMinutes / 60)}h ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        // Function to render notifications
+        function renderNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+
+            const unreadCount = notifications.filter(n => !n.read).length;
+            
+            // Update the unread indicator and count
+            const unreadIndicator = document.getElementById('unreadIndicator');
+            const unreadCountSpan = document.getElementById('unreadCount');
+            
+            if (unreadCount > 0) {
+                unreadIndicator.style.display = 'inline';
+                unreadCountSpan.textContent = `(${unreadCount})`;
+            } else {
+                unreadIndicator.style.display = 'none';
+                unreadCountSpan.textContent = '';
+            }
+
+            notificationsList.innerHTML = notifications.length === 0 
+                ? '<p>No notifications</p>'
+                : notifications
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort by newest first
+                    .map(notification => `
+                        <div class="notification-item ${notification.read ? 'read' : 'unread'}" 
+                             data-notification-id="${notification.id}">
+                            <div>${notification.message}</div>
+                            <small style="color: rgba(255,255,255,0.5);">${formatTimestamp(notification.timestamp)}</small>
+                        </div>
+                    `).join('');
+
+            // Add click handlers
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const notificationId = parseInt(this.dataset.notificationId);
+                    markNotificationAsRead(notificationId);
+                });
+            });
+        }
+
+        // Function to mark notification as read
+        function markNotificationAsRead(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification && !notification.read) {
+                notification.read = true;
+                saveNotifications(); // Save to localStorage
+                renderNotifications();
+            }
+        }
+
+        // Add a function to add new notifications
+        function addNotification(message) {
+            const newNotification = {
+                id: Date.now(), // Use timestamp as ID
+                message,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            notifications.push(newNotification);
+            saveNotifications();
+            renderNotifications();
+        }
+
+        // Optional: Add a function to clear old notifications
+        function cleanupOldNotifications() {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            notifications = notifications.filter(notification => 
+                new Date(notification.timestamp) > thirtyDaysAgo || !notification.read
+            );
+            
+            saveNotifications();
+            renderNotifications();
+        }
+
+        // Call cleanup when loading the page
+        cleanupOldNotifications();
+    </script>    <!-- Make sure this aligns with an opening <script> tag -->
+    <script>
+    // Scaling function
+    function updateScaleFactor() {
+        const container = document.querySelector('.profile-container');
+        if (!container) return;
+
+        const width = window.innerWidth;
+        if (width < 1024) {
+            const scale = Math.max(0.5, width / 1024);
+            container.style.transform = `scale(${scale})`;
+        } else {
+            container.style.transform = 'none';
+        }
+    }
+
+    // Add event listeners
+    window.addEventListener('resize', updateScaleFactor);
+    window.addEventListener('load', updateScaleFactor);
+    document.addEventListener('DOMContentLoaded', updateScaleFactor);
+</script>
+</body>          <!-- Make sure this aligns with an opening <body> tag -->
+</html>          <!-- Make sure this aligns with an opening <html> tag -->

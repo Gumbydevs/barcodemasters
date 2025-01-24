@@ -107,6 +107,11 @@ const staticTips = [
     "Make sure you have a stable internet connection for battles",
     "Keep your device's camera lens clean for better scanning results",
     "Some older devices may have trouble with barcode scanning - try a QR code instead",
+
+    //Events
+    "Don't forget to cast your vote for Monster of the Week!",
+    "Haven't voted yet? Make your voice heard in this week's Monster of the Week poll!",
+    "Head over to the Monster Index to cast your vote for Monster of the Week!",
     
     // Community & Updates
     "Share your strategies and discoveries with other players in Discord",
@@ -158,7 +163,7 @@ async function getDynamicTips(db) {
         `There are currently ${stats.totalMonsters.toLocaleString()} monsters discovered worldwide!`,
         `Players have discovered ${stats.discoveredTypes} unique monster types so far`,
         `You are part of a growing community of ${stats.totalPlayers} active monster hunters`,
-        `The highest level monster discovered so far is level ${stats.highestLevel}!`
+        `The highest level monster so far is level ${stats.highestLevel}!`
     ];
 }
 
