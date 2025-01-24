@@ -390,6 +390,15 @@
             font-size: 0.9rem;
         }
 
+        .votes-remaining span {
+            font-weight: bold;
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 4px;
+        }
+
         .toast {
             position: fixed;
             top: -100px;
@@ -556,7 +565,6 @@
                         throw new Error("Required documents don't exist");
                     }
 
-                    // Get monster name for the toast message
                     monsterName = monsterDoc.data().monsterName;
 
                     const userData = userDoc.data();
@@ -577,7 +585,7 @@
                         }
                     });
 
-                    // Update monster votes
+                    // Update monster's votes - simplified update that doesn't check ownership
                     const monsterData = monsterDoc.data();
                     const currentVotes = monsterData.weeklyVotes?.[currentContest.id]?.votes || 0;
                     const currentVoters = monsterData.weeklyVotes?.[currentContest.id]?.voters || {};
@@ -597,6 +605,12 @@
                 });
 
                 await loadNominees(); // Refresh the display
+                
+                // Add this line to update the UI immediately after successful vote
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const weeklyVotes = userDoc.data().weeklyVotes?.[currentContest.id];
+                document.getElementById('votesRemaining').textContent = weeklyVotes.votesRemaining;
+
                 showToast(`🎉 Successfully voted ${votes} time${votes > 1 ? 's' : ''} for ${monsterName}!`);
             } catch (error) {
                 console.error('Error submitting vote:', error);
