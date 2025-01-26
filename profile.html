@@ -2755,144 +2755,7 @@
         }
     }
 </style>
-
-<!-- Add this script to handle mobile-specific behavior -->
-<script>
-    function handleMobileLayout() {
-        if (window.innerWidth <= 425) {
-            // Remove any scaling transforms on mobile
-            document.documentElement.style.removeProperty('--scale-factor');
-            
-            // Disable scaling calculations on mobile
-            window.removeEventListener('resize', updateScale);
-        }
-    }
-
-    // Run on load and orientation change
-    window.addEventListener('load', handleMobileLayout);
-    window.addEventListener('orientationchange', handleMobileLayout);
-</script>
 <!-- ...existing code... -->
-<style>
-    /* Tablet-only fixes (768px to 1023px) */
-    @media screen and (min-width: 768px) and (max-width: 1023px) {
-        /* Center main content */
-        .main-content {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            width: calc(100% - 240px) !important;
-            margin-left: 240px !important;
-            padding: 1rem !important;
-        }
-
-        /* Fix logo and tooltip alignment */
-        .logo-container {
-            width: 160px !important;
-            margin: 1rem auto !important;
-        }
-
-        .tooltip-box {
-            width: 90% !important;
-            max-width: 500px !important;
-            margin: 1rem auto !important;
-        }
-
-        /* Fix stats grid layout */
-        .stats-container {
-            width: 90% !important;
-            max-width: 600px !important;
-            margin: 1rem auto !important;
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 0.75rem !important;
-        }
-
-        /* Adjust navigation grid */
-        .navigation-grid {
-            width: 90% !important;
-            max-width: 600px !important;
-            margin: 1rem auto !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0.75rem !important;
-        }
-    }
-</style>
-<!-- ...existing code... -->
-<style>
-    /* Tablet-specific footer positioning */
-    @media screen and (min-width: 426px) and (max-width: 1023px) {
-        footer {
-            margin-left: 240px; /* Match sidebar width */
-            width: calc(100% - 240px); /* Take remaining width */
-            text-align: center;
-            position: relative;
-            bottom: 0;
-        }
-    }
-</style>
-<!-- ...existing code... -->
-<style>
-    /* Stats Card - Base Styles */
-    .stats-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-        padding: 0.5rem;
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .stat-box {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 0.5rem;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        min-width: 80px;
-        max-width: 120px;
-        aspect-ratio: 1;
-    }
-
-    .stat-box div {
-        font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.7);
-        margin: 0;
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    .stat-box strong {
-        font-size: 1.2rem;
-        margin: 0.2rem 0 0 0;
-        text-align: center;
-    }
-
-    /* Override tablet styles */
-    @media screen and (min-width: 426px) and (max-width: 1023px) {
-        .stats-container {
-            transform: scale(0.9);
-            transform-origin: center top;
-        }
-        
-        .stat-box {
-            transform: none;
-            padding: 0.5rem;
-            aspect-ratio: 1;
-        }
-    }
-
-    @media screen and (max-width: 425px) {
-        .stats-container {
-            transform: scale(0.8);
-            transform-origin: center top;
-        }
-    }
-</style>
 <!-- ...existing code... -->
 <style>
     /* Mobile-only layout adjustments (425px and below) */
@@ -3521,4 +3384,140 @@
         }
     }
 </style>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Updated mobile breakpoint to include iPhone 14 Pro (430px) */
+    @media screen and (max-width: 430px) {
+        /* Reset and disable all scaling/transforms */
+        * {
+            transform: none !important;
+            min-width: unset !important;
+            max-width: 100% !important;
+        }
+
+        /* Container reset */
+        .profile-container {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            min-width: unset !important;
+            margin: 0 !important;
+            padding: 0.5rem !important;
+        }
+
+        /* Sidebar changes */
+        .profile-sidebar {
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0.5rem 0 !important;
+            padding: 1rem !important;
+            transform: none !important;
+            order: 2;
+        }
+
+        /* Main content adjustments */
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 0.5rem !important;
+            order: 1;
+        }
+
+        /* Logo container */
+        .logo-container {
+            width: 120px !important;
+            margin: 1rem auto !important;
+        }
+
+        /* Navigation grid */
+        .navigation-grid {
+            width: 90% !important;
+            margin: 0.5rem auto !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.5rem !important;
+        }
+
+        /* Hide desktop elements */
+        .stats-card,
+        .ad-container {
+            display: none !important;
+        }
+
+        /* Reset any scaling/transform properties */
+        html, body {
+            min-width: initial !important;
+            width: 100% !important;
+            overflow-x: hidden !important;
+        }
+    }
+</style>
+
+<script>
+    // Update the mobile check to include iPhone 14 Pro
+    function handleMobileLayout() {
+        if (window.innerWidth <= 430) {
+            // Remove any scaling transforms on mobile
+            document.documentElement.style.removeProperty('--scale-factor');
+            // Disable scaling calculations on mobile
+            window.removeEventListener('resize', updateScale);
+        }
+    }
+
+    // Run on load and orientation change
+    window.addEventListener('load', handleMobileLayout);
+    window.addEventListener('orientationchange', handleMobileLayout);
+</script>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* iPhone 14 Pro (and similar devices) spacing fixes */
+    @media screen and (max-width: 430px) {
+        /* Force all content to use natural height */
+        .profile-container {
+            min-height: unset !important;
+            height: auto !important;
+            gap: 0.5rem !important;
+        }
+
+        /* Remove extra spaces in main content */
+        .main-content {
+            gap: 0.5rem !important;
+            min-height: unset !important;
+            height: auto !important;
+        }
+
+        /* Tighten up navigation grid spacing */
+        .navigation-grid {
+            margin: 0.5rem auto !important;
+            padding: 0 !important;
+        }
+
+        /* Remove extra padding/margins from sidebar content */
+        .profile-sidebar {
+            padding: 0.75rem !important;
+            margin: 0.5rem 0 !important;
+            min-height: unset !important;
+            height: auto !important;
+        }
+
+        /* Adjust spacing between sections */
+        .sidebar-section {
+            margin-bottom: 0.5rem !important;
+            padding: 0.5rem !important;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        /* Remove any flex gaps causing extra space */
+        .sidebar-content {
+            gap: 0.5rem !important;
+        }
+    }
+</style>
+<!-- ...existing code... -->
 <!-- ...existing code... -->
