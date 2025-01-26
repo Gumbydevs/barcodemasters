@@ -2401,6 +2401,113 @@ async function updateCollectionStats(monsters) {
 
     // ...rest of existing code...
 </script>
+<script>
+    // Function to get the current monster of the week and display it
+    async function updateCurrentWinner() {
+        const winnerContainer = document.getElementById('currentWinner');
+        try {
+            const now = new Date();
+            const weekStart = getWeekStart(now);
+            const weekId = weekStart.toISOString().split('T')[0];
+            
+            const contestRef = doc(db, 'weeklyContests', weekId);
+            const contestDoc = await getDoc(contestRef);
+            
+            if (contestDoc.exists() && contestDoc.data().winner) {
+                const winner = contestDoc.data().winner;
+                const monsterRef = doc(db, 'monsters', winner.monsterId);
+                const monsterDoc = await getDoc(monsterRef);
+                
+                if (monsterDoc.exists()) {
+                    const monster = monsterDoc.data();
+                    const ownerRef = doc(db, 'users', monster.ownerId);
+                    const ownerDoc = await getDoc(ownerRef);
+                    const owner = ownerDoc.data();
+                    const typeRef = doc(db, 'monsterTypes', monster.type);
+                    const typeDoc = await getDoc(typeRef);
+                    const typeInfo = typeDoc.data();
+
+                    winnerContainer.innerHTML = `
+                        <div class="current-winner-card">
+                            <img src="${monster.imageUrl || 'assets/images/monster-placeholder.png'}" 
+                                 alt="${monster.monsterName}" 
+                                 class="winner-monster-image">
+                            <div class="winner-details">
+                                <div class="winner-owner-info">
+                                    <img src="${owner.profilePicture || 'assets/images/default-avatar.png'}" 
+                                         alt="${owner.username}" 
+                                         class="owner-avatar">
+                                    <div>
+                                        <div>Owner: ${owner.username}</div>
+                                        <div>Total Votes: ${winner.votes}</div>
+                                    </div>
+                                </div>
+                                <h3 class="winner-monster-name">${monster.monsterName}</h3>
+                                <div class="winner-type-info">
+                                    <div>${monster.type}</div>
+                                    <div>${typeInfo?.description || 'No description available'}</div>
+                                </div>
+                                <div class="winner-stats">
+                                    <div class="winner-stat">
+                                        <div class="winner-stat-label">Level</div>
+                                        <div class="winner-stat-value">${monster.level}</div>
+                                    </div>
+                                    <div class="winner-stat">
+                                        <div class="winner-stat-label">HP</div>
+                                        <div class="winner-stat-value">${monster.HP}</div>
+                                    </div>
+                                    <div class="winner-stat">
+                                        <div class="winner-stat-label">AP</div>
+                                        <div class="winner-stat-value">${monster.AP}</div>
+                                    </div>
+                                    <div class="winner-stat">
+                                        <div class="winner-stat-label">Speed</div>
+                                        <div class="winner-stat-value">${monster.Speed}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                winnerContainer.innerHTML = '<div class="no-winner">No winner yet this week</div>';
+            }
+        } catch (error) {
+            console.error('Error updating current winner:', error);
+            winnerContainer.innerHTML = '<div class="error" align=center>⭐❓👹❓⭐</div>';
+        }
+    }
+
+    // Add to your initialization code
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCurrentWinner();
+        // ... rest of your existing initialization code
+    });
+</script>
+<script>
+    // Add this helper function
+    function getWeekStart(date) {
+        const newDate = new Date(date);
+        newDate.setHours(0, 0, 0, 0);
+        const day = newDate.getDay();
+        const diff = newDate.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(newDate.setDate(diff));
+    }
+
+    // Add this function to your existing script
+    async function updateCurrentWinner() {
+        const winnerContainer = document.getElementById('currentWinner');
+        try {
+            const now = new Date();
+            const weekStart = getWeekStart(now);
+            // ...rest of existing updateCurrentWinner function...
+        } catch (error) {
+            console.error('Error updating current winner:', error);
+            winnerContainer.innerHTML = '<div class="error" align=center>⭐❓👹❓⭐</div>';
+        }
+    }
+    <!-- ...existing code... -->
+</script>
 </head>
 <body>
     <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
@@ -2433,7 +2540,7 @@ async function updateCollectionStats(monsters) {
                 <div class="motw-timer">Next winner in: <span id="indexVotingTimer">--:--:--</span></div>
             </div>
             <div class="current-winner" id="currentWinner">
-                <!-- Winner will be dynamically inserted -->
+                <!-- Winner card template will be inserted here -->
             </div>
             <button class="vote-button" onclick="location.href='monster-of-the-week.html'">
                 <span class="vote-icon">🗳️</span>
@@ -2472,7 +2579,7 @@ async function updateCollectionStats(monsters) {
         <p id="errorMessage" style="color: red; display: none;"></p>
     </div>
 
-    <footer>
+    <footer></footer>
         <p>Version: <span id="versionNumber">1.0.06</span></p>
         <p>&copy; 2025 Barcode Masters | 
             <a href="changelog.html" class="support-link">
@@ -2938,6 +3045,97 @@ async function updateCollectionStats(monsters) {
         margin: 0 auto !important;
         width: fit-content !important;
         max-width: 100% !important;
+    }
+</style>
+<style>
+    /* Add these styles within the existing style block */
+    .current-winner-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .winner-owner-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .owner-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #2ecc71;
+    }
+
+    .winner-monster-image {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .winner-details {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .winner-monster-name {
+        font-size: 1.5rem;
+        color: #2ecc71;
+        margin: 0;
+    }
+
+    .winner-type-info {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .winner-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .winner-stat {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .winner-stat-label {
+        font-size: 0.8rem;
+        color: #a8b3cf;
+        margin-bottom: 0.25rem;
+    }
+
+    .winner-stat-value {
+        font-size: 1.1rem;
+        color: #2ecc71;
+    }
+
+    @media (max-width: 768px) {
+        .current-winner-card {
+            grid-template-columns: 1fr;
+            padding: 1rem;
+        }
+
+        .winner-monster-image {
+            width: 100%;
+            height: 180px;
+        }
     }
 </style>
 </body>

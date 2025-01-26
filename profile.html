@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Barcode Masters - Profile</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="assets/styles.css">
@@ -167,7 +167,7 @@
 
         .nav-button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 1);
         }
 
         #logoutButton {
@@ -258,6 +258,10 @@
                 grid-template-columns: repeat(3, 1fr);
                 max-width: 700px;
             }
+             .nav-button {
+                padding: 0.45rem;
+                font-size: 0.9rem;
+            }
         }
 
         /* Mobile styles */
@@ -293,7 +297,7 @@
             }
 
             .nav-button {
-                padding: 0.75rem;
+                padding: 0.45rem;
                 font-size: 0.9rem;
             }
 
@@ -1440,6 +1444,188 @@
         }
     }
 </style>
+    <style>
+        /* Viewport Base Settings */
+        html, body {
+            width: 100%;
+            min-width: 1024px;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Container Base */
+        .profile-container {
+            width: 1024px;
+            margin: 0 auto;
+            position: relative;
+            transform-origin: top left;
+        }
+
+        /* Fixed Sidebar */
+        .profile-sidebar {
+            width: 240px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            transform-origin: top left;
+        }
+
+        /* Main Content */
+        .main-content {
+            width: 784px;
+            margin-left: 240px;
+            transform-origin: top left;
+        }
+
+        /* Scaling Solution */
+        @media screen and (max-width: 1023px) {
+            :root {
+                --scale: calc(100vw / 1024);
+            }
+
+            body {
+                transform-origin: top left;
+                transform: scale(var(--scale));
+                width: calc(100% * (1/var(--scale)));
+                height: calc(100% * (1/var(--scale)));
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+
+            .profile-container {
+                margin: 0 auto;
+                padding: 1rem;
+                box-sizing: border-box;
+            }
+
+            footer {
+                width: 100vw;
+                transform-origin: bottom left;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+            }
+        }
+
+        /* Additional Mobile Optimizations */
+        @media screen and (max-width: 767px) {
+            .profile-container {
+                padding: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+    <style>
+    /* Base Layout Settings */
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-width: 320px;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Container Base */
+    .profile-container {
+        display: flex;
+        min-height: 100vh;
+        width: 1024px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    /* Sidebar Base */
+    .profile-sidebar {
+        width: 240px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: rgba(20, 20, 35, 0.95);
+        z-index: 100;
+    }
+
+    /* Main Content Base */
+    .main-content {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        min-height: 100vh;
+        padding: 1rem;
+    }
+
+    /* Scaling Solution */
+    @media screen and (max-width: 1023px) {
+        :root {
+            --sidebar-height: 100vh;
+            --viewport-height: 100vh;
+            --scale-ratio: calc(var(--viewport-height) / var(--sidebar-height));
+        }
+
+        body {
+            min-height: 100vh;
+            transform-origin: top left;
+            overflow-x: auto;
+        }
+
+        .profile-container {
+            transform-origin: top left;
+            transform: scale(var(--scale-ratio));
+            width: calc(1024px * var(--scale-ratio));
+            height: calc(100vh / var(--scale-ratio));
+        }
+
+        .profile-sidebar {
+            transform-origin: top left;
+            height: 100vh;
+            position: fixed;
+        }
+    }
+</style>
+
+<script>
+    function updateScale() {
+        const sidebar = document.querySelector('.profile-sidebar');
+        if (!sidebar) return;
+
+        const viewportHeight = window.innerHeight;
+        const sidebarHeight = sidebar.scrollHeight;
+        const scale = Math.min(1, viewportHeight / sidebarHeight);
+
+        document.documentElement.style.setProperty('--sidebar-height', `${sidebarHeight}px`);
+        document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
+        document.documentElement.style.setProperty('--scale-ratio', scale);
+
+        // Prevent zooming on mobile
+        document.body.style.touchAction = 'pan-y';
+        document.body.style.userSelect = 'none';
+    }
+
+    // Update scale on important events
+    window.addEventListener('load', updateScale);
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('orientationchange', updateScale);
+
+    // Prevent pinch zoom
+    document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Update on content changes
+    new MutationObserver(updateScale).observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+</script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8114687054287419" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -1449,52 +1635,54 @@
     <div class="profile-container">
         <!-- Fixed Sidebar -->
         <aside class="profile-sidebar">
-            <!-- Profile Picture -->
-            <div class="sidebar-section">
-                <div class="avatar-container">
-                    <div class="avatar-placeholder" id="avatarPlaceholder">👤</div>
-                </div>
-                <div class="name-container">
-                    <h2 id="userName">Loading...</h2>
-                    <div class="account-type-container" id="accountBadge">
-                        <span class="emoji"></span>
-                        <span class="type"></span>
+            <div class="sidebar-content">
+                <!-- Profile Picture -->
+                <div class="sidebar-section">
+                    <div class="avatar-container">
+                        <div class="avatar-placeholder" id="avatarPlaceholder">👤</div>
+                    </div>
+                    <div class="name-container">
+                        <h2 id="userName">Loading...</h2>
+                        <div class="account-type-container" id="accountBadge">
+                            <span class="emoji"></span>
+                            <span class="type"></span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Notifications -->
-            <div class="sidebar-section">
-                <h3 style="display: flex; align-items: center; gap: 4px;">
-                    📬 Notifications
-                    <div style="display: inline-flex; align-items: center;">
-                        <span id="unreadIndicator" style="color: #f1c40f; display: none;">❗</span>
-                        <span id="unreadCount" style="color: #f1c40f; margin-left: 4px;"></span>
-                    </div>
-                </h3>
-                <div class="notifications-container">
-                    <div id="notificationsList">
-                        <!-- Notifications will be dynamically inserted here -->
+                <!-- Notifications -->
+                <div class="sidebar-section">
+                    <h3 style="display: flex; align-items: center; gap: 4px;">
+                        📬 Notifications
+                        <div style="display: inline-flex; align-items: center;">
+                            <span id="unreadIndicator" style="color: #f1c40f; display: none;">❗</span>
+                            <span id="unreadCount" style="color: #f1c40f; margin-left: 4px;"></span>
+                        </div>
+                    </h3>
+                    <div class="notifications-container">
+                        <div id="notificationsList">
+                            <!-- Notifications will be dynamically inserted here -->
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- MVP Monster -->
-            <div class="sidebar-section">
-                <h3>⭐ MVP Monster</h3>
-                <img id="mvpMonsterImage" class="mvp-monster-image" src="assets/images/placeholder-monster.png" alt="MVP Monster">
-                <p class="mvp-monster-name" id="mvpMonsterName">Loading MVP...</p>
-                <p class="mvp-monster-details">Type: <span id="mvpMonsterType">-</span> | Level: <span id="mvpMonsterLevel">0</span></p>
-                <p class="mvp-monster-stats">Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
-            </div>
+                <!-- MVP Monster -->
+                <div class="sidebar-section">
+                    <h3>⭐ MVP Monster</h3>
+                    <img id="mvpMonsterImage" class="mvp-monster-image" src="assets/images/placeholder-monster.png" alt="MVP Monster">
+                    <p class="mvp-monster-name" id="mvpMonsterName">Loading MVP...</p>
+                    <p class="mvp-monster-details">Type: <span id="mvpMonsterType">-</span> | Level: <span id="mvpMonsterLevel">0</span></p>
+                    <p class="mvp-monster-stats">Wins: <span id="mvpMonsterWins">0</span> | XP: <span id="mvpMonsterXP">0</span></p>
+                </div>
 
-            <!-- Action Buttons -->
-            <div class="sidebar-section profile-actions">
-                <button class="sidebar-button" id="renamePlayerButton">Rename Player</button>
-                <button class="sidebar-button" id="uploadImageButton">Change Photo</button>
-                <button class="sidebar-button" onclick="location.href='help.html'">Help</button>
-                <button class="sidebar-button logout" id="logoutButton">Logout</button>
-                <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
+                <!-- Action Buttons -->
+                <div class="sidebar-section profile-actions">
+                    <button class="sidebar-button" id="renamePlayerButton">Rename Player</button>
+                    <button class="sidebar-button" id="uploadImageButton">Change Photo</button>
+                    <button class="sidebar-button" onclick="location.href='help.html'">Help</button>
+                    <button class="sidebar-button logout" id="logoutButton">Logout</button>
+                    <input type="file" id="profileImageInput" style="display: none;" accept="image/*">
+                </div>
             </div>
         </aside>
 
@@ -1504,17 +1692,15 @@
                 <!-- Ad code will go here -->
                 <div style="color: rgba(255,255,255,0.5);">Advertisement</div>
             </div>
-            
+
             <div class="logo-container">
                 <img src="assets/images/BarcodeLogo1.PNG" alt="Barcode Masters Logo">
             </div>
 
-            <!-- Game Tip - Moved here -->
             <div class="tooltip-box" id="gameTip">
                 Loading tip...
             </div>
 
-            <!-- Stats Card -->
             <div class="stats-card">
                 <div class="stats-container">
                     <div class="stat-box">
@@ -1544,7 +1730,6 @@
                 </div>
             </div>
 
-            <!-- Navigation -->
             <nav class="navigation-grid">
                 <button class="nav-button" onclick="location.href='dna-extractor.html'">DNA Extractor</button>
                 <button class="nav-button" onclick="location.href='monster-collection.html'">Monster Collection</button>
@@ -2034,26 +2219,36 @@
 
         const width = window.innerWidth;
         if (width < 1024) {
-            const sidebarScale = Math.min(1, Math.max(0.9, width / 1024));
-            const contentScale = Math.min(1, Math.max(0.75, width / 1024));
+            const scale = window.innerWidth / 1024;
+            const height = document.documentElement.scrollHeight;
+            document.documentElement.style.height = `${height}px`;
+            document.body.style.minHeight = `${height * scale}px`;
             
-            sidebar.style.transform = `scale(${sidebarScale})`;
-            mainContent.style.transform = `scale(${contentScale})`;
-            
-            // Adjust main content width to prevent cutoff
-            const adjustedWidth = (1024 / width) * 100;
-            mainContent.style.width = `${adjustedWidth}%`;
+            // Update footer position
+            const footer = document.querySelector('footer');
+            if (footer) {
+                footer.style.transform = `scale(${scale})`;
+                footer.style.transformOrigin = 'bottom left';
+            }
         } else {
-            sidebar.style.transform = 'none';
-            mainContent.style.transform = 'none';
-            mainContent.style.width = 'calc(100% - 240px)';
+            document.documentElement.style.height = '';
+            document.body.style.minHeight = '';
+            
+            const footer = document.querySelector('footer');
+            if (footer) {
+                footer.style.transform = '';
+            }
         }
     }
 
-    // Add event listeners
-    window.addEventListener('resize', updateScaleFactor);
     window.addEventListener('load', updateScaleFactor);
-    document.addEventListener('DOMContentLoaded', updateScaleFactor);
+    window.addEventListener('resize', updateScaleFactor);
+    
+    // Update on content changes
+    new MutationObserver(updateScaleFactor).observe(document.body, {
+        childList: true,
+        subtree: true
+    });
 </script>
 <script>
     function updateScale() {
@@ -2082,5 +2277,1248 @@
         subtree: true 
     });
 </script>
-</body>          <!-- Make sure this aligns with an opening <body> tag -->
-</html>          <!-- Make sure this aligns with an opening <html> tag -->
+<style>
+    /* Base Layout */
+    .profile-container {
+        max-width: 1400px;
+        min-width: 1024px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        min-height: calc(100vh - 4rem);
+        transform-origin: top left;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    /* Fixed Sidebar */
+    .profile-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 240px;
+        height: 100vh;
+        background: rgba(20, 20, 35, 0.95);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        overflow-y: auto;
+        z-index: 100;
+        transform-origin: top left;
+    }
+
+    /* Main Content */
+    .main-content {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        min-width: 784px;
+        padding: 1rem;
+        transform-origin: top left;
+    }
+
+    /* Responsive Scaling */
+    @media (max-width: 1023px) {
+        html {
+            overflow-x: auto;
+            min-width: 1024px;
+        }
+
+        body {
+            min-width: 1024px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .profile-container {
+            transform: scale(var(--scale-factor, 1));
+            transform-origin: top left;
+            width: 1024px;
+            margin: 1rem auto;
+        }
+
+        .profile-sidebar {
+            transform: scale(var(--scale-factor, 1));
+            transform-origin: top left;
+            width: 240px;
+        }
+
+        .main-content {
+            transform: scale(var(--scale-factor, 1));
+            transform-origin: top left;
+            width: calc(100% - 240px);
+            margin-left: 240px;
+        }
+
+        footer {
+            transform: scale(var(--scale-factor, 1));
+            transform-origin: bottom left;
+            width: calc(100% / var(--scale-factor, 1));
+        }
+    }
+</style>
+
+<script>
+    function calculateScale() {
+        const viewportWidth = window.innerWidth;
+        if (viewportWidth < 1024) {
+            const baseScale = viewportWidth / 1024;
+            const sidebarScale = Math.min(1, Math.max(0.85, baseScale * 1.1));
+            const contentScale = baseScale;
+
+            document.documentElement.style.setProperty('--scale-factor', baseScale);
+            document.documentElement.style.setProperty('--sidebar-scale', sidebarScale);
+
+            // Set minimum height to ensure content is visible
+            const scaledHeight = document.querySelector('.profile-container').scrollHeight * baseScale;
+            document.body.style.minHeight = `${scaledHeight}px`;
+
+            // Adjust footer position
+            const footer = document.querySelector('footer');
+            if (footer) {
+                footer.style.width = `${100 / baseScale}%`;
+            }
+        } else {
+            document.documentElement.style.setProperty('--scale-factor', '1');
+            document.documentElement.style.setProperty('--sidebar-scale', '1');
+            document.body.style.minHeight = 'auto';
+        }
+    }
+
+    // Call on load, resize, and content changes
+    window.addEventListener('load', calculateScale);
+    window.addEventListener('resize', calculateScale);
+    new MutationObserver(calculateScale).observe(document.body, { 
+        childList: true, 
+        subtree: true 
+    });
+</script>
+
+<script>
+    function initScaling() {
+        const updateScale = () => {
+            const viewportWidth = window.innerWidth;
+            if (viewportWidth < 1024) {
+                const scale = Math.min(1, viewportWidth / 1024);
+                const sidebarHeight = document.querySelector('.profile-sidebar')?.scrollHeight || window.innerHeight;
+                const viewportHeight = window.innerHeight;
+                
+                document.documentElement.style.setProperty('--scale-factor', scale.toString());
+                document.documentElement.style.setProperty('--sidebar-height', `${sidebarHeight}px`);
+                document.documentElement.style.setProperty('--viewport-height', `${viewportHeight}px`);
+                
+                document.body.style.minHeight = `${sidebarHeight}px`;
+                document.body.style.touchAction = 'pan-y';
+                document.body.style.userSelect = 'none';
+            } else {
+                document.documentElement.style.removeProperty('--scale-factor');
+                document.documentElement.style.removeProperty('--sidebar-height');
+                document.documentElement.style.removeProperty('--viewport-height');
+                document.body.style.minHeight = '';
+            }
+        };
+
+        // Wait for DOM content to be loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                // Initialize observers after DOM is ready
+                const observer = new MutationObserver(updateScale);
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true
+                });
+                
+                // Initial scale update
+                updateScale();
+            });
+        } else {
+            // DOM is already ready
+            const observer = new MutationObserver(updateScale);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+            
+            // Initial scale update
+            updateScale();
+        }
+
+        // Add event listeners
+        window.addEventListener('load', updateScale);
+        window.addEventListener('resize', updateScale);
+        window.addEventListener('orientationchange', updateScale);
+
+        // Prevent zoom on mobile
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+    }
+
+    // Initialize scaling
+    initScaling();
+</script>
+<style>
+    /* Add this after your existing styles */
+    @media screen and (max-width: 768px) {
+        /* Reset container styles for mobile */
+        .profile-container {
+            flex-direction: column;
+            width: 100%;
+            min-width: initial;
+            margin: 0;
+            padding: 0;
+            transform: none !important;
+        }
+
+        /* Reset sidebar styles for mobile */
+        .profile-sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            margin: 0 auto;
+            transform: none !important;
+        }
+
+        /* Center logo at the top */
+        .logo-container {
+            width: 100%;
+            max-width: 200px;
+            margin: 1rem auto;
+            padding: 0;
+            order: -1;
+        }
+
+        /* Adjust main content for mobile */
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+            min-width: initial;
+            padding: 0.5rem;
+            transform: none !important;
+        }
+
+        /* Hide stats on mobile */
+        .stats-card {
+            display: none;
+        }
+
+        /* Center tooltips and adjust width */
+        .tooltip-box {
+            width: 90%;
+            margin: 1rem auto;
+        }
+
+        /* Center navigation grid and adjust width */
+        .navigation-grid {
+            width: 90%;
+            margin: 1rem auto;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        /* Hide ads on mobile */
+        .ad-container {
+            display: none;
+        }
+
+        /* Adjust footer for mobile */
+        footer {
+            position: relative;
+            transform: none !important;
+            width: 100%;
+            padding: 1rem 0;
+        }
+
+        /* Reset any scaling transforms */
+        html, body {
+            min-width: initial;
+            width: 100%;
+            overflow-x: hidden;
+            transform: none !important;
+        }
+    }
+</style>
+
+<!-- Add this script to disable scaling on mobile -->
+<script>
+    if (window.innerWidth <= 768) {
+        // Remove all scaling-related event listeners and calculations
+        window.removeEventListener('load', updateScale);
+        window.removeEventListener('resize', updateScale);
+        window.removeEventListener('orientationchange', updateScale);
+    }
+</script>
+<!-- ...existing code... -->
+<style>
+    /* Update the media query breakpoints and layout styles */
+    @media screen and (min-width: 769px) and (max-width: 1023px) {
+        /* Tablet-specific styles */
+        .profile-container {
+            transform-origin: top left;
+            transform: scale(var(--scale-factor, 1));
+        }
+
+        .profile-sidebar {
+            position: fixed;
+            width: 240px;
+            transform: scale(var(--scale-factor, 1));
+        }
+
+        .main-content {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            transform: scale(var(--scale-factor, 1));
+        }
+    }
+
+    /* Mobile-specific styles */
+    @media screen and (max-width: 768px) {
+        /* Reset container styles */
+        .profile-container {
+            flex-direction: column;
+            width: 100%;
+            min-width: initial;
+            margin: 0;
+            padding: 0;
+            transform: none !important;
+        }
+
+        /* Logo container positioning */
+        .logo-container {
+            width: 100%;
+            max-width: 200px;
+            margin: 1rem auto;
+            padding: 0;
+            order: -2; /* Move to very top */
+        }
+
+        /* Sidebar positioning */
+        .profile-sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            margin: 0 auto;
+            transform: none !important;
+            order: -1; /* Place below logo but above content */
+        }
+
+        /* Main content adjustments */
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+            min-width: initial;
+            padding: 0.5rem;
+            transform: none !important;
+        }
+
+        /* Hide stats on mobile */
+        .stats-card {
+            display: none;
+        }
+
+        /* Center tooltips */
+        .tooltip-box {
+            width: 90%;
+            margin: 1rem auto;
+        }
+
+        /* Adjust navigation grid */
+        .navigation-grid {
+            width: 90%;
+            margin: 1rem auto;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        /* Hide ads on mobile */
+        .ad-container {
+            display: none;
+        }
+
+        /* Reset scaling transforms */
+        html, body {
+            min-width: initial;
+            width: 100%;
+            overflow-x: hidden;
+            transform: none !important;
+        }
+    }
+</style>
+<style>
+       
+    /* Tablet styles (768px to 1023px) */
+    @media screen and (min-width: 426px) and (max-width: 1023px) {
+        .profile-container {
+            transform-origin: top left;
+            transform: scale(var(--scale-factor, 1));
+            width: 1024px;
+            margin: 1rem auto;
+        }
+
+        .profile-sidebar {
+            position: fixed;
+            width: 240px;
+            transform: scale(var(--scale-factor, 1));
+        }
+
+        .main-content {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            transform: scale(var(--scale-factor, 1));
+        }
+
+        /* Keep all desktop layout features for tablet */
+        .stats-card {
+            display: block;
+        }
+
+        .navigation-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .ad-container {
+            display: flex;
+        }
+    }
+
+    /* Mobile-specific styles (425px and below) */
+    @media screen and (max-width: 425px) {
+        /* Reset container styles */
+        .profile-container {
+            flex-direction: column;
+            width: 100%;
+            min-width: initial;
+            margin: 0;
+            padding: 0;
+            transform: none !important;
+        }
+
+        /* Logo container positioning */
+        .logo-container {
+            width: 100%;
+            max-width: 200px;
+            margin: 1rem auto;
+            padding: 0;
+            order: -2; /* Move to very top */
+        }
+
+        /* Sidebar positioning */
+        .profile-sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            margin: 0 auto;
+            transform: none !important;
+            order: -1; /* Place below logo but above content */
+        }
+
+        /* Main content adjustments */
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+            min-width: initial;
+            padding: 0.5rem;
+            transform: none !important;
+        }
+
+        /* Hide stats and ads on mobile */
+        .stats-card, .ad-container {
+            display: none;
+        }
+
+        /* Center tooltips */
+        .tooltip-box {
+            width: 90%;
+            margin: 1rem auto;
+        }
+
+        /* Adjust navigation grid */
+        .navigation-grid {
+            width: 90%;
+            margin: 1rem auto;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        /* Reset scaling transforms */
+        html, body {
+            min-width: initial;
+            width: 100%;
+            overflow-x: hidden;
+            height: auto;
+        }
+    }
+</style>
+
+<!-- Add this script to handle mobile-specific behavior -->
+<script>
+    function handleMobileLayout() {
+        if (window.innerWidth <= 425) {
+            // Remove any scaling transforms on mobile
+            document.documentElement.style.removeProperty('--scale-factor');
+            
+            // Disable scaling calculations on mobile
+            window.removeEventListener('resize', updateScale);
+        }
+    }
+
+    // Run on load and orientation change
+    window.addEventListener('load', handleMobileLayout);
+    window.addEventListener('orientationchange', handleMobileLayout);
+</script>
+<!-- ...existing code... -->
+<style>
+    /* Tablet-only fixes (768px to 1023px) */
+    @media screen and (min-width: 768px) and (max-width: 1023px) {
+        /* Center main content */
+        .main-content {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            width: calc(100% - 240px) !important;
+            margin-left: 240px !important;
+            padding: 1rem !important;
+        }
+
+        /* Fix logo and tooltip alignment */
+        .logo-container {
+            width: 160px !important;
+            margin: 1rem auto !important;
+        }
+
+        .tooltip-box {
+            width: 90% !important;
+            max-width: 500px !important;
+            margin: 1rem auto !important;
+        }
+
+        /* Fix stats grid layout */
+        .stats-container {
+            width: 90% !important;
+            max-width: 600px !important;
+            margin: 1rem auto !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 0.75rem !important;
+        }
+
+        /* Adjust navigation grid */
+        .navigation-grid {
+            width: 90% !important;
+            max-width: 600px !important;
+            margin: 1rem auto !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Tablet-specific footer positioning */
+    @media screen and (min-width: 426px) and (max-width: 1023px) {
+        footer {
+            margin-left: 240px; /* Match sidebar width */
+            width: calc(100% - 240px); /* Take remaining width */
+            text-align: center;
+            position: relative;
+            bottom: 0;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Stats Card - Base Styles */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        padding: 0.5rem;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .stat-box {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-width: 80px;
+        max-width: 120px;
+        aspect-ratio: 1;
+    }
+
+    .stat-box div {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .stat-box strong {
+        font-size: 1.2rem;
+        margin: 0.2rem 0 0 0;
+        text-align: center;
+    }
+
+    /* Override tablet styles */
+    @media screen and (min-width: 426px) and (max-width: 1023px) {
+        .stats-container {
+            transform: scale(0.9);
+            transform-origin: center top;
+        }
+        
+        .stat-box {
+            transform: none;
+            padding: 0.5rem;
+            aspect-ratio: 1;
+        }
+    }
+
+    @media screen and (max-width: 425px) {
+        .stats-container {
+            transform: scale(0.8);
+            transform-origin: center top;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Mobile-only layout adjustments (425px and below) */
+    @media screen and (max-width: 425px) {
+        .profile-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-width: initial;
+            margin: 0;
+            padding: 1rem;
+            transform: none !important;
+        }
+
+        /* Logo - First element */
+        .logo-container {
+            width: 120px;
+            margin: 1rem auto 0.5rem;
+            padding: 0;
+            order: 1;
+        }
+
+        /* Tooltip - Second element */
+        .tooltip-box {
+            width: 90%;
+            max-width: 300px;
+            margin: 0.5rem auto;
+            padding: 0.75rem;
+            order: 2;
+        }
+
+        /* Sidebar - Third element */
+        .profile-sidebar {
+            position: static;
+            width: 90%;
+            max-width: 300px;
+            height: auto;
+            margin: 0.5rem auto;
+            padding: 0.75rem;
+            transform: none !important;
+            order: 3;
+            background: rgba(20, 20, 35, 0.95);
+            border-radius: 12px;
+        }
+
+        /* Navigation grid - Fourth element */
+        .navigation-grid {
+            width: 90%;
+            max-width: 300px;
+            margin: 0.5rem auto;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            order: 4;
+        }
+
+        /* Footer - Last element */
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            order: 5;
+        }
+
+        /* Hide stats and ads on mobile */
+        .stats-card, .ad-container {
+            display: none;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Mobile-specific layout (425px and below) */
+    @media screen and (max-width: 425px) {
+        /* Reset container styles */
+        .profile-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-width: initial;
+            padding: 0.5rem;
+            margin: 0;
+            gap: 0.5rem;
+            transform: none !important;
+        }
+
+        /* Main content needs to be first in DOM order */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            width: 100%;
+            padding: 0;
+            gap: 0.5rem;
+            order: 1;
+        }
+
+        /* 1. Logo */
+        .logo-container {
+            width: 120px;
+            margin: 0.5rem auto;
+            order: 1;
+        }
+
+        /* 2. Tooltip */
+        .tooltip-box {
+            width: 90%;
+            margin: 0.25rem auto;
+            order: 2;
+        }
+
+        /* 3. Sidebar content */
+        .profile-sidebar {
+            position: static;
+            width: 100%;
+            height: auto;
+            margin: 0.25rem 0;
+            padding: 0.75rem;
+            transform: none !important;
+            order: 3;
+            background: rgba(20, 20, 35, 0.95);
+            border-radius: 12px;
+        }
+
+        /* 4. Navigation buttons */
+        .navigation-grid {
+            width: 90%;
+            margin: 0.5rem auto;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            order: 4;
+        }
+
+        /* Hide stats and ads */
+        .stats-card, .ad-container {
+            display: none;
+        }
+
+        /* Footer adjustments */
+        footer {
+            margin-top: 0.5rem;
+            width: 100%;
+            position: relative;
+            order: 5;
+        }
+
+        /* Reset any scrolling issues */
+        html, body {
+            min-width: initial;
+            width: 100%;
+            overflow-x: hidden;
+            height: auto;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Mobile-First Layout (425px and below) */
+    @media screen and (max-width: 425px) {
+        /* Reset and disable all scaling/transforms */
+        * {
+            transform: none !important;
+            min-width: unset !important;
+            max-width: 100% !important;
+        }
+
+        /* Container reset */
+        .profile-container {
+            display: block !important;
+            width: 100% !important;
+            min-width: unset !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Main content wrapper */
+        .main-content {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            gap: 0 !important;
+            min-height: unset !important;
+        }
+
+        /* Logo */
+        .logo-container {
+            width: 120px !important;
+            margin: 1rem auto !important;
+        }
+
+        /* Tooltip */
+        .tooltip-box {
+            width: 90% !important;
+            margin: 0.5rem auto !important;
+        }
+
+        /* Sidebar - Key Changes Here */
+        .profile-sidebar {
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 1rem !important;
+            margin: 0.5rem 0 !important;
+            background: rgba(20, 20, 35, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Navigation Grid */
+        .navigation-grid {
+            width: 90% !important;
+            margin: 0.5rem auto !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.5rem !important;
+            padding: 0.5rem !important;
+        }
+
+        /* Hide desktop elements */
+        .stats-card,
+        .ad-container {
+            display: none !important;
+        }
+
+        /* Fix scrolling */
+        html, body {
+            width: 100% !important;
+            overflow-x: hidden !important;
+            height: auto !important;
+        }
+
+        /* Element Order */
+        .logo-container { order: 1 !important; }
+        .tooltip-box { order: 2 !important; }
+        .profile-sidebar { order: 3 !important; }
+        .navigation-grid { order: 4 !important; }
+        footer { order: 5 !important; }
+
+        /* Remove any margin/padding that might cause gaps */
+        .sidebar-section {
+            margin-bottom: 0.5rem !important;
+        }
+
+        .sidebar-content {
+            gap: 0.5rem !important;
+        }
+
+        /* Force elements to stack properly */
+        .main-content > * {
+            margin-bottom: 0.5rem !important;
+        }
+
+        /* Disable any fixed positioning */
+        .profile-sidebar,
+        .main-content,
+        footer {
+            position: static !important;
+        }
+    }
+</style>
+
+<!-- Add this script to force disable scaling on mobile -->
+<script>
+    function forceDisableMobileScaling() {
+        if (window.innerWidth <= 425) {
+            document.querySelectorAll('*').forEach(el => {
+                el.style.transform = 'none';
+                el.style.minWidth = 'unset';
+                el.style.maxWidth = '100%';
+            });
+        }
+    }
+    window.addEventListener('load', forceDisableMobileScaling);
+    window.addEventListener('resize', forceDisableMobileScaling);
+</script>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    @media screen and (max-width: 425px) {
+        /* Reset container */
+        .profile-container {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            min-width: unset !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Main content area needs to be flex container */
+        .main-content {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0.5rem !important;
+        }
+
+        /* Logo (1st) */
+        .logo-container {
+            width: 120px !important;
+            margin: 1rem auto !important;
+        }
+
+        /* Tooltip (2nd) */
+        .tooltip-box {
+            width: 90% !important;
+            margin: 0.5rem auto !important;
+        }
+
+        /* Sidebar (3rd) - Most important change */
+        .profile-sidebar {
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 1rem !important;
+            margin: 0.5rem 0 !important;
+            order: 3 !important;
+        }
+
+        /* Navigation Grid (4th) */
+        .navigation-grid {
+            width: 90% !important;
+            margin: 0.5rem auto !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.5rem !important;
+            order: 4 !important;
+        }
+
+        /* Hide unused elements */
+        .stats-card,
+        .ad-container {
+            display: none !important;
+        }
+
+        /* Disable all transforms and scaling */
+        * {
+            transform: none !important;
+            min-width: unset !important;
+            max-width: 100% !important;
+        }
+
+        /* Reset scrolling */
+        html, body {
+            width: 100% !important;
+            overflow-x: hidden !important;
+            min-width: unset !important;
+        }
+    }
+</style>
+
+<!-- Add this script right after your styles -->
+<script>
+    // Disable all scaling on mobile
+    if (window.innerWidth <= 425) {
+        document.querySelectorAll('*').forEach(element => {
+            element.style.transform = 'none';
+            element.style.minWidth = 'unset';
+        });
+    }
+</script>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Desktop & Tablet Base Styles (768px and above) */
+    @media screen and (min-width: 768px) {
+        .logo-container {
+            width: 180px !important;
+            margin: 1rem auto !important;
+            text-align: center !important;
+        }
+
+        .logo-container img {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        .stats-container {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 1rem !important;
+            padding: 1rem !important;
+            width: 100% !important;
+            max-width: 900px !important;
+            margin: 0 auto !important;
+            align-items:center !important;
+        }
+
+        .stat-box {
+            aspect-ratio: auto !important;
+            min-height: 100px !important;
+            padding: 1rem !important;
+            height: auto !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+
+        .main-content {
+            margin-left: 240px !important;
+            width: calc(100% - 240px) !important;
+            padding: 1rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+        }
+
+        .navigation-grid {
+            width: 90% !important;
+            max-width: 800px !important;
+            margin: 1rem auto !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 1rem !important;
+        }
+
+        /* Keep sidebar fixed for desktop/tablet */
+        .profile-sidebar {
+            position: fixed !important;
+            width: 240px !important;
+            height: 100vh !important;
+            left: 0 !important;
+            top: 0 !important;
+        }
+    }
+
+    /* Mobile-specific styles remain unchanged */
+    @media screen and (max-width: 767px) {
+        /* ...existing mobile styles... */
+    }
+</style>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Stats Container and Box Fixes */
+    .stats-container {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; /* Reduced from 180px */
+        gap: 0.75rem !important;
+        padding: 0.75rem !important;
+        width: 100% !important;
+        max-width: 800px !important;
+        margin: 0 auto !important;
+    }
+
+    .stat-box {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem !important; /* Reduced from 1.5rem */
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 80px !important; /* Reduced from 100px */
+        max-width: none !important;
+    }
+
+    .stat-box div {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0 0 0.25rem 0;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .stat-box strong {
+        font-size: 1.2rem;
+        margin: 0;
+        text-align: center;
+        line-height: 1;
+    }
+</style>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Stats Container and Box Styles */
+    .stats-container {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        gap: 0.75rem !important;
+        padding: 0.75rem !important;
+        width: 100% !important;
+        max-width: 800px !important;
+        margin: 0 auto !important;
+    }
+
+    /* Position wins and losses in second row */
+    .stats-container .stat-box:nth-child(5),
+    .stats-container .stat-box:nth-child(6) {
+        grid-row: 2 !important;
+        grid-column: 2 / span 1 !important;
+    }
+
+    .stats-container .stat-box:nth-child(6) {
+        grid-column: 3 / span 1 !important;
+    }
+
+    .stat-box {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem !important;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 80px !important;
+        aspect-ratio: 1 !important;
+    }
+
+    /* Responsive adjustments */
+    @media screen and (max-width: 768px) {
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr) !important;
+            grid-template-rows: auto auto auto !important;
+        }
+
+        .stats-container .stat-box:nth-child(5) {
+            grid-column: 1 / span 1 !important;
+            grid-row: 3 !important;
+        }
+
+        .stats-container .stat-box:nth-child(6) {
+            grid-column: 2 / span 1 !important;
+            grid-row: 3 !important;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<style>
+    /* Main Content Centering */
+    .main-content {
+        margin-left: 240px !important; /* Match sidebar width */
+        width: calc(100% - 240px) !important;
+        padding: 1rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important; /* Center children horizontally */
+    }
+
+    /* Container widths for centered content */
+    .logo-container {
+        width: 180px !important;
+        margin: 1rem auto !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    .tooltip-box {
+        width: 90% !important;
+        max-width: 600px !important;
+        margin: 1rem auto !important;
+    }
+
+    .stats-card {
+        width: 90% !important;
+        max-width: 800px !important;
+        margin: 1rem auto !important;
+    }
+
+    .navigation-grid {
+        width: 90% !important;
+        max-width: 800px !important;
+        margin: 1rem auto !important;
+        justify-content: center !important;
+    }
+
+    /* Center content only for tablet and desktop */
+    @media screen and (min-width: 768px) {
+        .main-content > * {
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        .stats-container {
+            margin: 0 auto !important;
+        }
+    }
+</style>
+<!-- ...existing code... -->
+<!-- ...existing code... -->
+<style>
+    /* Main Content Centering - Clean Fix */
+    .main-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        margin-left: 240px !important;
+        width: calc(100% - 240px) !important;
+        padding: 1rem !important;
+    }
+
+    /* Stats Grid - Original Layout */
+    .stats-container {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-rows: repeat(2, auto) !important;
+        gap: 1rem !important;
+        width: 100% !important;
+        max-width: 900px !important;
+        margin: 0 auto !important;
+    }
+
+    .stats-container .stat-box:nth-child(5),
+    .stats-container .stat-box:nth-child(6) {
+        grid-row: 2 !important;
+        grid-column: 2 / span 1 !important;
+    }
+
+    .stats-container .stat-box:nth-child(6) {
+        grid-column: 3 / span 1 !important;
+    }
+
+    /* Keep mobile layout intact */
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+</style>
+<!-- ...existing code... -->

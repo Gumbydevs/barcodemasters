@@ -521,18 +521,20 @@
             const weekStart = getWeekStart(now);
             const weekId = weekStart.toISOString().split('T')[0];
 
-            // Get or create current week's contest
             const contestRef = doc(db, 'weeklyContests', weekId);
             const contestDoc = await getDoc(contestRef);
 
             if (!contestDoc.exists()) {
-                // Create new contest structure
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekEnd.getDate() + 7);
                 
+                // Convert to EST (UTC-5)
+                const estEnd = new Date(weekEnd.getTime() - (5 * 3600000));
+                estEnd.setUTCHours(4, 59, 59, 999); // 23:59:59.999 EST
+
                 await setDoc(contestRef, {
                     startDate: weekStart.toISOString(),
-                    endDate: weekEnd.toISOString(),
+                    endDate: estEnd.toISOString(),
                     status: 'active',
                     winner: null
                 });
@@ -544,10 +546,8 @@
             };
 
             startCountdown(currentContest.endDate);
-            await loadNominees(); // We'll keep the function name but it loads all monsters
+            await loadNominees();
         }
-
-        // Remove getTopMonstersForNomination and createNewContest functions as they're no longer needed
 
         window.submitVote = async function(monsterId, votes) {
             if (!currentUser || !currentContest) return;
@@ -647,13 +647,70 @@
         function startCountdown(endDate) {
             const countdownElement = document.getElementById('countdown');
             
+            async function handleContestEnd() {
+                try {
+                    // Get all monsters and their votes
+                    const monstersRef = collection(db, 'monsters');
+                    const snapshot = await getDocs(monstersRef);
+                    
+                    // Find the winner
+                    let winner = null;
+                    let maxVotes = 0;
+                    
+                    snapshot.docs.forEach(doc => {
+                        const votes = doc.data().weeklyVotes?.[currentContest.id]?.votes || 0;
+                        if (votes > maxVotes) {
+                            maxVotes = votes;
+                            winner = {
+                                id: doc.id,
+                                ...doc.data()
+                            };
+                        }
+                    });
+
+                    if (winner) {
+                        // Update contest with winner
+                        await updateDoc(doc(db, 'weeklyContests', currentContest.id), {
+                            status: 'completed',
+                            winner: {
+                                monsterId: winner.id,
+                                monsterName: winner.monsterName,
+                                votes: maxVotes,
+                                timestamp: serverTimestamp()
+                            }
+                        });
+
+                        // Initialize next week's contest
+                        const nextWeekStart = new Date(currentContest.endDate);
+                        const nextWeekId = nextWeekStart.toISOString().split('T')[0];
+                        const nextWeekEnd = new Date(nextWeekStart);
+                        nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
+                        nextWeekEnd.setUTCHours(4, 59, 59, 999); // 23:59:59.999 EST
+
+                        await setDoc(doc(db, 'weeklyContests', nextWeekId), {
+                            startDate: nextWeekStart.toISOString(),
+                            endDate: nextWeekEnd.toISOString(),
+                            status: 'active',
+                            winner: null
+                        });
+
+                        // Refresh the page to start new contest
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error handling contest end:', error);
+                    showToast('Error selecting winner. Please refresh the page.', true);
+                }
+            }
+            
             function updateCountdown() {
                 const now = new Date().getTime();
                 const end = new Date(endDate).getTime();
                 const distance = end - now;
 
                 if (distance < 0) {
-                    countdownElement.innerHTML = "Voting ended";
+                    countdownElement.innerHTML = "Selecting winner...";
+                    handleContestEnd();
                     return;
                 }
 
@@ -672,7 +729,10 @@
             }
 
             updateCountdown();
-            setInterval(updateCountdown, 1000);
+            const timer = setInterval(updateCountdown, 1000);
+            
+            // Cleanup interval on page unload
+            window.addEventListener('unload', () => clearInterval(timer));
         }
 
         async function loadNominees() {
@@ -745,10 +805,22 @@
         }
 
         function getWeekStart(date) {
+            // Get the previous Sunday at midnight EST
             const d = new Date(date);
-            d.setHours(0, 0, 0, 0);
-            d.setDate(d.getDate() - d.getDay());
-            return d;
+            const utc = d.getTime();
+            const estOffset = -5 * 60 * 60 * 1000; // EST offset in milliseconds
+            
+            // Convert to EST
+            const estDate = new Date(utc + (d.getTimezoneOffset() * 60000) + estOffset);
+            
+            // Set to midnight
+            estDate.setHours(0, 0, 0, 0);
+            
+            // Go to Sunday
+            estDate.setDate(estDate.getDate() - estDate.getDay());
+            
+            // Convert back to UTC for storage
+            return new Date(estDate.getTime() - estOffset - (d.getTimezoneOffset() * 60000));
         }
 
         async function getUsernameById(userId) {
