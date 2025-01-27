@@ -424,6 +424,280 @@
         .toast.show {
             top: 20px;
         }
+
+        .winner-section {
+            background: linear-gradient(135deg, 
+                rgba(241, 196, 15, 0.1), 
+                rgba(243, 156, 18, 0.15)
+            );
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 1px solid rgba(243, 156, 18, 0.2);
+            text-align: center;
+        }
+
+        .winner-section h2 {
+            color: #f39c12;
+            margin-bottom: 1rem;
+        }
+
+        .winner-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .winner-monster {
+            font-size: 1.2rem;
+            color: #f1c40f;
+        }
+
+        .winner-votes {
+            font-size: 1.1rem;
+            color: #e67e22;
+        }
+
+        .winner-details {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1rem;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .winner-image-container {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .winner-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .winner-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            /* Remove these lines to remove visible container */
+            /* padding: 0.5rem; */
+            /* background: rgba(255, 255, 255, 0.05); */
+            /* border-radius: 8px; */
+        }
+
+        .owner-avatar {
+            width: 64px; /* Increased from 32px */
+            height: 64px; /* Increased from 32px */
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .owner-info span {
+            flex: 1;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7); /* Make text slightly more subtle */
+        }
+
+        @media (max-width: 480px) {
+            .owner-avatar {
+                width: 48px; /* Slightly smaller on mobile */
+                height: 48px;
+            }
+        }
+
+        .winner-date {
+            color: #f39c12;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .rewards-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .rewards-header {
+            color: #f1c40f;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        .rewards-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .reward-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.4rem;
+            border-radius: 6px;
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            min-width: 90px;
+        }
+
+        .reward-title {
+            font-size: 0.8rem;
+            color: #2ecc71;
+            margin-bottom: 0.25rem;
+        }
+
+        .reward-value {
+            font-size: 0.9rem;
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        .coming-soon {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            margin-top: 0.2rem;
+        }
+
+        /* Update winner-details grid layout for mobile */
+        .winner-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .winner-details {
+                grid-template-columns: auto 1fr;
+            }
+        }
+
+        /* Fix winner image container sizing */
+        .winner-image-container {
+            width: 100%;
+            max-width: 150px;
+            height: auto;
+            aspect-ratio: 1;
+            margin: 0 auto;
+        }
+
+        /* Make rewards section responsive */
+        .rewards-section {
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem auto 0;
+            padding: 0.75rem;
+        }
+
+        .rewards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .reward-item {
+            min-width: unset;
+            width: 100%;
+        }
+
+        /* Fix container padding and width */
+        .container {
+            padding: 5rem 1rem 1rem;
+            width: 95%;
+            max-width: 1200px;
+        }
+
+        /* Improve mobile stats display */
+        .winner-stats {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .winner-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-item {
+                padding: 0.35rem;
+                font-size: 0.85rem;
+            }
+            
+            .reward-item {
+                padding: 0.35rem;
+            }
+
+            .rewards-header {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Ensure proper spacing in winner info */
+        .winner-monster,
+        .winner-votes,
+        .winner-type,
+        .type-description {
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+        }
+
+        /* Make owner info more compact on mobile */
+        @media (max-width: 480px) {
+            .owner-info {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 0.5rem;
+            }
+
+            .owner-info span {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -444,6 +718,47 @@
         <div class="contest-header">
             <h1>🏆 Monster of the Week</h1>
             <div id="countdown" class="countdown">Next winner in: --:--:--</div>
+            <div id="winnerSection" class="winner-section" style="display: none;">
+                <h2>🎉 Last Week's Winner 🎉</h2>
+                <div class="winner-details">
+                    <div class="winner-image-container">
+                        <img id="winnerImage" src="" alt="" class="winner-image">
+                    </div>
+                    <div>
+                        <div class="winner-monster">Monster: <span id="winnerName">--</span></div>
+                        <div class="winner-votes">Votes: <span id="winnerVotes">--</span></div>
+                        <div id="winnerType" class="monster-type"></div>
+                        <p id="winnerDescription" class="type-description"></p>
+                        <div id="winnerStats" class="winner-stats">
+                            <!-- Stats will be added here -->
+                        </div>
+                        <div id="winnerOwner" class="owner-info">
+                            <!-- Owner info will be added here -->
+                        </div>
+                        <div id="winnerDate" class="winner-date"></div>
+                        <div class="rewards-section">
+                            <div class="rewards-header">Weekly Rewards</div>
+                            <div class="rewards-container">
+                                <div class="reward-item">
+                                    <div class="reward-title">Winner Boost</div>
+                                    <div class="reward-value">+15%</div>
+                                    <div class="coming-soon">(coming soon)</div>
+                                </div>
+                                <div class="reward-item">
+                                    <div class="reward-title">Voter Boost</div>
+                                    <div class="reward-value">+5%</div>
+                                    <div class="coming-soon">(coming soon)</div>
+                                </div>
+                                <div class="reward-item">
+                                    <div class="reward-title">Server Boost</div>
+                                    <div class="reward-value">+2%</div>
+                                    <div class="coming-soon">(coming soon)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="vote-info">
                 <div id="membershipStatus" class="account-badge">
                     <span class="emoji"></span>
@@ -480,8 +795,10 @@
             serverTimestamp,
             orderBy,
             limit,
-            startAfter
+            startAfter,
+            writeBatch
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDoIWAIUt4HC1RcNmdfXozEr0NG65GO63s",
@@ -518,35 +835,84 @@
 
         async function initializeContest() {
             const now = new Date();
-            const weekStart = getWeekStart(now);
-            const weekId = weekStart.toISOString().split('T')[0];
+            const nextWeekStart = getWeekStart(now);
+            console.log('Debug date info:', {
+                currentDate: now.toISOString(),
+                currentEST: new Date(now.getTime() + (now.getTimezoneOffset() * 60000) - (5 * 60 * 60 * 1000)).toISOString(),
+                nextWeekStart: nextWeekStart.toISOString(),
+                nextWeekStartEST: new Date(nextWeekStart.getTime() + (nextWeekStart.getTimezoneOffset() * 60000) - (5 * 60 * 60 * 1000)).toISOString()
+            });
 
-            const contestRef = doc(db, 'weeklyContests', weekId);
+            debugDateCalc();
+            console.log('Current date:', now.toISOString());
+            console.log('Current time in EST:', new Date(now.getTime() + (now.getTimezoneOffset() * 60000) - (5 * 3600000)).toISOString());
+            
+            const currentWeekStart = getWeekStart(now);
+            const currentWeekId = currentWeekStart.toISOString().split('T')[0];
+
+            console.log('Week start date:', currentWeekStart.toISOString());
+            console.log('Initializing contest for:', currentWeekId);
+
+            // First check if we have an active contest for the current week
+            const contestRef = doc(db, 'weeklyContests', currentWeekId);
             const contestDoc = await getDoc(contestRef);
 
             if (!contestDoc.exists()) {
-                const weekEnd = new Date(weekStart);
+                console.log('Creating new contest period for:', currentWeekId);
+                // Calculate end date for current week (next Sunday at 23:59:59 EST)
+                const weekEnd = new Date(currentWeekStart);
                 weekEnd.setDate(weekEnd.getDate() + 7);
-                
-                // Convert to EST (UTC-5)
-                const estEnd = new Date(weekEnd.getTime() - (5 * 3600000));
-                estEnd.setUTCHours(4, 59, 59, 999); // 23:59:59.999 EST
+                weekEnd.setUTCHours(4, 59, 59, 999); // 23:59:59 EST
 
-                await setDoc(contestRef, {
-                    startDate: weekStart.toISOString(),
-                    endDate: estEnd.toISOString(),
+                // Create the new contest document
+                const newContest = {
+                    startDate: currentWeekStart.toISOString(),
+                    endDate: weekEnd.toISOString(),
                     status: 'active',
                     winner: null
-                });
+                };
+
+                await setDoc(contestRef, newContest);
+                currentContest = {
+                    id: currentWeekId,
+                    ...newContest
+                };
+            } else {
+                currentContest = {
+                    id: currentWeekId,
+                    ...contestDoc.data()
+                };
             }
 
-            currentContest = {
-                id: weekId,
-                ...(contestDoc.exists() ? contestDoc.data() : {})
-            };
-
+            console.log('Current contest period:', currentContest.id);
+            
             startCountdown(currentContest.endDate);
-            await loadNominees();
+            await loadNominees(); // Remove the contestId parameter
+            await checkPreviousWeekWinner();
+        }
+
+        async function clearVotesForWeek(weekId) {
+            try {
+                const batch = writeBatch(db);
+                const monstersRef = collection(db, 'monsters');
+                const snapshot = await getDocs(monstersRef);
+                
+                snapshot.docs.forEach(doc => {
+                    const monsterRef = doc.ref;
+                    // Explicitly set votes to 0 for the new week
+                    batch.update(monsterRef, {
+                        [`weeklyVotes.${weekId}`]: {
+                            votes: 0,
+                            voters: {}
+                        }
+                    });
+                });
+
+                await batch.commit();
+                console.log('Cleared votes for week:', weekId);
+            } catch (error) {
+                console.error('Error clearing votes:', error);
+            }
         }
 
         window.submitVote = async function(monsterId, votes) {
@@ -604,7 +970,7 @@
                     });
                 });
 
-                await loadNominees(); // Refresh the display
+                await loadNominees(); // Remove the contestId parameter
                 
                 // Add this line to update the UI immediately after successful vote
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
@@ -740,16 +1106,24 @@
             nomineesGrid.innerHTML = '<div class="loading">Loading monsters...</div>';
 
             try {
+                // Always get the current contest period
+                const now = new Date();
+                const currentWeekStart = getWeekStart(now);
+                const currentWeekId = currentWeekStart.toISOString().split('T')[0];
+                
+                console.log('Loading nominees for current week:', currentWeekId);
+
                 const monstersRef = collection(db, 'monsters');
                 const snapshot = await getDocs(monstersRef);
                 
                 const allMonsters = snapshot.docs.map(doc => {
                     const data = doc.data();
+                    // Always use currentWeekId
                     return {
                         id: doc.id,
                         ...data,
-                        votes: data.weeklyVotes?.[currentContest.id]?.votes || 0,
-                        voters: data.weeklyVotes?.[currentContest.id]?.voters || {}
+                        votes: data.weeklyVotes?.[currentWeekId]?.votes || 0,
+                        voters: data.weeklyVotes?.[currentWeekId]?.voters || {}
                     };
                 });
 
@@ -761,12 +1135,10 @@
                     return b.level - a.level;
                 });
 
-                // Rest of the loading logic remains the same...
                 // Process monsters in chunks for display
                 const CHUNK_SIZE = 30;
                 let html = '';
 
-                // Rest of the display logic remains the same...
                 for (let i = 0; i < allMonsters.length; i += CHUNK_SIZE) {
                     const chunk = allMonsters.slice(i, i + CHUNK_SIZE);
                     const chunkHtml = await Promise.all(chunk.map(async monster => {
@@ -774,7 +1146,6 @@
                         return `
                             <div class="nominee-card">
                                 <div class="vote-count">${monster.votes} votes</div>
-                                <!-- Rest of the card template remains the same -->
                                 <div class="monster-image-container">
                                     ${monster.imageUrl ? 
                                         `<img src="${monster.imageUrl}" alt="${monster.monsterName}" class="nominee-image">` :
@@ -795,7 +1166,6 @@
                     html += chunkHtml.join('');
                     nomineesGrid.innerHTML = html;
                     
-                    // Allow UI to update between chunks
                     await new Promise(resolve => setTimeout(resolve, 0));
                 }
             } catch (error) {
@@ -805,22 +1175,40 @@
         }
 
         function getWeekStart(date) {
-            // Get the previous Sunday at midnight EST
             const d = new Date(date);
-            const utc = d.getTime();
-            const estOffset = -5 * 60 * 60 * 1000; // EST offset in milliseconds
             
             // Convert to EST
-            const estDate = new Date(utc + (d.getTimezoneOffset() * 60000) + estOffset);
+            const estTime = new Date(d.getTime() + (d.getTimezoneOffset() * 60000) - (5 * 60 * 60 * 1000));
             
-            // Set to midnight
-            estDate.setHours(0, 0, 0, 0);
+            // Get the current day in EST (0 = Sunday, 1 = Monday, etc.)
+            const currentDay = estTime.getDay();
+            const currentHour = estTime.getHours();
             
-            // Go to Sunday
-            estDate.setDate(estDate.getDate() - estDate.getDay());
+            // If we're past Saturday 7PM EST, get next week's Sunday
+            if (currentDay === 6 && currentHour >= 19) {
+                const nextSunday = new Date(estTime);
+                nextSunday.setDate(estTime.getDate() + 1); // Add one day to get to Sunday
+                nextSunday.setHours(0, 0, 0, 0);
+                // Convert back to UTC
+                return new Date(nextSunday.getTime() - (nextSunday.getTimezoneOffset() * 60000) + (5 * 60 * 60 * 1000));
+            }
             
-            // Convert back to UTC for storage
-            return new Date(estDate.getTime() - estOffset - (d.getTimezoneOffset() * 60000));
+            // If it's Sunday and past midnight EST, use next Sunday
+            if (currentDay === 0) {
+                const nextSunday = new Date(estTime);
+                nextSunday.setDate(estTime.getDate() + 7);
+                nextSunday.setHours(0, 0, 0, 0);
+                // Convert back to UTC
+                return new Date(nextSunday.getTime() - (nextSunday.getTimezoneOffset() * 60000) + (5 * 60 * 60 * 1000));
+            }
+            
+            // Otherwise, get next Sunday
+            const daysUntilSunday = 7 - currentDay;
+            const nextSunday = new Date(estTime);
+            nextSunday.setDate(estTime.getDate() + daysUntilSunday);
+            nextSunday.setHours(0, 0, 0, 0);
+            // Convert back to UTC
+            return new Date(nextSunday.getTime() - (nextSunday.getTimezoneOffset() * 60000) + (5 * 60 * 60 * 1000));
         }
 
         async function getUsernameById(userId) {
@@ -854,13 +1242,416 @@
             });
 
             // Hide toast after 3 seconds
+            const duration = message.includes('Debug:') ? 5000 : 3000; // Longer duration for debug messages
             setTimeout(() => {
                 toast.classList.remove('show');
-            }, 3000);
+            }, duration);
+        }
+
+        // Update checkPreviousWeekWinner function to remove duplicate declarations
+        async function checkPreviousWeekWinner() {
+            try {
+                console.log('Checking for previous winner...');
+                
+                // Query most recent completed contest
+                const contestsRef = collection(db, 'weeklyContests');
+                const q = query(
+                    contestsRef,
+                    where('status', '==', 'completed'),
+                    orderBy('winner.timestamp', 'desc'),
+                    limit(1)
+                );
+
+                console.log('Executing winner query...');
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    console.log('No previous winner found');
+                    return;
+                }
+
+                const lastContest = querySnapshot.docs[0];
+                const contestData = lastContest.data();
+                
+                if (!contestData.winner) {
+                    console.log('No winner data in contest');
+                    return;
+                }
+
+                console.log('Found winner:', contestData.winner);
+
+                // Get winner monster details
+                const monsterRef = doc(db, 'monsters', contestData.winner.monsterId);
+                const monsterDoc = await getDoc(monsterRef);
+                
+                if (!monsterDoc.exists()) {
+                    console.error('Winner monster not found:', contestData.winner.monsterId);
+                    return;
+                }
+
+                const monsterData = monsterDoc.data();
+
+                // Change this section to use the correct field name 'type'
+                const typeRef = doc(db, 'monsterTypes', monsterData.type);
+                const typeDoc = await getDoc(typeRef);
+                const typeData = typeDoc.exists() ? typeDoc.data() : null;
+
+                // Get owner details
+                const ownerRef = doc(db, 'users', monsterData.ownerId);
+                const ownerDoc = await getDoc(ownerRef);
+                const ownerData = ownerDoc.exists() ? ownerDoc.data() : { username: 'Unknown User' };
+
+                // Get monster image URL
+                const storage = getStorage();
+                let monsterImageUrl = monsterData.imageUrl;
+                
+                if (!monsterImageUrl) {
+                    try {
+                        const monsterImageRef = storageRef(storage, `monsters/${contestData.winner.monsterId}`);
+                        monsterImageUrl = await getDownloadURL(monsterImageRef);
+                    } catch (error) {
+                        console.log('Could not load monster image:', error);
+                        monsterImageUrl = '/assets/default-monster.png';
+                    }
+                }
+
+                // Get owner profile image URL
+                let ownerImageUrl = '/assets/default-avatar.png';
+                if (ownerData.profileImageUrl) {
+                    try {
+                        const ownerImageRef = storageRef(storage, `user-images/${monsterData.ownerId}`);
+                        ownerImageUrl = await getDownloadURL(ownerImageRef);
+                    } catch (error) {
+                        console.log('No custom profile image found for owner');
+                    }
+                }
+
+                // Update the UI with proper field names
+                const winnerSection = document.getElementById('winnerSection');
+                winnerSection.style.display = 'block';
+
+                document.getElementById('winnerImage').src = monsterImageUrl;
+                document.getElementById('winnerName').textContent = `${contestData.winner.monsterName} (Level ${monsterData.level || 1})`;
+                document.getElementById('winnerVotes').textContent = contestData.winner.votes || 0;
+                const typeText = typeData ? `Type: ${typeData.name}` : 'Unknown Type';
+                document.getElementById('winnerType').textContent = `Type: ${monsterData.type}`;
+                document.getElementById('winnerDescription').textContent = typeData ? typeData.description : '';
+
+                // Fix stats display with proper null checks
+                const statsHtml = `
+                    <div class="stat-item">
+                        <div>HP</div>
+                        <div>${monsterData.HP || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>AP</div>
+                        <div>${monsterData.AP || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Speed</div>
+                        <div>${monsterData.Speed || 0}</div>
+                    </div>
+                `;
+                document.getElementById('winnerStats').innerHTML = statsHtml;
+
+                // Update owner info
+                document.getElementById('winnerOwner').innerHTML = `
+                    <img src="${ownerImageUrl}" 
+                         alt="${ownerData.username}" 
+                         class="owner-avatar">
+                    <span>Owner: ${ownerData.username}</span>
+                `;
+
+                // Add winning date
+                const winDate = contestData.winner.timestamp?.toDate() || new Date(lastContest.endDate);
+                const dateStr = winDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                document.getElementById('winnerDate').textContent = `Won on ${dateStr}`;
+
+                console.log('Winner display updated successfully');
+
+            } catch (error) {
+                console.error('Error checking previous winner:', error);
+                console.log('Monster data:', monsterData); // Add this for debugging
+                showToast('Error loading previous winner', true);
+            }
+        }
+
+        // Modify handleContestEnd to be more robust
+        async function handleContestEnd() {
+            try {
+                // First, reset votes for the next contest
+                await resetVotes();
+
+                // Get all monsters with votes for this contest
+                const monstersRef = collection(db, 'monsters');
+                const snapshot = await getDocs(monstersRef);
+                
+                let winner = null;
+                let maxVotes = 0;
+                
+                // Find the winner
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    const votes = data.weeklyVotes?.[currentContest.id]?.votes || 0;
+                    if (votes > maxVotes) {
+                        maxVotes = votes;
+                        winner = {
+                            id: doc.id,
+                            monsterName: data.monsterName,
+                            level: data.level,
+                            stats: data.stats || {},
+                            monsterType: data.monsterType, // Changed from type to monsterType
+                            votes: votes,
+                            ownerId: data.ownerId
+                        };
+                    }
+                });
+
+                if (winner && maxVotes > 0) {
+                    console.log('Contest winner:', winner);
+                    
+                    // Update contest with complete winner information using correct fields
+                    const contestRef = doc(db, 'weeklyContests', currentContest.id);
+                    await updateDoc(contestRef, {
+                        status: 'completed',
+                        winner: {
+                            monsterId: winner.id,
+                            monsterName: winner.monsterName,
+                            level: winner.level || 1,
+                            HP: winner.HP || 0,
+                            AP: winner.AP || 0,
+                            Speed: winner.Speed || 0,
+                            monsterType: winner.monsterType || 'unknown',
+                            votes: winner.votes,
+                            ownerId: winner.ownerId,
+                            timestamp: serverTimestamp()
+                        }
+                    });
+
+                    showToast(`🎉 Winner selected: ${winner.monsterName} with ${winner.votes} votes!`);
+                } else {
+                    // ...existing error handling code...
+                }
+
+                // Initialize next contest
+                await initializeNextContest();
+                
+                // Reload page to show new contest
+                window.location.reload();
+            } catch (error) {
+                console.error('Error handling contest end:', error);
+                showToast('Error selecting winner. Please refresh the page.', true);
+            }
+        }
+
+        async function resetVotes() {
+            try {
+                const batch = writeBatch(db);
+                const monstersRef = collection(db, 'monsters');
+                const snapshot = await getDocs(monstersRef);
+                
+                // Get the next week's contest ID
+                const nextWeekStart = new Date(currentContest.endDate);
+                const nextWeekId = getWeekStart(nextWeekStart).toISOString().split('T')[0];
+                
+                snapshot.docs.forEach(doc => {
+                    const monsterRef = doc.ref;
+                    // Reset votes for both current and next contest period
+                    batch.update(monsterRef, {
+                        [`weeklyVotes.${currentContest.id}`]: {
+                            votes: 0,
+                            voters: {}
+                        },
+                        [`weeklyVotes.${nextWeekId}`]: {
+                            votes: 0,
+                            voters: {}
+                        }
+                    });
+                });
+
+                await batch.commit();
+                console.log('Votes reset for current and next contest period');
+            } catch (error) {
+                console.error('Error resetting votes:', error);
+                throw error;
+            }
+        }
+
+        // Add this helper function
+        async function initializeNextContest() {
+            const nextWeekStart = new Date(currentContest.endDate);
+            const nextWeekId = nextWeekStart.toISOString().split('T')[0];
+            const nextWeekEnd = new Date(nextWeekStart);
+            nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
+            nextWeekEnd.setUTCHours(4, 59, 59, 999); // 23:59:59.999 EST
+
+            await setDoc(doc(db, 'weeklyContests', nextWeekId), {
+                startDate: nextWeekStart.toISOString(),
+                endDate: nextWeekEnd.toISOString(),
+                status: 'active',
+                winner: null
+            });
+        }
+
+        // Add this function to check if it's time for a new contest
+        async function checkAndStartNewContest() {
+            const now = new Date();
+            const currentWeekStart = getWeekStart(now);
+            const currentWeekId = currentWeekStart.toISOString().split('T')[0];
+            
+            console.log('Checking contest period for:', currentWeekId);
+            
+            const contestRef = doc(db, 'weeklyContests', currentWeekId);
+            const contestDoc = await getDoc(contestRef);
+
+            if (!contestDoc.exists()) {
+                // Calculate dates for the new contest period
+                const weekEnd = new Date(currentWeekStart);
+                weekEnd.setDate(weekEnd.getDate() + 7);
+                weekEnd.setUTCHours(4, 59, 59, 999); // 23:59:59 EST
+
+                console.log('Creating new contest period:', {
+                    start: currentWeekStart.toISOString(),
+                    end: weekEnd.toISOString()
+                });
+
+                // Create the new contest document
+                await setDoc(contestRef, {
+                    startDate: currentWeekStart.toISOString(),
+                    endDate: weekEnd.toISOString(),
+                    status: 'active',
+                    winner: null
+                });
+
+                // Refresh the page to load the new contest
+                window.location.reload();
+            }
         }
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', initializeContest);
+
+        // Replace the keyboard handler with this version
+        document.addEventListener('keydown', (e) => {
+            // Check for "Ctrl + Alt + W" combination
+            if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'w') {
+                e.preventDefault(); // Prevent browser from closing
+                console.clear(); // Clear console for better debugging
+                showToast('🔧 Debug: Running winner selection...', false);
+                forceSelectWinner(); // Use new function name to avoid confusion
+            }
+        });
+
+        // Add new debug function
+        async function forceSelectWinner() {
+            try {
+                if (!currentContest) {
+                    throw new Error('No active contest found');
+                }
+
+                console.log('Current contest:', currentContest);
+                
+                // Get all monsters with votes for this contest
+                const monstersRef = collection(db, 'monsters');
+                const snapshot = await getDocs(monstersRef);
+                
+                let winner = null;
+                let maxVotes = 0;
+                let allVotes = [];
+                
+                // Find the winner and log all votes
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    const votes = data.weeklyVotes?.[currentContest.id]?.votes || 0;
+                    allVotes.push({
+                        name: data.monsterName,
+                        votes: votes
+                    });
+                    console.log(`${data.monsterName}: ${votes} votes`);
+                    
+                    if (votes > maxVotes) {
+                        maxVotes = votes;
+                        winner = {
+                            id: doc.id,
+                            monsterName: data.monsterName,
+                            votes: votes
+                        };
+                    }
+                });
+
+                console.log('All votes:', allVotes.sort((a, b) => b.votes - a.votes));
+                console.log('Selected winner:', winner);
+
+                if (!winner || maxVotes === 0) {
+                    throw new Error('No valid winner found - no votes recorded');
+                }
+
+                // Update contest with winner
+                const contestRef = doc(db, 'weeklyContests', currentContest.id);
+                await updateDoc(contestRef, {
+                    status: 'completed',
+                    winner: {
+                        monsterId: winner.id,
+                        monsterName: winner.monsterName,
+                        votes: winner.votes,
+                        timestamp: serverTimestamp()
+                    }
+                });
+
+                // Update the winner display immediately
+                document.getElementById('winnerSection').style.display = 'block';
+                document.getElementById('winnerName').textContent = winner.monsterName;
+                document.getElementById('winnerVotes').textContent = winner.votes;
+
+                showToast(`🏆 Winner selected: ${winner.monsterName} with ${winner.votes} votes!`, false);
+                
+                // Initialize next contest
+                await initializeNextContest();
+                
+                // Update current contest to the new one
+                const now = new Date();
+                const weekStart = getWeekStart(now);
+                const weekId = weekStart.toISOString().split('T')[0];
+                const newContestRef = doc(db, 'weeklyContests', weekId);
+                const newContestDoc = await getDoc(newContestRef);
+                
+                if (newContestDoc.exists()) {
+                    currentContest = {
+                        id: weekId,
+                        ...newContestDoc.data()
+                    };
+                    startCountdown(currentContest.endDate);
+                    await loadNominees();
+                    showToast('✨ New contest started!', false);
+                }
+
+            } catch (error) {
+                console.error('Debug error:', error);
+                showToast('🛑 ' + error.message, true);
+            }
+        }
+
+        // Add this function to reset votes for all monsters
+        setInterval(async () => {
+            await checkAndStartNewContest();
+        }, 60000); // Check every minute
+
+        // Add debug function to test date calculations
+        function debugDateCalc() {
+            const now = new Date();
+            const weekStart = getWeekStart(now);
+            console.log({
+                currentUTC: now.toISOString(),
+                currentEST: new Date(now.getTime() + (now.getTimezoneOffset() * 60000) - (5 * 3600000)).toISOString(),
+                weekStartUTC: weekStart.toISOString(),
+                weekStartEST: new Date(weekStart.getTime() + (weekStart.getTimezoneOffset() * 60000) - (5 * 3600000)).toISOString()
+            });
+        }
+
     </script>
     <script>
         // Add dark mode toggle functionality

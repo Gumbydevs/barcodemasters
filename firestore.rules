@@ -71,13 +71,19 @@ service cloud.firestore {
     match /weeklyContests/{contestId} {
       allow read: if isAuthenticated();
       allow create: if isAdmin();
-      allow update: if isAuthenticated() && 
-        // Only allow updates to nominees' votes and voters
-        request.resource.data.diff(resource.data).affectedKeys()
+      allow update: if isAuthenticated() && (
+        // Keep existing rule for voting
+        (request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['nominees']) &&
         request.resource.data.startDate == resource.data.startDate &&
         request.resource.data.endDate == resource.data.endDate &&
-        request.resource.data.status == resource.data.status;
+        request.resource.data.status == resource.data.status) ||
+        // Add new rule for winner updates
+        (request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'winner']) &&
+        request.resource.data.startDate == resource.data.startDate &&
+        request.resource.data.endDate == resource.data.endDate)
+      );
     }
   }
 }
