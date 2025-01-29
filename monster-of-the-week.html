@@ -719,7 +719,7 @@
             <h1>🏆 Monster of the Week</h1>
             <div id="countdown" class="countdown">Next winner in: --:--:--</div>
             <div id="winnerSection" class="winner-section" style="display: none;">
-                <h2>🎉 Last Week's Winner 🎉</h2>
+                <h2>🎉 This Week's Winner 🎉</h2>
                 <div class="winner-details">
                     <div class="winner-image-container">
                         <img id="winnerImage" src="" alt="" class="winner-image">
@@ -833,61 +833,89 @@
             }
         });
 
+        function getNextSunday() {
+            const date = new Date();
+            // Force timezone to EST
+            const estDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            const currentDay = estDate.getDay();
+            
+            // Days until next Sunday (0 is Sunday)
+            const daysToAdd = currentDay === 0 ? 7 : 7 - currentDay;
+            
+            // Set to next Sunday midnight EST
+            estDate.setDate(estDate.getDate() + daysToAdd);
+            estDate.setHours(0, 0, 0, 0);
+            
+            return estDate;
+        }
+
+        function startCountdown(endDate) {
+            const countdownElement = document.getElementById('countdown');
+            
+            function updateCountdown() {
+                // Get current time in EST
+                const now = new Date();
+                const estNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+                const estEnd = new Date(endDate);
+                
+                const distance = estEnd - estNow;
+                
+                if (distance < 0) {
+                    countdownElement.innerHTML = "Selecting winner...";
+                    handleContestEnd();
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                countdownElement.innerHTML = `Next winner in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                
+                // Debug info
+                console.log('Time debug:', {
+                    currentEST: estNow.toLocaleString('en-US', { timeZone: 'America/New_York' }),
+                    endEST: estEnd.toLocaleString('en-US', { timeZone: 'America/New_York' }),
+                    days, hours, minutes, seconds
+                });
+            }
+
+            updateCountdown();
+            return setInterval(updateCountdown, 1000);
+        }
+
         async function initializeContest() {
-            const now = new Date();
-            const nextWeekStart = getWeekStart(now);
-            console.log('Debug date info:', {
-                currentDate: now.toISOString(),
-                currentEST: new Date(now.getTime() + (now.getTimezoneOffset() * 60000) - (5 * 60 * 60 * 1000)).toISOString(),
-                nextWeekStart: nextWeekStart.toISOString(),
-                nextWeekStartEST: new Date(nextWeekStart.getTime() + (nextWeekStart.getTimezoneOffset() * 60000) - (5 * 60 * 60 * 1000)).toISOString()
+            const nextSunday = getNextSunday();
+            const weekEnd = new Date(nextSunday);
+            weekEnd.setHours(23, 59, 59, 999);
+            
+            console.log('Contest timing:', {
+                nextSunday: nextSunday.toLocaleString('en-US', { timeZone: 'America/New_York' }),
+                weekEnd: weekEnd.toLocaleString('en-US', { timeZone: 'America/New_York' })
             });
 
-            debugDateCalc();
-            console.log('Current date:', now.toISOString());
-            console.log('Current time in EST:', new Date(now.getTime() + (now.getTimezoneOffset() * 60000) - (5 * 3600000)).toISOString());
+            const weekId = nextSunday.toISOString().split('T')[0];
             
-            const currentWeekStart = getWeekStart(now);
-            const currentWeekId = currentWeekStart.toISOString().split('T')[0];
-
-            console.log('Week start date:', currentWeekStart.toISOString());
-            console.log('Initializing contest for:', currentWeekId);
-
-            // First check if we have an active contest for the current week
-            const contestRef = doc(db, 'weeklyContests', currentWeekId);
+            // Check for existing contest
+            const contestRef = doc(db, 'weeklyContests', weekId);
             const contestDoc = await getDoc(contestRef);
 
             if (!contestDoc.exists()) {
-                console.log('Creating new contest period for:', currentWeekId);
-                // Calculate end date for current week (next Sunday at 23:59:59 EST)
-                const weekEnd = new Date(currentWeekStart);
-                weekEnd.setDate(weekEnd.getDate() + 7);
-                weekEnd.setUTCHours(4, 59, 59, 999); // 23:59:59 EST
-
-                // Create the new contest document
                 const newContest = {
-                    startDate: currentWeekStart.toISOString(),
+                    startDate: nextSunday.toISOString(),
                     endDate: weekEnd.toISOString(),
                     status: 'active',
                     winner: null
                 };
-
                 await setDoc(contestRef, newContest);
-                currentContest = {
-                    id: currentWeekId,
-                    ...newContest
-                };
+                currentContest = { id: weekId, ...newContest };
             } else {
-                currentContest = {
-                    id: currentWeekId,
-                    ...contestDoc.data()
-                };
+                currentContest = { id: weekId, ...contestDoc.data() };
             }
-
-            console.log('Current contest period:', currentContest.id);
             
-            startCountdown(currentContest.endDate);
-            await loadNominees(); // Remove the contestId parameter
+            startCountdown(weekEnd);
+            await loadNominees();
             await checkPreviousWeekWinner();
         }
 
@@ -1010,108 +1038,17 @@
             votesRemaining.textContent = remainingVotes;
         }
 
-        function startCountdown(endDate) {
-            const countdownElement = document.getElementById('countdown');
-            
-            async function handleContestEnd() {
-                try {
-                    // Get all monsters and their votes
-                    const monstersRef = collection(db, 'monsters');
-                    const snapshot = await getDocs(monstersRef);
-                    
-                    // Find the winner
-                    let winner = null;
-                    let maxVotes = 0;
-                    
-                    snapshot.docs.forEach(doc => {
-                        const votes = doc.data().weeklyVotes?.[currentContest.id]?.votes || 0;
-                        if (votes > maxVotes) {
-                            maxVotes = votes;
-                            winner = {
-                                id: doc.id,
-                                ...doc.data()
-                            };
-                        }
-                    });
-
-                    if (winner) {
-                        // Update contest with winner
-                        await updateDoc(doc(db, 'weeklyContests', currentContest.id), {
-                            status: 'completed',
-                            winner: {
-                                monsterId: winner.id,
-                                monsterName: winner.monsterName,
-                                votes: maxVotes,
-                                timestamp: serverTimestamp()
-                            }
-                        });
-
-                        // Initialize next week's contest
-                        const nextWeekStart = new Date(currentContest.endDate);
-                        const nextWeekId = nextWeekStart.toISOString().split('T')[0];
-                        const nextWeekEnd = new Date(nextWeekStart);
-                        nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
-                        nextWeekEnd.setUTCHours(4, 59, 59, 999); // 23:59:59.999 EST
-
-                        await setDoc(doc(db, 'weeklyContests', nextWeekId), {
-                            startDate: nextWeekStart.toISOString(),
-                            endDate: nextWeekEnd.toISOString(),
-                            status: 'active',
-                            winner: null
-                        });
-
-                        // Refresh the page to start new contest
-                        window.location.reload();
-                    }
-                } catch (error) {
-                    console.error('Error handling contest end:', error);
-                    showToast('Error selecting winner. Please refresh the page.', true);
-                }
-            }
-            
-            function updateCountdown() {
-                const now = new Date().getTime();
-                const end = new Date(endDate).getTime();
-                const distance = end - now;
-
-                if (distance < 0) {
-                    countdownElement.innerHTML = "Selecting winner...";
-                    handleContestEnd();
-                    return;
-                }
-
-                // Ensure proper number calculations
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                if (isNaN(days) || isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-                    countdownElement.innerHTML = "Calculating...";
-                    return;
-                }
-
-                countdownElement.innerHTML = `Next winner in: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-            }
-
-            updateCountdown();
-            const timer = setInterval(updateCountdown, 1000);
-            
-            // Cleanup interval on page unload
-            window.addEventListener('unload', () => clearInterval(timer));
-        }
-
         async function loadNominees() {
             const nomineesGrid = document.getElementById('nomineesGrid');
             nomineesGrid.innerHTML = '<div class="loading">Loading monsters...</div>';
 
             try {
-                // Always get the current contest period
+                // Use getNextSunday instead of getWeekStart
                 const now = new Date();
-                const currentWeekStart = getWeekStart(now);
-                const currentWeekId = currentWeekStart.toISOString().split('T')[0];
+                const nextSunday = getNextSunday();
+                const currentWeekId = nextSunday.toISOString().split('T')[0];
                 
-                console.log('Loading nominees for current week:', currentWeekId);
+                console.log('Loading nominees for week:', currentWeekId);
 
                 const monstersRef = collection(db, 'monsters');
                 const snapshot = await getDocs(monstersRef);
@@ -1172,43 +1109,6 @@
                 console.error('Error loading monsters:', error);
                 nomineesGrid.innerHTML = '<div class="error">Error loading monsters. Please try again.</div>';
             }
-        }
-
-        function getWeekStart(date) {
-            const d = new Date(date);
-            
-            // Convert to EST
-            const estTime = new Date(d.getTime() + (d.getTimezoneOffset() * 60000) - (5 * 60 * 60 * 1000));
-            
-            // Get the current day in EST (0 = Sunday, 1 = Monday, etc.)
-            const currentDay = estTime.getDay();
-            const currentHour = estTime.getHours();
-            
-            // If we're past Saturday 7PM EST, get next week's Sunday
-            if (currentDay === 6 && currentHour >= 19) {
-                const nextSunday = new Date(estTime);
-                nextSunday.setDate(estTime.getDate() + 1); // Add one day to get to Sunday
-                nextSunday.setHours(0, 0, 0, 0);
-                // Convert back to UTC
-                return new Date(nextSunday.getTime() - (nextSunday.getTimezoneOffset() * 60000) + (5 * 60 * 60 * 1000));
-            }
-            
-            // If it's Sunday and past midnight EST, use next Sunday
-            if (currentDay === 0) {
-                const nextSunday = new Date(estTime);
-                nextSunday.setDate(estTime.getDate() + 7);
-                nextSunday.setHours(0, 0, 0, 0);
-                // Convert back to UTC
-                return new Date(nextSunday.getTime() - (nextSunday.getTimezoneOffset() * 60000) + (5 * 60 * 60 * 1000));
-            }
-            
-            // Otherwise, get next Sunday
-            const daysUntilSunday = 7 - currentDay;
-            const nextSunday = new Date(estTime);
-            nextSunday.setDate(estTime.getDate() + daysUntilSunday);
-            nextSunday.setHours(0, 0, 0, 0);
-            // Convert back to UTC
-            return new Date(nextSunday.getTime() - (nextSunday.getTimezoneOffset() * 60000) + (5 * 60 * 60 * 1000));
         }
 
         async function getUsernameById(userId) {
@@ -1454,9 +1354,9 @@
                 const monstersRef = collection(db, 'monsters');
                 const snapshot = await getDocs(monstersRef);
                 
-                // Get the next week's contest ID
-                const nextWeekStart = new Date(currentContest.endDate);
-                const nextWeekId = getWeekStart(nextWeekStart).toISOString().split('T')[0];
+                // Get the next week's contest ID using getNextSunday
+                const nextSunday = getNextSunday();
+                const nextWeekId = nextSunday.toISOString().split('T')[0];
                 
                 snapshot.docs.forEach(doc => {
                     const monsterRef = doc.ref;
@@ -1500,8 +1400,8 @@
         // Add this function to check if it's time for a new contest
         async function checkAndStartNewContest() {
             const now = new Date();
-            const currentWeekStart = getWeekStart(now);
-            const currentWeekId = currentWeekStart.toISOString().split('T')[0];
+            const nextSunday = getNextSunday();
+            const currentWeekId = nextSunday.toISOString().split('T')[0];
             
             console.log('Checking contest period for:', currentWeekId);
             
